@@ -14,6 +14,7 @@
 #include <vector>
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
 #include "Analysis/VVAnalysis/interface/SelectorBase.h"
+#include "Analysis/VVAnalysis/interface/BranchManager.h"
 
 class ZSelector : public SelectorBase {
 public :
@@ -108,24 +109,26 @@ public :
     Float_t nTruePU;
 
     TBranch* b_nTruePU;
-    TBranch* b_nCBVIDTightElec;
-    TBranch* b_nCBVIDHLTSafeElec;
-    TBranch* b_nWZTightMuon;
-    TBranch* b_nWZMediumMuon;
-    TBranch* b_l1IsTight;
-    TBranch* b_l2IsTight;
-    TBranch* b_l1Eta;
-    TBranch* b_l2Eta;
-    TBranch* b_l1Pt;
-    TBranch* b_l2Pt;
-    TBranch* b_ZMass;
-    
-    // Readers to access the data (delete the ones you do not need).
-    virtual void    SetScaleFactors() override;
-    virtual void    Init(TTree *tree) override;
-    ZSelector(TTree * /*tree*/ =0) { }
-    ~ZSelector() { }
-    virtual void    SetupNewDirectory() override;
+  TBranch* b_nCBVIDTightElec;
+  TBranch* b_nCBVIDHLTSafeElec;
+  TBranch* b_nWZTightMuon;
+  TBranch* b_nWZMediumMuon;
+  TBranch* b_l1IsTight;
+  TBranch* b_l2IsTight;
+  TBranch* b_l1Eta;
+  TBranch* b_l2Eta;
+  TBranch* b_l1Pt;
+  TBranch* b_l2Pt;
+  TBranch* b_ZMass;
+
+  BranchManager b;
+  
+  // Readers to access the data (delete the ones you do not need).
+  virtual void    SetScaleFactors() override;
+  virtual void    Init(TTree *tree) override;
+  ZSelector(TTree * /*tree*/ =0) { }
+  ~ZSelector() { }
+  virtual void    SetupNewDirectory() override;
 
     ClassDefOverride(ZSelector,0);
 
