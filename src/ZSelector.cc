@@ -108,14 +108,14 @@ void ZSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::s
     weight = 1;
     b.SetEntry(entry);
     if (nElectron > N_KEEP_MU_E_ || nMuon > N_KEEP_MU_E_) {
-      std::string message = "Found more electrons or muons than max read number.\n    Found ";
-      message += std::to_string(nElectron);
-      message += " electrons.\n    Found ";
-      message += std::to_string(nMuon);
-      message += " Muons\n  --> Max read number was ";
-      message += std::to_string(N_KEEP_MU_E_);
-      message += "\nExiting because this can cause problems. Increase N_KEEP_MU_E_ to avoid this error.\n";
-      throw std::domain_error(message);
+        std::string message = "Found more electrons or muons than max read number.\n    Found ";
+ 	message += std::to_string(nElectron);
+	message += " electrons.\n    Found ";
+        message += std::to_string(nMuon);
+	message += " Muons\n  --> Max read number was ";
+        message += std::to_string(N_KEEP_MU_E_);
+	message += "\nExiting because this can cause problems. Increase N_KEEP_MU_E_ to avoid this error.\n";
+        throw std::domain_error(message);
     }
 
     ZMass = 0;
@@ -251,29 +251,29 @@ void ZSelector::LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::stri
 }
 
 void ZSelector::ApplyScaleFactors() {
-  if (channel_ == ee) {
-    if (eIdSF_ != nullptr) {
-      weight *= eIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
-      weight *= eIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+    if (channel_ == ee) {
+        if (eIdSF_ != nullptr) {
+	    weight *= eIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
+	    weight *= eIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+        }
+        if (eGsfSF_ != nullptr) {
+	    weight *= eGsfSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
+	    weight *= eGsfSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+        }
     }
-    if (eGsfSF_ != nullptr) {
-      weight *= eGsfSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
-      weight *= eGsfSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+    else if (channel_ == mm) {
+        if (mIdSF_ != nullptr) {
+	    weight *= mIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
+	    weight *= mIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+	}
+        if (mIsoSF_ != nullptr) {
+	    weight *= mIsoSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
+	    weight *= mIsoSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+	}
     }
-  }
-  else if (channel_ == mm) {
-    if (mIdSF_ != nullptr) {
-      weight *= mIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
-      weight *= mIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
+    if (pileupSF_ != nullptr) {
+        weight *= pileupSF_->Evaluate1D(numPU);
     }
-    if (mIsoSF_ != nullptr) {
-      weight *= mIsoSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
-      weight *= mIsoSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
-    }
-  }
-  if (pileupSF_ != nullptr) {
-    weight *= pileupSF_->Evaluate1D(numPU);
-  }
 }
 
 void ZSelector::SetComposite() {

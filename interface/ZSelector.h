@@ -109,17 +109,17 @@ public :
     Float_t nTruePU;
 
     TBranch* b_nTruePU;
-  TBranch* b_nCBVIDTightElec;
-  TBranch* b_nCBVIDHLTSafeElec;
-  TBranch* b_nWZTightMuon;
-  TBranch* b_nWZMediumMuon;
-  TBranch* b_l1IsTight;
-  TBranch* b_l2IsTight;
-  TBranch* b_l1Eta;
-  TBranch* b_l2Eta;
-  TBranch* b_l1Pt;
-  TBranch* b_l2Pt;
-  TBranch* b_ZMass;
+    TBranch* b_nCBVIDTightElec;
+    TBranch* b_nCBVIDHLTSafeElec;
+    TBranch* b_nWZTightMuon;
+    TBranch* b_nWZMediumMuon;
+    TBranch* b_l1IsTight;
+    TBranch* b_l2IsTight;
+    TBranch* b_l1Eta;
+    TBranch* b_l2Eta;
+    TBranch* b_l1Pt;
+    TBranch* b_l2Pt;
+    TBranch* b_ZMass;
 
   BranchManager b;
   
