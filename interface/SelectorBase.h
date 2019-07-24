@@ -29,6 +29,7 @@ public :
 
     std::vector<std::string> allChannels_ = {};
     std::vector<std::string> hists1D_ = {};
+    std::vector<std::string> hists2D_ = {};
 
     enum Channel {
         e,
@@ -95,57 +96,57 @@ public :
     };
 
     enum Year {
-	yrdefault,
-	yr2016,
-	yr2017,
-	yr2018
+        yrdefault,
+        yr2016,
+        yr2017,
+        yr2018
     };
 
     std::map<std::string, Year> yearMap_ = {
-	{"default", yrdefault},
-	{"2016", yr2016},
-	{"2017", yr2017},
-	{"2018", yr2018},
+        {"default", yrdefault},
+        {"2016", yr2016},
+        {"2017", yr2017},
+        {"2018", yr2018},
     };
     
     std::map<std::string, Channel> channelMap_ = {
-	{"e", e},
-	{"m", m},
-	{"ee", ee},
-	{"mm", mm},
-	{"eee", eee},
-	{"eem", eem},
-	{"emm", emm},
-	{"mmm", mmm},
-	{"eeee", eeee},
-	{"eemm", eemm},
-	{"mmee", mmee},
-	{"mmmm", mmmm},
-	{"eeeeGen", eeee},
-	{"eemmGen", eemm},
-	{"mmeeGen", mmee},
-	{"mmmmGen", mmmm},
-	{"Inclusive", Inclusive},
+        {"e", e},
+        {"m", m},
+        {"ee", ee},
+        {"mm", mm},
+        {"eee", eee},
+        {"eem", eem},
+        {"emm", emm},
+        {"mmm", mmm},
+        {"eeee", eeee},
+        {"eemm", eemm},
+        {"mmee", mmee},
+        {"mmmm", mmmm},
+        {"eeeeGen", eeee},
+        {"eemmGen", eemm},
+        {"mmeeGen", mmee},
+        {"mmmmGen", mmmm},
+        {"Inclusive", Inclusive},
     };
 
     enum Systematic {
-	Central,
-	jetEnergyScaleUp,
-	jetEnergyScaleDown,
-	jetEnergyResolutionUp,
-	jetEnergyResolutionDown,
-	metUnclusteredEnergyUp,
-	metUnclusteredEnergyDown,
-	muonEfficiencyUp,
-	muonEfficiencyDown,
-	muonScaleUp,
-	muonScaleDown,
-	electronEfficiencyUp,
-	electronEfficiencyDown,
-	electronScaleUp,
-	electronScaleDown,
-	pileupUp,
-	pileupDown,
+        Central,
+        jetEnergyScaleUp,
+        jetEnergyScaleDown,
+        jetEnergyResolutionUp,
+        jetEnergyResolutionDown,
+        metUnclusteredEnergyUp,
+        metUnclusteredEnergyDown,
+        muonEfficiencyUp,
+        muonEfficiencyDown,
+        muonScaleUp,
+        muonScaleDown,
+        electronEfficiencyUp,
+        electronEfficiencyDown,
+        electronScaleUp,
+        electronScaleDown,
+        pileupUp,
+        pileupDown,
     }; 
 
 
@@ -200,8 +201,7 @@ public :
 protected:
     // Maps to the histogram pointers themselves
     std::map<std::string, TH1D*> histMap1D_ = {};
-    //TODO change the name to map and don't break things
-    std::map<std::string, TH2D*> hists2D_ = {};
+    std::map<std::string, TH2D*> histMap2D_ = {};
     std::map<std::string, TH2D*> weighthists_ = {};
     std::map<std::string, TH3D*> weighthists2D_ {};
 
