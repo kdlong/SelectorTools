@@ -71,13 +71,17 @@ void SelectorBase::Init(TTree *tree)
         }
     }
 
+    //std::cout<<"In SelectorBase"<<std::endl;
+    //std::cout<<"selectionName: "<<selectionName_<<std::endl;
+    //std::cout<<"enum selection_: "<<selection_<<std::endl;
     if (selectionMap_.find(selectionName_) != selectionMap_.end()) {
         selection_ = selectionMap_[selectionName_];
     }
     else
-        throw std::invalid_argument("Invalid selection!");
+        throw std::invalid_argument("Invalid selection SelectorBase!");
     
     isMC_ = false;
+    //std::cout<<"What is a name: "<<name_<<std::endl;
     if (name_.find("data") == std::string::npos){
         isMC_ = true;
     }
@@ -86,8 +90,12 @@ void SelectorBase::Init(TTree *tree)
 
     currentHistDir_ = dynamic_cast<TList*>(fOutput->FindObject(name_.c_str()));
 
-    if (channelMap_.find(channelName_) != channelMap_.end())
+    if (channelMap_.find(channelName_) != channelMap_.end()){
         channel_ = channelMap_[channelName_];
+        //std::cout<<"In SelectorBase"<<std::endl;
+        //std::cout<<"channelName: "<<channelName_<<std::endl;
+        //std::cout<<"enum channel_: "<<channel_<<std::endl;
+    }
     else {
         std::string message = "Invalid channel choice! ";
         message += "Choice was " + channelName_ + "\n";
@@ -135,6 +143,7 @@ void SelectorBase::LoadBranches(Long64_t entry, std::pair<Systematic, std::strin
 Bool_t SelectorBase::Process(Long64_t entry)
 {
     for (const auto& variation : variations_) {
+        //std::cout<<"Selector Base Process"<<std::endl;
         LoadBranches(entry, variation);
         FillHistograms(entry, variation);
     }
@@ -178,10 +187,13 @@ void SelectorBase::InitializeHistogramsFromConfig() {
     if (histInfo == nullptr ) 
         throw std::domain_error("Can't initialize histograms without passing histogram information to TSelector");
 
+    //std::cout<<"SelectorBase: Does it enter this function"<<std::endl;
+    //std::cout<<"hist1D length"<<hists1D_.size()<<std::endl;
     for (auto& label : hists1D_) {
         if (channel_ != Inclusive) {
             auto histName = getHistName(label, "", channelName_);
             histMap1D_[histName] = {};
+            //std::cout<<"SelectorBase: Do Histos get initialized"<<std::endl;
         }
         else {
             for (auto& chan : allChannels_) {

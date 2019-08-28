@@ -48,6 +48,7 @@ class SelectorBase : public TSelector {
   
     enum Selection {
         tightleptons,                 ZZGenFiducial,
+        ZZselection,
         Wselection,                   Zselection,
         Wselection_Full,              FakeRateSelectionLoose,
         FakeRateSelectionTight,       VBSselection_Loose,
@@ -72,6 +73,7 @@ class SelectorBase : public TSelector {
         metUnclusteredEnergyUp,    metUnclusteredEnergyDown,
         muonEfficiencyUp,          muonEfficiencyDown,
         muonScaleUp,               muonScaleDown,
+        electronRecoEffUp,         electronRecoEffDown,
         electronEfficiencyUp,      electronEfficiencyDown,
         electronScaleUp,           electronScaleDown,
         pileupUp,                  pileupDown,
@@ -91,6 +93,9 @@ class SelectorBase : public TSelector {
         {"ZZGenFiducial", ZZGenFiducial},
         {"Wselection", Wselection},
         {"Zselection", Zselection},
+        {"ZZselection", ZZselection},
+        {"SignalSync", ZZselection},
+        {"LooseLeptons", ZZselection},
         {"Wselection_Full", Wselection_Full},
         {"FakeRateSelectionLoose", FakeRateSelectionLoose},
         {"FakeRateSelectionTight", FakeRateSelectionTight},

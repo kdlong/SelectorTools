@@ -6,6 +6,9 @@
   <class name="WZBackgroundSelector"/>
   <class name="WZSelectorBase"/>
   <class name="ZZGenSelector"/>
+  <class name="ZZSelectorBase"/>
+  <class name="ZZSelector"/>
+  <class name="ZZBackgroundSelector"/>
   <class name="NanoGenSelectorBase"/>
   <class name="WGenSelector"/>
   <class name="ZGenSelector"/>

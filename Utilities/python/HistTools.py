@@ -244,10 +244,14 @@ def addOverflowAndUnderflow(hist, underflow=True, overflow=True):
 def makeCompositeHists(hist_file, name, members, lumi, hists=[], underflow=False, overflow=True, rebin=None):
     composite = ROOT.TList()
     composite.SetName(name)
+    #print "members for CompositeHists: ",members
+    #print "hist_file:",hist_file
     for directory in [str(i) for i in members.keys()]:
         # For aQGC, the different plot groups should already be in their own files
         if "aqgc" in directory:
             directory = name
+        #print "directory:",directory
+        #print "directory:",type(directory)
         if not hist_file.Get(directory):
             print "Skipping invalid filename %s" % directory
             continue

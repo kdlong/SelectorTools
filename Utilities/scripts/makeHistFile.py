@@ -8,6 +8,7 @@ from python import HistTools
 import os
 import logging
 import sys
+import datetime
 
 def getComLineArgs():
     parser = UserInput.getDefaultParser()
@@ -34,7 +35,7 @@ def getComLineArgs():
     parser.add_argument("-b", "--hist_names", 
                         type=lambda x : [i.strip() for i in x.split(',')],
                         default=["all"], help="List of histograms, "
-                        "as defined in AnalysisDatasetManager, separated "
+                        "as defined in ZZ4lRun2DatasetManager, separated "
                         "by commas")
     return vars(parser.parse_args())
 
@@ -44,9 +45,15 @@ def makeHistFile(args):
     manager_path = ConfigureJobs.getManagerPath()
     if manager_path not in sys.path:
         sys.path.insert(0, "/".join([manager_path, 
-            "AnalysisDatasetManager", "Utilities/python"]))
+            "ZZ4lRun2DatasetManager", "Utilities/python"]))
 
-    tmpFileName = args['output_file']
+    today = datetime.date.today().strftime("%d%b%Y")
+    
+    if args['test']:
+        tmpFileName = "Hists%s-%s.root" % (today, args['output_file']) 
+    else:
+        tmpFileName = "Hists%s-%s.root" % (today, args['output_file']) if args['selection'] == "SignalSync" \
+            else "Hists%s-%s.root" % (today, args['analysis'])
     fOut = ROOT.TFile(tmpFileName, "recreate")
 
     addScaleFacs = False
@@ -129,21 +136,26 @@ def makeHistFile(args):
     if args['test']:
         fOut.Close()
         sys.exit(0)
-
+    
+    fOut.Close()    
+    fOut = ROOT.TFile.Open(tmpFileName, "update")
+    
     alldata = HistTools.makeCompositeHists(fOut,"AllData", 
-        ConfigureJobs.getListOfFilesWithXSec(["WZxsec2016data"], manager_path), args['lumi'],
+        ConfigureJobs.getListOfFilesWithXSec([args['analysis']+"data"], manager_path), args['lumi'],
         underflow=False, overflow=False)
     OutputTools.writeOutputListItem(alldata, fOut)
     alldata.Delete()
 
-    nonpromptmc = HistTools.makeCompositeHists(fOut, "NonpromptMC", ConfigureJobs.getListOfFilesWithXSec( 
-        ConfigureJobs.getListOfNonpromptFilenames(), manager_path), args['lumi'],
-        underflow=False, overflow=False)
-    nonpromptmc.Delete()
+    if "ZZ4l" not in args['analysis']:
+        nonpromptmc = HistTools.makeCompositeHists(fOut, "NonpromptMC", ConfigureJobs.getListOfFilesWithXSec( 
+            ConfigureJobs.getListOfNonpromptFilenames(), manager_path), args['lumi'],
+            underflow=False, overflow=False)
+        nonpromptmc.Delete()
 
-    OutputTools.writeOutputListItem(nonpromptmc, fOut)
+        OutputTools.writeOutputListItem(nonpromptmc, fOut)
+    
     ewkmc = HistTools.makeCompositeHists(fOut,"AllEWK", ConfigureJobs.getListOfFilesWithXSec(
-        ConfigureJobs.getListOfEWKFilenames(), manager_path), args['lumi'],
+        ConfigureJobs.getListOfEWKFilenames(args['analysis']), manager_path), args['lumi'],
         underflow=False, overflow=False)
     OutputTools.writeOutputListItem(ewkmc, fOut)
     ewkmc.Delete()

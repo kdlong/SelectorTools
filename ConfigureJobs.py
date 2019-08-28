@@ -2,16 +2,11 @@ import datetime
 import UserInput
 import fnmatch
 import glob
-import subprocess
 import os
 import json
 import array
 import string
-#try:
 import configparser
-#except:
-    #import ConfigParser as configparser
-    #from six.moves import configparser
 
 def get2DBinning(xvar="mjj", yvar="etajj", analysis='WZ'):
     #return (array.array('d', [500, 1000,1500, 2000, 2500]),
@@ -31,30 +26,15 @@ def get2DBinning(xvar="mjj", yvar="etajj", analysis='WZ'):
         ybinning = [0, 5, 6, 20]
     return (xbinning, ybinning)
 
-def getBinning(variable='MTWZ', isVBS=True, isHiggs=False):
-    if variable == 'MTWZ':
-        if isVBS:
-            if isHiggs:
-                return [0,50,100,150,200,250,300,400,500,700,1000,1500,2000]
-            return [0,100,200,300,400,500,700,1000,1500,2000]
-        return [0,50,100,200,300,400,500,700,1000,1200]
-    return []
-
-def getChannels(analysis='WZ'):
-    if analysis == 'WZ':
-        return ["eee", "eem", "emm", "mmm"]
+def getChannels(analysis='ZZ'):
+    if analysis == 'ZZ':
+        return ["eeee", "eemm", "mmee", "mmmm"]
 def getManagerPath():
     config = configparser.ConfigParser()
-    try:
-        config.read_file(open("Templates/config.%s" % os.environ["USER"]))
-        if "dataset_manager_path" not in config['Setup']:
-            raise ValueError("dataset_manager_path not specified in config file Template/config.%s" 
+    config.read_file(open("Templates/config.%s" % os.environ["USER"]))
+    if "dataset_manager_path" not in config['Setup']:
+        raise ValueError("dataset_manager_path not specified in config file Template/config.%s" 
                             % os.environ["USER"])
-    except ValueError as e:
-        if os.path.isdir('ZZ4lRun2DatasetManager'):
-            return '.'
-        raise e
-
     return config['Setup']['dataset_manager_path'] + "/"
 def getCombinePath():
     config = configparser.ConfigParser()
@@ -63,54 +43,80 @@ def getCombinePath():
         raise ValueError("dataset_manager_path not specified in config file Template/config.%s" 
                             % os.environ["USER"])
     return config['Setup']['combine_path'] + "/"
-def getListOfEWKFilenames(analysis):
-    if "ZZ4l" in analysis:
-        return [
+def getListOfEWKFilenames():
+    return [
+        #"wz3lnu-amcnlo",#old 2018 ntuples
+        "wz3lnu-powheg",#New 2018 ntuples
+    # Use jet binned WZ samples for subtraction by default
+        #"wz3lnu-mgmlm-0j",
+        #"wz3lnu-mgmlm-1j",
+        #"wz3lnu-mgmlm-2j",
+        #"wz3lnu-mgmlm-3j",
+        #"wlljj-ewk",
+        "zz4l-powheg",
+        #"zz4ljj-ewk",
+        #"zz2l2vjj-ewk",
+        #"tzq",
+        #"ttz",
+        #"ttw",
+        #"zzz",
+        #"wwz",
+        #"www",
+        #"ww",
+        #"zg",
+        "ggZZ4e",
+        "ggZZ4m",
+        "ggZZ4t",
+        "ggZZ2e2mu",
+        "ggZZ2e2tau",
+        "ggZZ2mu2tau",
+    ]
+
+def getListOfEWK():
+    return [
         "zz4l-powheg",
         "ggZZ4e",
         "ggZZ4m",
         "ggZZ4t",
         "ggZZ2e2mu",
         "ggZZ2e2tau",
-        #"ggZZ2mu2tau",
-        ]
-    else:
-        return [
-    #    "wz3lnu-powheg",
-    # Use jet binned WZ samples for subtraction by default
-        "wz3lnu-mgmlm-0j",
-        "wz3lnu-mgmlm-1j",
-        "wz3lnu-mgmlm-2j",
-        "wz3lnu-mgmlm-3j",
-        "wlljj-ewk",
-        "zz4l-powheg",
-        "zz4ljj-ewk",
-        "zz2l2vjj-ewk",
-        "tzq",
-        "ttz",
-        "ttw",
-        "zzz",
-        "wwz",
-        "www",
-        "ww",
-        "zg",
-        "ggZZ4e",
-        "ggZZ4m",
-        "ggZZ2e2mu",
+        "ggZZ2mu2tau",
+    ]
+def getListOfDYFilenames():
+    return[
+        "DYJetsToLL_M10to50",
+        "DYJetsToLLM-50",
         ]
 def getListOfNonpromptFilenames():
     return ["tt-lep",
-        "st-schan",
-        "st-tchan-t",
-        "st-tchan-tbar",
-        "st-tw",
-        "st-tbarw",
-        #"DYm50",
-        "DYm50-1j",
-        "DYm50-2j",
-        "DYm50-3j",
-        "DYm50-4j",
+            "tt-jets",
+        #"st-schan",
+        #"st-tchan-t",
+        #"st-tchan-tbar",
+        #"st-tw",
+        #"st-tbarw",
+        ##"DYm50",
+        #"DYm50-1j",
+        #"DYm50-2j",
+        #"DYm50-3j",
+        #"DYm50-4j",
     ]
+def getListOfHZZFilenames():
+    return ["ggHZZ",
+            "vbfHZZ",
+            "ttH_HToZZ_4L",
+            "WminusHToZZ",
+            "WplusHToZZ",
+            "ZHToZZ_4L"
+    ]
+def getListOfggZZFilenames():
+    return ["ggZZ4e",
+        "ggZZ4m",
+        "ggZZ4t",
+        "ggZZ2e2mu",
+        "ggZZ2e2tau",
+        "ggZZ2mu2tau"
+        ]
 def getJobName(sample_name, analysis, selection, version):
     date = '{:%Y-%m-%d}'.format(datetime.date.today())
     selection = selection.replace(";",",")
@@ -123,11 +129,6 @@ def getNumberAndSizeOfLocalFiles(path_to_files):
     file_list = glob.glob(path_to_files)
     return (len(file_list), sum([os.path.getsize(f)/1000000 for f in file_list]))
 def getNumberAndSizeOfHDFSFiles(file_path):
-    p = subprocess.Popen(["hdfs", "dfs", "-ls", "-h", file_path.replace("/hdfs", "")],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-    out,err = p.communicate()
     file_info = []
     for line in out.splitlines():
         split = line.split()
@@ -143,35 +144,22 @@ def getListOfHDFSFiles(file_path):
         return []
     files = []
     for line in out.splitlines():
-        split = line.rsplit(" ", 1)
+        split = line.split(" ", 1)
         if len(split) != 2:
             continue
         elif "root" in split[1]:
-            files.append(split[1])
+            files.append("/"+split[1])
     return files
 def getListOfFiles(filelist, selection, manager_path=""):
     if manager_path is "":
         manager_path = getManagerPath()
     data_path = "%s/ZZ4lRun2DatasetManager/FileInfo" % manager_path
-    data_info = UserInput.readAllInfo("/".join([data_path, "data/*"]))
-    mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
+    data_info = UserInput.readAllJson("/".join([data_path, "%s.json" % "data/*"]))
+    mc_info = UserInput.readAllJson("/".join([data_path, "%s.json" % "montecarlo/*"]))
     valid_names = data_info.keys() + mc_info.keys()
     names = []
     for name in filelist:
-        if ".root" in name:
-            names.append(name)
-        elif "WZxsec2016" in name:
-            dataset_file = manager_path + \
-                "ZZ4lRun2DatasetManager/FileInfo/WZxsec2016/%s.json" % selection
-            allnames = json.load(open(dataset_file)).keys()
-            if "nodata" in name:
-                nodata = [x for x in allnames if "data" not in x]
-                names += nodata
-            elif "data" in name:
-                names += [x for x in allnames if "data" in x]
-            else:
-                names += allnames
-        elif "ZZ4l2016" in name:
+        if "ZZ4l2016" in name:
             dataset_file = manager_path + \
                 "ZZ4lRun2DatasetManager/FileInfo/ZZ4l2016/%s.json" % selection
             allnames = json.load(open(dataset_file)).keys()
@@ -212,17 +200,9 @@ def getListOfFiles(filelist, selection, manager_path=""):
         else:
             if name.split("__")[0] not in valid_names:
                 print "%s is not a valid name" % name
-                print "Valid names are", valid_names
                 continue
             names += [name]
     return [str(i) for i in names]
-
-def getXrdRedirector():
-    usbased = ["hep.wisc.edu"]
-    if any(i in os.environ["HOSTNAME"] for i in usbased):
-        return 'cmsxrootd.fnal.gov'
-    return 'cms-xrd-global.cern.ch'
-
 def fillTemplatedFile(template_file_name, out_file_name, template_dict):
     with open(template_file_name, "r") as templateFile:
         source = string.Template(templateFile.read())
@@ -234,7 +214,8 @@ def getListOfFilesWithXSec(filelist, manager_path=""):
         manager_path = getManagerPath()
     data_path = "%s/ZZ4lRun2DatasetManager/FileInfo" % manager_path
     files = getListOfFiles(filelist, "ntuples", manager_path)
-    mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
+    #files = getListOfFiles(filelist, "2018Data", manager_path)
+    mc_info = UserInput.readAllJson("/".join([data_path, "%s.json" % "montecarlo/*"]))
     info = {}
     for file_name in files:
         if "data" in file_name:
@@ -246,31 +227,32 @@ def getListOfFilesWithXSec(filelist, manager_path=""):
     return info
 def getPreviousStep(selection, analysis):
     selection_map = {}
-    if analysis == "WZxsec2016":
+    if analysis == "ZZ4l2016":
         selection_map = { "ntuples" : "ntuples",
-                "loosepreselection" : "ntuples",
                 "preselection" : "ntuples",
-                "3LooseLeptons" : "ntuples",
-                "3LooseLeptonsNoIP" : "ntuples",
-                "3LooseLeptonsNoVeto" : "ntuples",
-                "3TightLeptonsNoVeto" : "ntuples",
-                "3MediumLeptonsNoVeto" : "ntuples",
-                "preselectionLooseVeto" : "ntuples",
-                "preselectionNoVeto" : "ntuples",
-                "LepVetoAnd3lmass" : "preselection",
-                "3lmass" : "preselection",
-                "Zselection" : "3lmass",
-                "Wselection" : "Zselection",
-                "3lDYControl" : "Zselection",
-                "3lTTbarControl" : "3lmass",
+                "4lCRBase" : "ntuples"
         }
-    elif analysis == "WZDecemberAnalysis":
+    elif analysis == "ZplusL2016":
+        selection_map = { "ntuples": "ntuples",
+                "ZplusLBase" : "ntuples"
+        }
+    elif analysis == "ZZ4l2017":
         selection_map = { "ntuples" : "ntuples",
-                "loosepreselection" : "ntuples",
                 "preselection" : "ntuples",
-                "Mass3l" : "preselection",
-                "Zselection" : "preselection",
-                "Wselection" : "Zselection"
+                "4lCRBase" : "ntuples"
+        }
+    elif analysis == "ZplusL2017":
+        selection_map = { "ntuples": "ntuples",
+                "ZplusLBase" : "ntuples"
+        }
+    elif analysis == "ZZ4l2018":
+        selection_map = { "ntuples" : "ntuples",
+                "preselection" : "ntuples",
+                "4lCRBase" : "ntuples"
+        }
+    elif analysis == "ZplusL2018":
+        selection_map = { "ntuples": "ntuples",
+                "ZplusLBase" : "ntuples"
         }
     selection = selection.replace(";",",")
     first_selection = selection.split(",")[0].strip()
@@ -281,33 +263,20 @@ def getPreviousStep(selection, analysis):
             raise ValueError("Invalid selection '%s'. Valid selections are:"
                 "%s" % (first_selection, selection_map.keys()))
     return selection_map[first_selection]
-
-def getConfigFileName(config_file_name):
-    for extension in ["json", "py"]:
-        if os.path.isfile(".".join([config_file_name, extension])):
-            return ".".join([config_file_name, extension])
-    raise IOError("Invalid configuration file. Tried to read %s which does not exist" % \
-            config_file_name)
-
 def getInputFilesPath(sample_name, selection, analysis, manager_path=""):
     if manager_path is "":
         manager_path = getManagerPath()
-    if ".root" in sample_name:
-        print "INFO: using simple file %s" % sample_name
-        return sample_name
     data_path = "%s/ZZ4lRun2DatasetManager/FileInfo" % manager_path
-    input_file_base_name = "/".join([data_path, analysis, selection])
-    input_file_name = getConfigFileName(input_file_base_name)
-    input_files = UserInput.readInfo(input_file_name)
+    input_file_name = "/".join([data_path, analysis, "%s.json" %
+        selection])
+    input_files = UserInput.readJson(input_file_name)
     if sample_name not in input_files.keys():
         raise ValueError("Invalid input file %s. Input file must correspond"
                " to a definition in %s" % (sample_name, input_file_name))
     filename = input_files[sample_name]['file_path']
     return filename
-
 def getCutsJsonName(selection, analysis):
-    return "/".join(["Cuts", analysis, selection])
-
+    return "/".join(["Cuts", analysis, selection + ".json"]) 
 def getTriggerName(sample_name, analysis, selection):
     trigger_names = ["MuonEG", "DoubleMuon", "DoubleEG", "SingleMuon", "SingleElectron"]
     if "data" in sample_name and getPreviousStep(selection, analysis) == "ntuples":

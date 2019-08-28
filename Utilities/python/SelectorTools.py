@@ -21,6 +21,9 @@ class SelectorDriver(object):
             "Zstudy_2016" : "ZSelector",
             "Zstudy_2017" : "ZSelector",
             "ZZGen" : "ZZGenSelector",
+            "ZZ4l2016" : "ZZSelector",
+            "ZZ4l2017" : "ZZSelector",
+            "ZZ4l2018" : "ZZSelector",
             "WGen" : "WGenSelector",
             "ZGen" : "ZGenSelector",
             "ThreeLep" : "ThreeLepSelector",
@@ -157,7 +160,7 @@ class SelectorDriver(object):
                 self.outfile = ROOT.TFile.Open(self.outfile_name)
             sumweights_hist = self.outfile.Get("%s/sumweights" % dataset)
             if not sumweights_hist:
-                sumweights_hist = ROOT.TH1D("sumweights", "sumweights", 100, 0, 100)
+                sumweights_hist = ROOT.TH1D("sumweights", "sumweights", 1000, 0, 1000)
             sumweights_hist.SetDirectory(ROOT.gROOT)
         self.processLocalFiles(select, file_path, addSumweights, chan)
         output_list = select.GetOutputList()
