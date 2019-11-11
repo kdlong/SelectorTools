@@ -7,6 +7,7 @@
 #include <TSelector.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TTree.h>
 #include <TEfficiency.h>
 #include <exception>
 #include <iostream>
@@ -28,7 +29,7 @@ enum PID {PID_MUON = 13, PID_ELECTRON = 11, PID_BJET = 5, PID_CJET = 4, PID_JET}
 
 class ThreeLepSelector : public SelectorBase {
 public :
-   #include "Analysis/VVAnalysis/interface/FourTopScales.h"
+#include "Analysis/VVAnalysis/interface/FourTopScales.h"
     
     /*****************************************/
     /* ____  ____   ___  __  __   ___ __  __ */
@@ -50,7 +51,7 @@ public :
     Float_t type1_pfMETPhi;
 
     //NanoAOD variables
-    static const unsigned int N_KEEP_MU_E_ = 15;
+    static const unsigned int N_KEEP_MU_E_ = 20;
     static const unsigned int N_KEEP_JET_ = 35;
     static const unsigned int N_KEEP_GEN_ = 300;
 
@@ -102,7 +103,14 @@ public :
     Float_t   Muon_jetPtRelv2[N_KEEP_MU_E_];
     Float_t   Muon_jetRelIso[N_KEEP_MU_E_];
 
-  
+    Float_t   IsoTrack_eta[N_KEEP_GEN_];
+    Int_t     IsoTrack_fromPV[N_KEEP_GEN_];	
+    Bool_t    IsoTrack_isPFcand[N_KEEP_GEN_];
+    Int_t     IsoTrack_pdgId[N_KEEP_GEN_];
+    Float_t   IsoTrack_phi[N_KEEP_GEN_];
+    Float_t   IsoTrack_pt[N_KEEP_GEN_];
+    UInt_t    nIsoTrack;
+    
     Int_t     numPU;
     Float_t   Pileup_nTrueInt;
 
@@ -152,6 +160,9 @@ public :
     std::vector<GoodPart> goodLeptons;
     std::vector<GoodPart> looseLeptons;
     std::vector<GoodPart> goodJets;
+    std::vector<int> jetList;
+    std::vector<int> bjetList;
+    
     double HT;
     int nJets, nBJets;
     bool passZVeto;
@@ -218,6 +229,10 @@ public :
     bool MetFilter();
     float getBtagEffFromFile(double, double, int);
     double getWDecayScaleFactor();
+    std::vector<GoodPart>::iterator findJet(std::vector<GoodPart>::iterator&, int);
+    std::map<std::string, TTree*> treeMap = {{"tree", nullptr}};
+    float bNJets, bnBJets, bHT, bMET, bl1Pt, bl2Pt, blMass, bsphere, bCentral, bShape1, bShape2, bnLeps, bDilepCharge;
+    float bjMass, bjdr, bj1Pt, bj2Pt, bj3Pt, bj4Pt, bj5Pt, bj6Pt, bj7Pt, bj8Pt, bb1Pt, bb2Pt, bb3Pt, bb4Pt;
     
     //// General Functions
     int getSRBin() const;

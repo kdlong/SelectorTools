@@ -12,7 +12,10 @@
 #define READFROM(data, index, size) (((data) & GETMASK((index), (size))) >> (index))
 
 #define CHGPT(index) (Electron_eCorr[index])
-#define CLOSEJET_REWEIGHT
+// #define CLOSEJET_REWEIGHT
+#define SELECTION 2
+//#define OS
+#define USETREE
 
 typedef std::bitset<sizeof(int)> IntBits;
 
@@ -58,25 +61,66 @@ void ThreeLepSelector::Init(TTree *tree) {
     allChannels_ = {{mm, "mm"}, {ee, "ee"}, {em, "em"}, {all, "all"}, {lll, "lll"}};
 
     hists1D_ = {
-		"CutFlow",      "ZMass",       "ptl1",     "etal1",    "ptl2",     "etal2",        "SR",
-		"bjetpt",       "jetpt",       "nbjet",    "njet",     "nleps",    "CRW_nbjet",    "CRW_njet",
-		"CRZ_nbjet",    "CRZ_njet",    "CRZ_HT",   "CRZ_Met",  "Met",      "HT",           "weight",
-		"CRW_HT",       "CRW_Met",     "CRZ_ptl3", "sphericity", "centrality",
+		"CutFlow",       "ptl1",     "etal1",    "ptl2",     "etal2",        "SR",
+		"bjetpt",       "jetpt",       "nbjet",    "njet",     "nleps", 
+		//"CRZ_nbjet",    "CRZ_njet",    "CRZ_HT",   "CRZ_Met",
+		"Met",      "HT",           "weight","sphericity", "centrality",
+		//"CRW_HT",       "CRW_Met",     "CRZ_ptl3",  "CRW_nbjet",    "CRW_njet",
+		"ptj1",         "ptj2",        "ptj3",     "ptj1OverHT",
+                "etaj1", "etaj2","etaj3", "etab1", "etab2","etab3", "dphi_l1j1","dphi_l1j2","dphi_l1j3",
+		"ptb1",         "ptb2",        "ptb3",     "ptb1OverHT",
+		"dilepMass",    "dilepCharge", "DRLep", "DRjet", "dijetMass",
+		"Shape1", "Shape2", "LepCos", "JLep1Cos", "JLep2Cos", "JBCos", "DRjb", "etaj", "etab",
     };
     hists2D_ = {"bJetvsJets",    "Beff_b_btag", "Beff_j_btag", "Beff_b", "Beff_j"};
 
     SelectorBase::Init(tree);
+#ifdef USETREE
+    AddObject<TTree>(treeMap["tree"], "testTree", "testTree");
+    treeMap["tree"]->Branch("NJets", &bNJets);
+    treeMap["tree"]->Branch("NBJets", &bnBJets);
+    treeMap["tree"]->Branch("NLeps", &bnLeps);
+    treeMap["tree"]->Branch("DilepCharge", &bDilepCharge);
+    treeMap["tree"]->Branch("HT", &bHT);
+    treeMap["tree"]->Branch("MET", &bMET);
+    treeMap["tree"]->Branch("l1Pt", &bl1Pt);
+    treeMap["tree"]->Branch("l2Pt", &bl2Pt);
+    treeMap["tree"]->Branch("lepMass", &blMass);
+    treeMap["tree"]->Branch("jetMass", &bjMass);
+    treeMap["tree"]->Branch("jetDR", &bjdr);
+    treeMap["tree"]->Branch("sphericity",&bsphere);
+    treeMap["tree"]->Branch("centrality", &bCentral);
+    treeMap["tree"]->Branch("j1Pt", &bj1Pt);
+    treeMap["tree"]->Branch("j2Pt", &bj2Pt);
+    treeMap["tree"]->Branch("j3Pt", &bj3Pt);
+    treeMap["tree"]->Branch("j4Pt", &bj4Pt);
+    treeMap["tree"]->Branch("j5Pt", &bj5Pt);
+    treeMap["tree"]->Branch("j6Pt", &bj6Pt);
+    treeMap["tree"]->Branch("j7Pt", &bj7Pt);
+    treeMap["tree"]->Branch("j8Pt", &bj8Pt);
+    treeMap["tree"]->Branch("b1Pt",&bb1Pt);
+    treeMap["tree"]->Branch("b2Pt",&bb2Pt);
+    treeMap["tree"]->Branch("b3Pt",&bb3Pt);
+    treeMap["tree"]->Branch("b4Pt",&bb4Pt);
+    treeMap["tree"]->Branch("weight",&weight);
+    treeMap["tree"]->Branch("Shape1",&bShape1);
+    treeMap["tree"]->Branch("Shape2",&bShape2);
+    std::cout << "here" << "\n";
+#endif
+
 }
 
 void ThreeLepSelector::SetBranchesNanoAOD() {
+
+    
     //  NECESSARY!!!!
     b.CleanUp();
     
-    b.SetBranch("HLT_DoubleMu8_Mass8_PFHT300", HLT_DoubleMu8_Mass8_PFHT300);
-    b.SetBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300", HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
-    b.SetBranch("HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300", HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300);
-    b.SetBranch("HLT_AK8PFJet450", HLT_AK8PFJet450);
-    b.SetBranch("HLT_PFJet450", HLT_PFJet450);
+    // b.SetBranch("HLT_DoubleMu8_Mass8_PFHT300", HLT_DoubleMu8_Mass8_PFHT300);
+    // b.SetBranch("HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300", HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300);
+    // b.SetBranch("HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300", HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300);
+    // b.SetBranch("HLT_AK8PFJet450", HLT_AK8PFJet450);
+    // b.SetBranch("HLT_PFJet450", HLT_PFJet450);
 
     b.SetBranch("nElectron",                  nElectron);
     b.SetBranch("Electron_pt",                Electron_pt);
@@ -90,15 +134,20 @@ void ThreeLepSelector::SetBranchesNanoAOD() {
     b.SetBranch("Electron_sip3d",             Electron_sip3d);
     b.SetBranch("Electron_lostHits",          Electron_lostHits);
     b.SetBranch("Electron_convVeto",          Electron_convVeto);
+    b.SetBranch("Electron_cutBased",       Electron_cutBased);
     if(year_ == yr2018) {
 	b.SetBranch("Electron_mvaFall17V2noIso",     Electron_MVA);
 	b.SetBranch("Electron_cutBased",             Electron_cutBased);
     } else if(year_ == yr2017) {
-	b.SetBranch("Electron_mvaFall17noIso",     Electron_MVA);
+        b.SetBranch("Electron_mvaFall17noIso",     Electron_MVA);
 	b.SetBranch("Electron_cutBased",   Electron_cutBased);
     } else if(year_ == yr2016 || year_ == yrdefault) {
-	b.SetBranch("Electron_mvaSpring16GP",        Electron_MVA);
-	b.SetBranch("Electron_cutBased_Sum16",       Electron_cutBased);
+	if(b.branchExists("Electron_mvaSpring16GP")) {
+            b.SetBranch("Electron_mvaSpring16GP",        Electron_MVA);
+	} else {
+            b.SetBranch("Electron_mvaFall17V2noIso",     Electron_MVA);
+	}
+        //b.SetBranch("Electron_cutBased_Sum16",       Electron_cutBased);
     }
     b.SetBranch("Electron_tightCharge", Electron_tightCharge);
     b.SetBranch("Electron_sieie",                        Electron_sieie);
@@ -108,7 +157,7 @@ void ThreeLepSelector::SetBranchesNanoAOD() {
     b.SetBranch("Electron_dr03EcalRecHitSumEt",          Electron_dr03EcalRecHitSumEt);
     b.SetBranch("Electron_dr03HcalDepth1TowerSumEt",     Electron_dr03HcalDepth1TowerSumEt);
     b.SetBranch("Electron_dr03TkSumPt",                  Electron_dr03TkSumPt);
-    b.SetBranch("Electron_vidNestedWPBitmapSum16", Electron_vidBitmap);
+    // b.SetBranch("Electron_vidNestedWPBitmapSum16", Electron_vidBitmap);
     b.SetBranch("Electron_eCorr", Electron_eCorr);
     
     b.SetBranch("nMuon",                  nMuon);
@@ -158,7 +207,16 @@ void ThreeLepSelector::SetBranchesNanoAOD() {
     b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilter", Flag_EcalDeadCellTriggerPrimitiveFilter);
     b.SetBranch("Flag_BadPFMuonFilter", Flag_BadPFMuonFilter);
     b.SetBranch("Flag_ecalBadCalibFilter", Flag_ecalBadCalibFilter);
-
+    
+    // b.SetBranch("IsoTrack_pdgId", IsoTrack_pdgId);
+    // b.SetBranch("IsoTrack_eta", IsoTrack_eta);
+    // b.SetBranch("IsoTrack_fromPV", IsoTrack_fromPV);
+    // b.SetBranch("IsoTrack_isPFcand", IsoTrack_isPFcand);
+    // b.SetBranch("IsoTrack_phi", IsoTrack_phi);
+    // b.SetBranch("IsoTrack_pt", IsoTrack_pt);
+    // b.SetBranch("nIsoTrack", nIsoTrack);
+        
+    
 #ifdef CLOSEJET_REWEIGHT
     b.SetBranch("Jet_L1", Jet_L1);
     b.SetBranch("Jet_L2L3", Jet_L2L3);
@@ -194,6 +252,8 @@ void ThreeLepSelector::clearValues() {
     goodLeptons.clear();
     looseLeptons.clear();
     goodJets.clear();
+    jetList.clear();
+    bjetList.clear();
 }
 
 void ThreeLepSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) {
@@ -228,11 +288,9 @@ void ThreeLepSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic,
 	ApplyScaleFactors();
     }
 
-    if(goodLeptons.size() >= 2 && looseLeptons.size() >= 3) {
-	for(auto lep : goodLeptons) {
-	    passZVeto = doesPassZVeto(lep, looseLeptons);
-	    if(!passZVeto) break;
-	}
+    for(auto lep : goodLeptons) {
+	passZVeto = doesPassZVeto(lep, looseLeptons);
+	if(!passZVeto) break;
     }
 }
 
@@ -291,6 +349,7 @@ void ThreeLepSelector::setupJets() {
 	    goodJets.back().index = i;
 	    nJets++;
 	    HT += Jet_pt[i];
+	    jetList.push_back(goodJets.size() - 1);
 	}
 	// bjet
 	if(isGoodBJet(i)) {
@@ -300,6 +359,7 @@ void ThreeLepSelector::setupJets() {
 	    }
             goodJets.back().setPassBJetSel();
 	    nBJets++;
+	    bjetList.push_back(goodJets.size() - 1);
 	}
     }
 
@@ -360,9 +420,8 @@ bool ThreeLepSelector::doesPassZVeto(GoodPart& lep, std::vector<GoodPart>& loose
 }
 
 void ThreeLepSelector::ApplyScaleFactors() {
-    if(selection_ == BEfficiency) return;
-    // weight *= (genWeight > 0) ? 1 : -1;
-    weight *= genWeight;
+    weight *= (genWeight > 0) ? 1 : -1;
+    // weight *= genWeight;
 
     if(!applyScaleFactors_ || goodLeptons.size() < 2) return;
 
@@ -418,7 +477,7 @@ bool ThreeLepSelector::isGoodMuon(size_t index) {
     if(year_ == yr2016) yearCuts = (Muon_miniPFRelIso_all[index] < 0.16);
     else                yearCuts = (Muon_miniPFRelIso_all[index] < 0.11);
     
-    return ( (Muon_pt[index] > 20) 
+    return ( (Muon_pt[index] > 15) 
 	     && (Muon_tightCharge[index] == 2) 
 	     && (abs(Muon_eta[index]) < 2.4) 
 	     && (Muon_mediumId[index]) 
@@ -466,12 +525,12 @@ bool ThreeLepSelector::isGoodElectron(size_t index) {
 	    passId = passId && (Electron_miniPFRelIso_all[index] < 0.07);
 	}
     } else {
-	passId = (Electron_cutBased[index] >= CBID_MEDIUM);
+	passId = (Electron_cutBased[index] >= CBID_LOOSE);
 	//	if(year_ == yr2016)       passId = passId && (Electron_miniPFRelIso_all[index] < 0.12);
 	//	else if(year_ == yr2017)       passId = passId && (Electron_miniPFRelIso_all[index] < 0.07);
     }
 
-    return ((Electron_pt[index]/CHGPT(index) > 20)
+    return ((Electron_pt[index]/CHGPT(index) > 15)
 	    && (passId)
 	    && (Electron_convVeto[index]) 
 	    && (Electron_lostHits[index] == 0) 
@@ -504,7 +563,7 @@ bool ThreeLepSelector::isLooseElectron(size_t index) {
 	passId = passMVACut(mvaValues[CBID_LOOSE], index);
     }
     else {
-	passId = (Electron_cutBased[index] >= CBID_LOOSE);
+	passId = (Electron_cutBased[index] >= CBID_VETO);
     }
     return ((passId)//
 	    && (Electron_pt[index]/CHGPT(index) > 7)
@@ -521,10 +580,10 @@ bool ThreeLepSelector::isGoodJet(size_t index) {
     bool yearCut = true;
     double ptCut = 40;
     
-    if(year_ == yr2016) yearCut = IntBits(Jet_jetId[index]).test(0);
-    else                yearCut = IntBits(Jet_jetId[index]).test(1);
+    if(year_ == yr2016) yearCut = IntBits(Jet_jetId[index]).test(0) || IntBits(Jet_jetId[index]).test(1);
+    
     return ((Jet_pt[index] > ptCut)      &&
-	    (abs(Jet_eta[index]) < 2.4) &&
+	    (abs(Jet_eta[index]) < 4.0) &&
 	    (yearCut)
 	    );
 }
@@ -534,9 +593,12 @@ bool ThreeLepSelector::isGoodJet(size_t index) {
 bool ThreeLepSelector::isGoodBJet(size_t index) {
     bool yearCut = true;
     double ptCut = 25;
+
+    yearCut = IntBits(Jet_jetId[index]).test(0) || IntBits(Jet_jetId[index]).test(1);
+    yearCut = yearCut && (Jet_btagDeepB[index] > 0.6324);
+    // if(year_ == yr2016) yearCut = (IntBits(Jet_jetId[index]).test(0)) && (Jet_btagDeepB[index] > 0.6324);
     
-    if(year_ == yr2016) yearCut = (IntBits(Jet_jetId[index]).test(0)) && (Jet_btagDeepB[index] > 0.6324);
-    else                yearCut = (IntBits(Jet_jetId[index]).test(1)) && (Jet_btagDeepB[index] > 0.4941);
+    // else                yearCut = (IntBits(Jet_jetId[index]).test(1)) && (Jet_btagDeepB[index] > 0.4941);
 
     return ((Jet_pt[index] > ptCut)
 	    && (abs(Jet_eta[index]) < 2.4)
@@ -578,14 +640,14 @@ double ThreeLepSelector::LepRelPt(LorentzVector& lep, LorentzVector& closeJet) {
 // Need to include DeltaPhi Ieta
 bool ThreeLepSelector::passTriggerEmu(size_t index) {
     bool etaDepend = false;
-    int DEtaInCut = READFROM(Electron_vidBitmap[index], 6, 3);
-    int DPhiInCut = READFROM(Electron_vidBitmap[index], 9, 3);
+    // int DEtaInCut = READFROM(Electron_vidBitmap[index], 6, 3);
+    // int DPhiInCut = READFROM(Electron_vidBitmap[index], 9, 3);
 
     if(abs(Electron_eta[index]) < 1.479) {
-	etaDepend = Electron_sieie[index] < 0.011 && (DEtaInCut >= 1) && (DPhiInCut >= 4);
+	etaDepend = Electron_sieie[index] < 0.011;// && (DEtaInCut >= 1) && (DPhiInCut >= 4);
     }
     else {
-	etaDepend = Electron_sieie[index] < 0.031 && (DEtaInCut >= 1) && (DPhiInCut >= 3);
+	etaDepend = Electron_sieie[index] < 0.031;// && (DEtaInCut >= 1) && (DPhiInCut >= 3);
     }
     return (abs(Electron_eInvMinusPInv[index]) < 0.01 &&
 	    etaDepend &&
@@ -617,85 +679,185 @@ void ThreeLepSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
     int step = 0;
     Fill1D("CutFlow", 0);
 
-    /// Trigger
-    if(((channel_ == mm && !HLT_DoubleMu8_Mass8_PFHT300) ||
-	(channel_ == em && !HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300) ||
-	(channel_ == ee && !HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300))
-       && !HLT_AK8PFJet450 && !HLT_PFJet450
-       ) return;
-    Fill1D("CutFlow", ++step);
+    // #if SELECTION == 2
+    //     /// Trigger
+    //     if(((channel_ == mm && !HLT_DoubleMu8_Mass8_PFHT300) ||
+    // 	(channel_ == em && !HLT_Mu8_Ele8_CaloIdM_TrackIdM_Mass8_PFHT300) ||
+    // 	(channel_ == ee && !HLT_DoubleEle8_CaloIdM_TrackIdM_Mass8_PFHT300))
+    //        && !HLT_AK8PFJet450 && !HLT_PFJet450
+    //        ) return;
+    //     Fill1D("CutFlow", ++step);
+    // #endif
 
-    if(!MetFilter()) return;
-    Fill1D("CutFlow", ++step);
+    // if(!MetFilter()) return;
+    // Fill1D("CutFlow", ++step);
 
     /// 2 good leptons
-    if(goodLeptons.size() < 2) return;
+    if(goodLeptons.size() != SELECTION) return;
     Fill1D("CutFlow", ++step);
 
     // first lep requirement
-    if(goodLeptons[0].Pt() < 25) return;
-    Fill1D("CutFlow", ++step);
+    // if(goodLeptons[0].Pt() < 25) return;
+    // Fill1D("CutFlow", ++step);
 
+#if SELECTION == 2
+    // #ifdef OS
+    // if(goodLeptons[0].Charge() * goodLeptons[1].Charge() > 0) return;
+    // if(abs((goodLeptons[0].v + goodLeptons[1].v).M() - 91.188) < 15
+    //    || (goodLeptons[0].v + goodLeptons[1].v).M() < 12) return;
+    // #else
+    // if(goodLeptons[0].Charge() * goodLeptons[1].Charge() < 0) return;
+    // #endif
+    
+#elif SELECTION == 3
+    if(goodLeptons[0].Charge() * goodLeptons[2].Charge() > 0) return;
+#endif
     // same sign requirement
-    if((goodLeptons.size() == 2 && goodLeptons[0].Charge() * goodLeptons[1].Charge() < 0)
-       || (goodLeptons.size() == 3 && goodLeptons[0].Charge() * goodLeptons[2].Charge() > 0)
-       )
-	return;
+    // if((goodLeptons.size() == 2 && goodLeptons[0].Charge() * goodLeptons[1].Charge() < 0)
+    //    || (goodLeptons.size() == 3 && goodLeptons[0].Charge() * goodLeptons[2].Charge() > 0)
+    //    )
+    // 	return;
     Fill1D("CutFlow", ++step);
 
     // jet cut
-    if(nJets < 2) return;
+    if(nJets < 1) return;
     Fill1D("CutFlow", ++step);
 
     // bjet cut
-    if(nBJets < 2) return;
+    if(nBJets < 1) return;
     Fill1D("CutFlow", ++step);
 
     // ht cut
-    if(HT < 300) return;
+    if(HT < 50) return;
     Fill1D("CutFlow", ++step);
 
     // met cut
-    if (MET < 50) return;
+    if (MET < 25) return;
     Fill1D("CutFlow", ++step);
 
     Fill1D("SR", getSRBin());
+    if(!passZVeto) return;
 
-    if(getSRBin() == -1) {
-	return;
-    }
-    else if(getSRBin() == 0) {
-	Fill1D("CRW_Met", MET);
-	Fill1D("CRW_HT", HT);
-	Fill1D("CRW_njet", nJets);
-	Fill1D("CRW_nbjet", nBJets);
-	return;
-    }
-    else if(getSRBin() == 9) {
-	Fill1D("CRZ_Met", MET);
-	Fill1D("CRZ_HT", HT);
-    	Fill1D("CRZ_njet", nJets);
-	Fill1D("CRZ_nbjet", nBJets);
-	Fill1D("CRZ_ptl3", goodLeptons[3].Pt());
-	return;
-    }
+    //    if(getSRBin() == -1) {
+    // 	return;
+    //    }
+    // else if(getSRBin() == 0) {
+    //     Fill1D("CRW_Met", MET);
+    //     Fill1D("CRW_HT", HT);
+    //     Fill1D("CRW_njet", nJets);
+    //     Fill1D("CRW_nbjet", nBJets);
+    //     return;
+    // }
+    // else if(getSRBin() == 9) {
+    //     Fill1D("CRZ_Met", MET);
+    //     Fill1D("CRZ_HT", HT);
+    //     Fill1D("CRZ_njet", nJets);
+    // 	Fill1D("CRZ_nbjet", nBJets);
+    // 	Fill1D("CRZ_ptl3", goodLeptons[3].Pt());
+    // 	return;
+    //    }
 
     Fill1D("CutFlow", ++step);
     
-    HistFullFill(histMap1D_, "weight", variation.first, abs(weight), 1);
-    Fill1D("Met", MET);
-    Fill1D("HT", HT);
-    Fill1D("ptl1", goodLeptons[0].Pt());
-    Fill1D("ptl2", goodLeptons[1].Pt());
+    HistFullFill(histMap1D_, "weight", variation.second, abs(weight), 1);
+    
+    
     Fill1D("njet", nJets);
     Fill1D("nbjet", nBJets);
     Fill2D("bJetvsJets", nJets, nBJets);
     Fill1D("nleps", goodLeptons.size());
-
+    Fill1D("dilepCharge", goodLeptons[0].Charge() * goodLeptons[1].Charge() > 0 ? 1 : -1);
+    Fill1D("HT", HT);
+    Fill1D("Met", MET);
+    Fill1D("ptl1", goodLeptons[0].Pt());
+    Fill1D("ptl2", goodLeptons[1].Pt());
+    Fill1D("dilepMass", (goodLeptons[0].v+goodLeptons[1].v).M());
     Fill1D("sphericity", JetSphericity(goodJets));
     Fill1D("centrality", JetCentrality(goodJets,HT));
+    Fill1D("DRLep", reco::deltaR(goodLeptons[0].v, goodLeptons[1].v));
+	Fill1D("DRjet", reco::deltaR(goodJets[0].v, goodJets[1].v));
+	Fill1D("dijetMass", (goodJets[0].v, goodJets[1].v).M());
+	Fill1D("DRLep", reco::deltaR(goodLeptons[0].v, goodLeptons[1].v));
+
+	auto event_pair = EventShape(goodJets, goodLeptons, pow(MET, 2), type1_pfMETPhi);
+	Fill1D("Shape1", event_pair.first);
+	Fill1D("Shape2", event_pair.second);
+	Fill1D("LepCos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodLeptons[1].v));
+	Fill1D("JLep1Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodJets[0].v));
+	Fill1D("JLep2Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[1].v, goodJets[0].v));
+	Fill1D("JBCos", ROOT::Math::VectorUtil::CosTheta(goodJets[bjetList.at(0)].v, goodJets[0].v));
+	Fill1D("DRjb", reco::deltaR(goodJets[bjetList.at(0)].v, goodJets[0].v));
     
     
+    for(auto i : jetList) {
+	Fill1D("jetpt", goodJets[i].Pt());
+	Fill1D("etaj", goodJets[i].Eta());
+    }
+    for(auto i : bjetList) {
+	Fill1D("bjetpt", goodJets[i].Pt());
+	Fill1D("etab", goodJets[i].Eta());
+    }
+    
+    int k= 1;
+    for(auto it: jetList) {
+	if(k > 3) break;
+	std::string intStr = std::to_string(k);
+	LorentzVector jit = goodJets.at(it).v;
+	    Fill1D(("ptj" + intStr).c_str(), jit.Pt());
+	    Fill1D(("etaj" + intStr).c_str(), jit.Eta());
+	    Fill1D(("dphi_l1j" + intStr).c_str(), abs(ROOT::Math::VectorUtil::DeltaPhi(goodLeptons[0].v, jit)));
+	    k++;
+	}
+	k=1;
+	for(auto it: bjetList) {
+	    if(k > 3) break;
+	    std::string intStr = std::to_string(k);
+	    LorentzVector jit = goodJets.at(it).v;
+	    Fill1D(("ptb" + intStr).c_str(), jit.Pt());
+	    Fill1D(("etab" + intStr).c_str(), jit.Eta());
+	    k++;
+	}
+#ifdef USETREE
+    bNJets = nJets;
+    bnBJets = nBJets;
+    bnLeps = goodLeptons.size();
+    bDilepCharge = goodLeptons[0].Charge() * goodLeptons[1].Charge() > 0 ? 1 : -1;
+    bHT = HT;
+    bMET = MET;
+    bl1Pt = goodLeptons[0].Pt();
+    bl2Pt = goodLeptons[1].Pt();
+    blMass = (goodLeptons[0].v+goodLeptons[1].v).M();
+    bjMass = (goodJets[0].v+goodJets[1].v).M();
+    bjdr = reco::deltaR(goodJets[0].v,goodJets[1].v);
+    bsphere = JetSphericity(goodJets);
+    bCentral = JetCentrality(goodJets,HT);
+    bj1Pt = goodJets.at(jetList[0]).Pt();
+    bj2Pt = (jetList.size() > 1) ? goodJets.at(jetList[1]).Pt() : 0;
+    bj3Pt = (jetList.size() > 2) ? goodJets.at(jetList[2]).Pt() : 0;
+    bj4Pt = (jetList.size() > 3) ? goodJets.at(jetList[3]).Pt() : 0;
+    bj5Pt = (jetList.size() > 4) ? goodJets.at(jetList[4]).Pt() : 0;
+    bj6Pt = (jetList.size() > 5) ? goodJets.at(jetList[5]).Pt() : 0;
+    bj7Pt = (jetList.size() > 6) ? goodJets.at(jetList[6]).Pt() : 0;
+    bj8Pt = (jetList.size() > 7) ? goodJets.at(jetList[7]).Pt() : 0;
+    bb1Pt = goodJets.at(bjetList[0]).Pt();
+    bb2Pt = (bjetList.size() > 1) ? goodJets.at(bjetList[1]).Pt() : 0;
+    bb3Pt = (bjetList.size() > 2) ? goodJets.at(bjetList[2]).Pt() : 0;
+    bb4Pt = (bjetList.size() > 3) ? goodJets.at(bjetList[3]).Pt() : 0;
+    bShape1 = event_pair.first;
+    bShape2 = event_pair.second;
+
+    treeMap["tree"]->Fill();
+#endif
+    
+}
+
+std::vector<GoodPart>::iterator ThreeLepSelector::findJet(std::vector<GoodPart>::iterator& start, int pid) {
+    while(start != goodJets.end()) {
+	if(pid == PID_BJET && start->passedBJetSel()) return start;
+	else if(pid != PID_BJET && start->passedJetSel()) return start;
+	++start;
+    }
+    return goodJets.end();
 }
 
 void ThreeLepSelector::SetupNewDirectory() {

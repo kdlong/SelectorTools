@@ -19,9 +19,10 @@ fi
 EXE=./Utilities/scripts/makeHistFile.py
 ANA=ThreeLep
 YEAR=2016
-INP=TwoLep_Met40
-# SEL=FourTopCutBasedEl
-SEL=FourTopMVAEl
+# INP=TwoLep_Met40
+INP=NoSkim_MultYear
+SEL=FourTopCutBasedEl
+# SEL=FourTopMVAEl
 
 
 # EXE=./Utilities/scripts/makeHistFile.py
@@ -31,9 +32,6 @@ SEL=FourTopMVAEl
 # INP=TwoLep_Met40
 # # SEL=FourTopCutBasedEl
 # SEL=test
-
-
-
 
 
 $EXE -a $ANA --input_tier $INP -s $SEL \

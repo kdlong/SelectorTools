@@ -10,40 +10,44 @@
 
 
 struct BranchManager {
-  std::vector<TBranch*> branchHolder;
-  std::unordered_map<std::string, TBranch*> specificBranch;
-  TTree* fChain;
+    std::vector<TBranch*> branchHolder;
+    std::unordered_map<std::string, TBranch*> specificBranch;
+    TTree* fChain;
 
-  void SetTree(TTree* fChain_) {
-    fChain = fChain_;
-  } 
+    void SetTree(TTree* fChain_) {
+	fChain = fChain_;
+    } 
 
-  template<typename T>
-  void SetBranch(std::string name, T& holder) {
-    branchHolder.push_back({});
-    fChain->SetBranchAddress(name.c_str(), &holder, &branchHolder.back());
-  }
-
-  template<typename T>
-  void SetSpecificBranch(std::string name, T& holder) {
-    specificBranch[name] = {};
-    fChain->SetBranchAddress(name.c_str(), &holder, &specificBranch[name]);
-  }
-
-  void SetEntry(int entry) {
-    for(auto& it: branchHolder) {
-      it->GetEntry(entry);
+    template<typename T>
+    void SetBranch(std::string name, T& holder) {
+	branchHolder.push_back({});
+	fChain->SetBranchAddress(name.c_str(), &holder, &branchHolder.back());
     }
-  }
 
-  void SetSpecificEntry(int entry, std::string name) {
-    specificBranch[name]->GetEntry(entry);
-  }
+    template<typename T>
+    void SetSpecificBranch(std::string name, T& holder) {
+	specificBranch[name] = {};
+	fChain->SetBranchAddress(name.c_str(), &holder, &specificBranch[name]);
+    }
+
+    void SetEntry(int entry) {
+	for(auto& it: branchHolder) {
+	    it->GetEntry(entry);
+	}
+    }
+
+    bool branchExists(std::string name) {
+	return bool(fChain->FindBranch(name.c_str()));
+    }
+    
+    void SetSpecificEntry(int entry, std::string name) {
+	specificBranch[name]->GetEntry(entry);
+    }
   
-  void CleanUp() {
-    branchHolder.clear();
-    specificBranch.clear();
-  }
+    void CleanUp() {
+	branchHolder.clear();
+	specificBranch.clear();
+    }
 };
 
 #endif
