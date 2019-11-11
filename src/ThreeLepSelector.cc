@@ -15,7 +15,7 @@
 // #define CLOSEJET_REWEIGHT
 #define SELECTION 2
 //#define OS
-#define USETREE
+//#define USETREE
 
 typedef std::bitset<sizeof(int)> IntBits;
 
@@ -207,15 +207,6 @@ void ThreeLepSelector::SetBranchesNanoAOD() {
     b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilter", Flag_EcalDeadCellTriggerPrimitiveFilter);
     b.SetBranch("Flag_BadPFMuonFilter", Flag_BadPFMuonFilter);
     b.SetBranch("Flag_ecalBadCalibFilter", Flag_ecalBadCalibFilter);
-    
-    // b.SetBranch("IsoTrack_pdgId", IsoTrack_pdgId);
-    // b.SetBranch("IsoTrack_eta", IsoTrack_eta);
-    // b.SetBranch("IsoTrack_fromPV", IsoTrack_fromPV);
-    // b.SetBranch("IsoTrack_isPFcand", IsoTrack_isPFcand);
-    // b.SetBranch("IsoTrack_phi", IsoTrack_phi);
-    // b.SetBranch("IsoTrack_pt", IsoTrack_pt);
-    // b.SetBranch("nIsoTrack", nIsoTrack);
-        
     
 #ifdef CLOSEJET_REWEIGHT
     b.SetBranch("Jet_L1", Jet_L1);

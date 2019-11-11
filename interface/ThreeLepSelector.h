@@ -103,14 +103,6 @@ public :
     Float_t   Muon_jetPtRelv2[N_KEEP_MU_E_];
     Float_t   Muon_jetRelIso[N_KEEP_MU_E_];
 
-    Float_t   IsoTrack_eta[N_KEEP_GEN_];
-    Int_t     IsoTrack_fromPV[N_KEEP_GEN_];	
-    Bool_t    IsoTrack_isPFcand[N_KEEP_GEN_];
-    Int_t     IsoTrack_pdgId[N_KEEP_GEN_];
-    Float_t   IsoTrack_phi[N_KEEP_GEN_];
-    Float_t   IsoTrack_pt[N_KEEP_GEN_];
-    UInt_t    nIsoTrack;
-    
     Int_t     numPU;
     Float_t   Pileup_nTrueInt;
 
@@ -177,7 +169,6 @@ public :
     TH2D* h_btag_eff_c;
     TH2D* h_btag_eff_udsg;
 
-    
     std::map<int, bool> eventVec;
     std::map<int, std::string> info;
 
@@ -190,7 +181,7 @@ public :
     Float_t PV_x;
     Float_t PV_y;
     Float_t PV_z;
-  
+
     /************************************************************/
     /* _____ __ __ __  __   ___ ______ __   ___   __  __  __    */
     /* ||    || || ||\ ||  //   | || | ||  // \\  ||\ || (( \   */
