@@ -35,11 +35,26 @@ struct BranchManager {
     for(auto& it: branchHolder) {
       it->GetEntry(entry);
     }
-  }
 
-  void SetSpecificEntry(int entry, std::string name) {
-    specificBranch[name]->GetEntry(entry);
-  }
+    template<typename T>
+    void SetSpecificBranch(std::string name, T& holder) {
+	specificBranch[name] = {};
+	fChain->SetBranchAddress(name.c_str(), &holder, &specificBranch[name]);
+    }
+
+    void SetEntry(int entry) {
+	for(auto& it: branchHolder) {
+	    it->GetEntry(entry);
+	}
+    }
+
+    bool branchExists(std::string name) {
+	return bool(fChain->FindBranch(name.c_str()));
+    }
+    
+    void SetSpecificEntry(int entry, std::string name) {
+	specificBranch[name]->GetEntry(entry);
+    }
   
   void CleanUp() {
     branchHolder.clear();
