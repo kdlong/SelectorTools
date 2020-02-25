@@ -17,16 +17,17 @@
 #include <vector>
 #include <unordered_map>
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
-
-#define PAIR(NAME_) {#NAME_, NAME_}
+#include "Analysis/VVAnalysis/interface/dynEnum.h"
+#include "Analysis/VVAnalysis/interface/cpplog.hpp"
 
 enum Channel {
-    e,           m,         
-    ep,          en,        mp,     mn,
-    ee,          em,        mm,     
-    eee,         eem,       emm,    mmm,
-    eeee,        eemm,      mmee,   mmmm,
-    Inclusive,   Unknown,   lll, all,
+	      e,           m,         
+	      ep,          en,        mp,     mn,
+	      ee,          em,        mm,     
+	      eee,         eem,       emm,    mmm,
+	      eeee,        eemm,      mmee,   mmmm,
+	      Inclusive,   Unknown,   lll, all,
+	      SS, OS, mult, one,
 };
   
 enum Systematic {
@@ -100,36 +101,20 @@ class SelectorBase : public TSelector {
     /* | |___| |\  | |_| | |  | \__ \ */
     /* |_____|_| \_|\___/|_|  |_|___/ */
     /*********************************/
-                              
-    enum NtupleType {
-        NanoAOD,
-        UWVV,
-        Bacon,
-    };
 
-    enum Selection {
-        tightleptons,                 ZZGenFiducial,
-        Wselection,                   Zselection,
-        WselectionAntiIso,                   
-        Wselection_Full,              FakeRateSelectionLoose,
-        FakeRateSelectionTight,       VBSselection_Loose,
-        VBSselection_NoZeppenfeld,    VBSselection_Tight,
-        VBSselection_Loose_Full,      VBSselection_NoZeppenfeld_Full,
-        VBSselection_Tight_Full,      VBSBackgroundControl,
-        VBSBackgroundControlATLAS,    VBSBackgroundControl_Full,
-        VBSBackgroundControlLoose,    VBSBackgroundControlLoose_Full,
-        Inclusive2Jet,                Inclusive2Jet_Full,
-        TightWithLooseVeto,           FourTopPlots,
-        FourTopCutBasedEl,            FourTopMVAEl,
-        BEfficiency,                  test,
+    enum NtupleType {
+		     NanoAOD,
+		     UWVV,
+		     Bacon,
     };
 
     enum Year {
-        yrdefault,      yr2016,      yr2017,      yr2018
+	       yrdefault,      yr2016,      yr2017,      yr2018
     };
 
     typedef std::pair<Channel, std::string> ChannelPair;
-
+    
+    
     typedef std::unordered_map<HistLabel, TH1D*> HistMap1D;
     typedef std::unordered_map<HistLabel, TH2D*> HistMap2D;
     typedef std::unordered_map<HistLabel, TH3D*> HistMap3D;
@@ -145,48 +130,22 @@ class SelectorBase : public TSelector {
     /*              |_|         */
     /****************************/
 
-    std::map<std::string, Selection> selectionMap_ = {
-	{"tightleptons", tightleptons},
-        {"ZZGenFiducial", ZZGenFiducial},
-        {"Wselection", Wselection},
-        {"WselectionAntiIso", WselectionAntiIso},
-        {"Zselection", Zselection},
-        {"Wselection_Full", Wselection_Full},
-        {"FakeRateSelectionLoose", FakeRateSelectionLoose},
-        {"FakeRateSelectionTight", FakeRateSelectionTight},
-        {"VBSselection_Loose", VBSselection_Loose},
-        {"VBSselection_NoZeppenfeld", VBSselection_NoZeppenfeld},
-        {"VBSselection_Tight", VBSselection_Tight},
-        {"VBSselection_Loose_Full", VBSselection_Loose_Full},
-        {"VBSselection_NoZeppenfeld_Full", VBSselection_NoZeppenfeld_Full},
-        {"VBSselection_Tight_Full", VBSselection_Tight_Full},
-        {"VBSBackgroundControl", VBSBackgroundControl},
-        {"VBSBackgroundControlATLAS", VBSBackgroundControlATLAS},
-        {"VBSBackgroundControl_Full", VBSBackgroundControl_Full},
-        {"VBSBackgroundControlLoose", VBSBackgroundControlLoose},
-        {"VBSBackgroundControlLoose_Full", VBSBackgroundControlLoose_Full},
-        {"Inclusive2Jet", Inclusive2Jet},
-        {"Inclusive2Jet_Full", Inclusive2Jet_Full},
-        {"TightWithLooseVeto", TightWithLooseVeto}, 
-        {"FourTopPlots", FourTopPlots},
-        {"FourTopCutBasedEl", FourTopCutBasedEl},
-	{"FourTopMVAEl", FourTopMVAEl}, 
-    };
-
+    
     std::map<std::string, Year> yearMap_ = {
-        {"default", yrdefault},
-        {"2016", yr2016},
-        {"2017", yr2017},
-        {"2018", yr2018},
+					    {"default", yrdefault},
+					    {"2016", yr2016},
+					    {"2017", yr2017},
+					    {"2018", yr2018},
     };
     
     std::map<std::string, Channel> channelMap_ = {
-        {"e", e},                   {"m", m},         
-        {"ep", ep},                 {"mp", mp},       {"ep", ep},       {"mn", mn},  
-        {"ee", ee},                 {"em", em},       {"mm", mm},
-        {"eee", eee},               {"eem", eem},     {"emm", emm},     {"mmm", mmm},
-        {"eeee", eeee},             {"eemm", eemm},   {"mmee", mmee},   {"mmmm", mmmm},
-        {"Inclusive", Inclusive},   {"lll", lll},     {"all", all},
+						  {"e", e},                   {"m", m},         
+						  {"ep", ep},                 {"mp", mp},       {"ep", ep},       {"mn", mn},  
+						  {"ee", ee},                 {"em", em},       {"mm", mm},
+						  {"eee", eee},               {"eem", eem},     {"emm", emm},     {"mmm", mmm},
+						  {"eeee", eeee},             {"eemm", eemm},   {"mmee", mmee},   {"mmmm", mmmm},
+						  {"Inclusive", Inclusive},   {"lll", lll},     {"all", all},
+						  {"SS", SS}, {"OS", OS}, {"mult", mult}, {"one", one},
     };
 
 
@@ -288,11 +247,16 @@ class SelectorBase : public TSelector {
     std::string channelName_ = "Unnamed";
     Channel channel_ = Unknown;
     NtupleType ntupleType_ = NanoAOD;
-    std::string selectionName_ = "tightleptons";
-    Selection selection_ = tightleptons;
+    DynEnum enumFactory;
+    std::unordered_map<std::string, int&> selectionMap_;
+    std::unordered_map<std::string, int&> addSelection_;
+    std::string selectionName_;
+    int selection_;
+    
     Year year_ = yrdefault;
     bool isMC_;
 
+    cpplog::StdErrLogger log;
     
     float GetPrefiringEfficiencyWeight(std::vector<float>* jetPt, std::vector<float>* jetEta);
     virtual std::string GetNameFromFile() { return ""; }

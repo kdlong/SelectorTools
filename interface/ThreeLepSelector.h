@@ -55,6 +55,8 @@ public :
     static const unsigned int N_KEEP_JET_ = 35;
     static const unsigned int N_KEEP_GEN_ = 300;
 
+    int MVAStudy, FourTopMVAEl, FourTopCutBasedEl, FakeRate;
+    
     
     UInt_t    nElectron;
     Float_t   Electron_pt[N_KEEP_MU_E_];
@@ -222,7 +224,7 @@ public :
     double getWDecayScaleFactor();
     std::vector<GoodPart>::iterator findJet(std::vector<GoodPart>::iterator&, int);
     std::map<std::string, TTree*> treeMap = {{"tree", nullptr}};
-    float bNJets, bnBJets, bHT, bMET, bl1Pt, bl2Pt, blMass, bsphere, bCentral, bShape1, bShape2, bnLeps, bDilepCharge;
+    float bNJets, bnBJets, bHT, bMET, bl1Pt, bl2Pt, blMass, bsphere, bCentral, bShape1, bShape2, bnLeps, bDilepCharge, bnlBJets, bntBJets, bnlLeps;
     float bjMass, bjdr, bj1Pt, bj2Pt, bj3Pt, bj4Pt, bj5Pt, bj6Pt, bj7Pt, bj8Pt, bb1Pt, bb2Pt, bb3Pt, bb4Pt;
     
     //// General Functions

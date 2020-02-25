@@ -2,6 +2,7 @@
 user = dteague
 analysis = 3top
 dataset_manager_path = /afs/cern.ch/work/d/%(user)s/
+dataset_manager_name = AnalysisDatasetManager
 combine_path = %(dataset_manager_path)s/HiggsCombine/CMSSW_8_1_0/src/HiggsAnalysis/CombinedLimit
 output_path = /afs/cern.ch/work/d/%(user)s/testHold
 fakeRate_output = %(output_path)s/FakeRates
