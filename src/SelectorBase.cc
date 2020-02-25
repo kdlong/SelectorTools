@@ -166,7 +166,7 @@ void SelectorBase::SetBranches() {
         
 }
 
-void SelectorBase::LoadBranches(Long64_t entry, std::pair<Systematic, std::string> variation) {
+void SelectorBase::LoadBranches(Long64_t entry, SystPair variation) {
     if (ntupleType_ == NanoAOD)
         LoadBranchesNanoAOD(entry, variation);
     else if (ntupleType_ == Bacon)

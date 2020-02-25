@@ -9,133 +9,157 @@ void NanoGenSelectorBase::Init(TTree *tree)
     b.SetTree(tree);
     SelectorBase::Init(tree);
     edm::FileInPath mc2hessianCSV("PhysicsTools/HepMCCandAlgos/data/NNPDF30_lo_as_0130_hessian_60.csv");
+    // Off for now
     doMC2H_ = name_.find("cp5") == std::string::npos && false;
-    std::cout << "INFO: Convert MC to Hessian is " << doMC2H_ << std::endl;
-    if (doMC2H_)
+    if (doMC2H_) {
+        std::cout << "INFO: Will convert MC PDF set to Hessian with MC2Hessian\n";
         pdfweightshelper_.Init(N_LHEPDF_WEIGHTS_, N_MC2HESSIAN_WEIGHTS_, mc2hessianCSV);
+    }
     // NNLOPSLike is just a config name for one MiNNLO sample
     if (name_.find("nnlops") != std::string::npos && name_.find("nnlopslike") == std::string::npos) {
-        std::cout << "INFO: Found NNLOPS sample but not applying weight\n";
-        //nnlops_ = true;
-        //std::cout << "INFO: NNLOPS sample will be weighted by NNLO weight\n";
+        if (name_.find("nloOnly") == std::string::npos) {
+            nnlops_ = true;
+            std::cout << "INFO: NNLOPS sample will be weighted by NNLO weight\n";
+        }
+        else
+            std::cout << "INFO: Found NNLOPS sample but not applying weight\n";
     }
+    if (!doFiducial_)
+        std::cout << "INFO: No fiducial selection will be applied\n";
+    doBorn_ = std::find_if(systematics_.begin(), systematics_.end(), [](auto& s) { return s.first == BornParticles; }) != systematics_.end();
+    doBareLeptons_ = std::find_if(systematics_.begin(), systematics_.end(), [](auto& s) { return s.first == BareLeptons; }) != systematics_.end();
     fReader.SetTree(tree);
 }
 
 void NanoGenSelectorBase::SetBranchesNanoAOD() {
 }
 
-void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) { 
+void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) { 
     weight = 1;
     fReader.SetLocalEntry(entry);
 
     channel_ = channelMap_[channelName_];
 
-    bornLeptons.clear();
-    lheLeptons.clear();
-    bornNeutrinos.clear();
-    lheNeutrinos.clear();
-    dressedLeptons.clear();
-    jets.clear();
-
-    for (size_t i = 0; i < *nGenDressedLepton; i++) {
-        LorentzVector vec;
-        if (GenDressedLepton_hasTauAnc.At(i)) {
-            continue;
-        }
-        dressedLeptons.emplace_back(makeGenParticle(GenDressedLepton_pdgId.At(i), 1, GenDressedLepton_pt.At(i), 
-                    GenDressedLepton_eta.At(i), GenDressedLepton_phi.At(i), GenDressedLepton_mass.At(i)));
-    } // No need to sort, they're already pt sorted
-    
+    // Sort descending
+    auto compareMaxByPt = [](const reco::GenParticle& a, const reco::GenParticle& b) { return a.pt() > b.pt(); };
     std::vector<unsigned int> idsToKeep = {11, 12, 13, 14};
     if (doPhotons_)
         idsToKeep.push_back(22);
-    if (doBareLeptons_ || doBorn_ || doNeutrinos_ || doPhotons_) {
+
+    // This is a bit nasty because it assumes that Central is the first variation, which is NOT guaranteed!
+    if (variation.first == Central) {
+        bornLeptons.clear();
+        dressedLeptons.clear();
         bareLeptons.clear();
+
+        bornNeutrinos.clear();
         fsneutrinos.clear();
 
-        for (size_t i = 0; i < *nGenPart; i++) {
-            bool isHardProcess = (GenPart_statusFlags.At(i) >> 7) & 1;
-            if ((doBorn_ && !isHardProcess) || GenPart_status.At(i) != 1)
+        jets.clear();
+        for (size_t i = 0; i < *nGenDressedLepton; i++) {
+            LorentzVector vec;
+            if (GenDressedLepton_hasTauAnc.At(i)) {
                 continue;
-            if (std::find(idsToKeep.begin(), idsToKeep.end(), std::abs(GenPart_pdgId.At(i))) == idsToKeep.end())
-                continue;
+            }
+            dressedLeptons.emplace_back(makeGenParticle(GenDressedLepton_pdgId.At(i), 1, GenDressedLepton_pt.At(i), 
+                                        GenDressedLepton_eta.At(i), GenDressedLepton_phi.At(i), GenDressedLepton_mass.At(i)));
+        } // No need to sort, they're already pt sorted
+        leptons = dressedLeptons;
+        // Do once, only if bare or born leptons are requested
+        if (doBorn_ || doBareLeptons_) {
+            for (size_t i = 0; i < *nGenPart; i++) {
+                bool isHardProcess = (GenPart_statusFlags.At(i) >> 7) & 1;
+                bool isPrompt = (GenPart_statusFlags.At(i) >> 0) & 1;
+                if ((doBorn_ && !isHardProcess) || GenPart_status.At(i) != 1)
+                    continue;
+                if (std::find(idsToKeep.begin(), idsToKeep.end(), std::abs(GenPart_pdgId.At(i))) == idsToKeep.end())
+                    continue;
 
-            auto part = makeGenParticle(GenPart_pdgId.At(i), GenPart_status.At(i), GenPart_pt.At(i), 
-                    GenPart_eta.At(i), GenPart_phi.At(i), GenPart_mass.At(i));
-            if (std::abs(part.pdgId()) == 11 || std::abs(part.pdgId()) == 13) {
-                if (doBareLeptons_ && GenPart_status.At(i) == 1)
-                    bareLeptons.emplace_back(part);
-                if (isHardProcess && doBorn_)
-                    bornLeptons.emplace_back(part);
-            }
-            if (std::abs(part.pdgId()) == 12 || std::abs(part.pdgId()) == 14) {
-                if (GenPart_status.At(i) == 1)
-                    fsneutrinos.emplace_back(part);
-                if (isHardProcess && doBorn_)
-                    bornNeutrinos.emplace_back(part);
-            }
-            else if (std::abs(part.pdgId()) == 22) {
-                photons.emplace_back(part);
+                auto part = makeGenParticle(GenPart_pdgId.At(i), GenPart_status.At(i), GenPart_pt.At(i), 
+                        GenPart_eta.At(i), GenPart_phi.At(i), GenPart_mass.At(i));
+                if (std::abs(part.pdgId()) == 11 || std::abs(part.pdgId()) == 13) {
+                    if (doBareLeptons_ && GenPart_status.At(i) == 1)
+                        bareLeptons.emplace_back(part);
+                    if (isHardProcess && doBorn_)
+                        bornLeptons.emplace_back(part);
+                }
+                else if (std::abs(part.pdgId()) == 12 || std::abs(part.pdgId()) == 14) {
+                    if (GenPart_status.At(i) == 1)
+                        fsneutrinos.emplace_back(part);
+                    if (isHardProcess && doBorn_)
+                        bornNeutrinos.emplace_back(part);
+                }
+                else if (std::abs(part.pdgId()) == 22 && isPrompt) {
+                //else if (std::abs(part.pdgId()) == 22) {
+                    photons.emplace_back(part);
+                }
             }
         }
+        // Warning! Only really works for the W
+        if (bareLeptons.size() > 0 && doPhotons_) {
+            auto& lep = bareLeptons.at(0);
+            photons.erase(std::remove_if(photons.begin(), photons.end(), 
+                    [lep] (const reco::GenParticle& p) { return reco::deltaR(p, lep) > 0.1; }),
+                photons.end()
+            );
+        }
+        neutrinos = fsneutrinos;
+        std::sort(bareLeptons.begin(), bareLeptons.end(), compareMaxByPt);
+        std::sort(bornLeptons.begin(), bornLeptons.end(), compareMaxByPt);
+    }
+    else if (variation.first == BareLeptons) {
+        leptons = bareLeptons;
         neutrinos = fsneutrinos;
     }
-
-    if (doLHE_) {
+    else if (variation.first == BornParticles) {
+        leptons = bornLeptons;
+        neutrinos = bornNeutrinos;
+    }
+    else if (variation.first == LHEParticles) {
+        lheLeptons.clear();
+        lheNeutrinos.clear();
         for (size_t i = 0; i < *nLHEPart; i++) {
             if (std::find(idsToKeep.begin(), idsToKeep.end(), std::abs(LHEPart_pdgId.At(i))) == idsToKeep.end())
                 continue;
 
             auto part = makeGenParticle(LHEPart_pdgId.At(i), 1, LHEPart_pt.At(i), 
                     LHEPart_eta.At(i), LHEPart_phi.At(i), LHEPart_mass.At(i));
-            std::cout << "Part ID is " << LHEPart_pdgId.At(i) << " pt is " << LHEPart_pt.At(i) << std::endl;
 
             if (std::abs(part.pdgId()) == 11 || std::abs(part.pdgId()) == 13) {
                 lheLeptons.emplace_back(part);
             }
-            if (std::abs(part.pdgId()) == 12 || std::abs(part.pdgId()) == 14) {
+            else if (std::abs(part.pdgId()) == 12 || std::abs(part.pdgId()) == 14) {
                 lheNeutrinos.emplace_back(part);
             }
+            // No dR check here, should add
+            else if ((std::abs(part.pdgId()) < 6 || std::abs(part.pdgId()) == 21) && part.pt() > 30) {
+                jets.emplace_back(part.polarP4());
+            }
         }
+        std::sort(lheLeptons.begin(), lheLeptons.end(), compareMaxByPt);
+        leptons = lheLeptons;
+        neutrinos = lheNeutrinos;
     }
         
-    // Sort descending
-    auto compareMaxByPt = [](const reco::GenParticle& a, const reco::GenParticle& b) { return a.pt() > b.pt(); };
-    std::sort(bareLeptons.begin(), bareLeptons.end(), compareMaxByPt);
-    std::sort(bornLeptons.begin(), bornLeptons.end(), compareMaxByPt);
-    std::sort(lheLeptons.begin(), lheLeptons.end(), compareMaxByPt);
+    if (variation.first != LHEParticles) {
+        jets.clear();
+        ht = 0;
+        for (size_t i = 0; i < *nGenJet; i++) {
+            auto jet = makeGenParticle(0, 1, GenJet_pt.At(i), 
+                    GenJet_eta.At(i), GenJet_phi.At(i), GenJet_mass.At(i));
+            if (jet.pt() > 30 && !helpers::overlapsCollection(jet.polarP4(), leptons, 0.4, nLeptons_)) {
+                ht += jet.pt();
+                jets.emplace_back(jet.polarP4());
+            }
+        } // No need to sort jets, they're already pt sorted
 
-    // Warning! Only really works for the W
-    if (bareLeptons.size() > 0 && doPhotons_) {
-        auto& lep = bareLeptons.at(0);
-        photons.erase(std::remove_if(photons.begin(), photons.end(), 
-                [lep] (const reco::GenParticle& p) { return reco::deltaR(p, lep) > 0.1; }),
-            photons.end()
-        );
+        genMet.SetPt(*MET_fiducialGenPt);
+        genMet.SetPhi(*MET_fiducialGenPhi);
+        genMet.SetM(0.);
+        genMet.SetEta(0.);
     }
 
-    leptons = dressedLeptons;
-
-    ht = 0;
-    for (size_t i = 0; i < *nGenJet; i++) {
-        LorentzVector jet;
-        jet.SetPt(GenJet_pt.At(i));
-        jet.SetEta(GenJet_eta.At(i));
-        jet.SetPhi(GenJet_phi.At(i));
-        jet.SetM(GenJet_mass.At(i));
-        if (jet.pt() > 30 && !helpers::overlapsCollection(jet, leptons, 0.4, nLeptons_)) {
-            ht += jet.pt();
-            jets.emplace_back(jet);
-        }
-    } // No need to sort jets, they're already pt sorted
-
-    genMet.SetPt(*MET_fiducialGenPt);
-    genMet.SetPhi(*MET_fiducialGenPhi);
-    genMet.SetM(0.);
-    genMet.SetEta(0.);
-
-    weight = *genWeight;
+    weight = *genWeight;       
 
     if (nnlops_) {
         weight *= LHEScaleWeight.At(9);

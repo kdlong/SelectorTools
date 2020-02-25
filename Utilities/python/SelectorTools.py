@@ -202,10 +202,12 @@ class SelectorDriver(object):
         # Only add for one channel
         addSumweights = self.addSumweights and self.channels.index(chan) == 0 and "data" not in dataset
         if addSumweights:
-            sumweights_hist = ROOT.gROOT.FindObject("sumweights")
             # Avoid accidentally combining sumweights across datasets
+            currfile_name = self.current_file.GetName()
+            self.current_file.Close()
+            sumweights_hist = ROOT.gROOT.FindObject("sumweights")
             if sumweights_hist:
-                del sumweights_hist
+                sumweights_hist.Delete()
             if not self.outfile:
                 self.outfile = ROOT.TFile.Open(self.outfile_name)
             sumweights_hist = self.outfile.Get("%s/sumweights" % dataset)
@@ -213,6 +215,7 @@ class SelectorDriver(object):
             if not sumweights_hist:
                 sumweights_hist = ROOT.TH1D("sumweights", "sumweights", 100, 0, 100)
             sumweights_hist.SetDirectory(ROOT.gROOT)
+            self.current_file = ROOT.TFile.Open(currfile_name, "update")
         self.processLocalFiles(select, file_path, addSumweights, chan)
 
         output_list = select.GetOutputList()
@@ -231,7 +234,13 @@ class SelectorDriver(object):
             self.outfile.Close()
             chanNum = self.channels.index(chan)
             self.current_file = ROOT.TFile.Open(self.tempfileName(dataset), "recreate" if chanNum == 0 else "update")
+<<<<<<< HEAD
         
+=======
+        if not self.current_file:
+            self.current_file = ROOT.TFile.Open(self.outfile_name)
+
+>>>>>>> upstream/gen
         for process in processes:
             dataset_list = output_list.FindObject(process)
             if not dataset_list or dataset_list.ClassName() != "TList":

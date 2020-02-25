@@ -18,6 +18,14 @@ void ZGenSelector::Init(TTree *tree)
             hists1D_.push_back(chan + "_" + hist);
     }
 
+    doSystematics_ = true;
+    systematics_ = {
+        {BareLeptons, "barelep"},
+        {BornParticles, "born"},
+        {LHEParticles, "lhe"},
+    };
+    systHists_ = hists1D_;
+
     weighthists1D_ = {"CutFlow", "ZMass", "yZ", "ptZ", "ptl1", "etal1", "phil1", "ptl2", "etal2", "phil2", 
         "ptj1", "ptj2", "ptj3", "etaj1", "etaj2", "etaj3", "phij1", "phij2", "phij3", "nJets",
         "MET", "HT", };
@@ -88,7 +96,7 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
             SafeHistFill(weighthistMap1D_, "CutFlow", channel_, variation.first, j, i, thweight);
         }
     }
-    if (failStep != 0)
+    if (doFiducial_ && failStep != 0)
         return;
 
     SafeHistFill(histMap1D_, "CutFlow", channel_, variation.first, step++, weight);
