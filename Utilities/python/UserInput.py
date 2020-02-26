@@ -16,7 +16,7 @@ def getDefaultParser(allow_from_file=True):
                         required=True, help="Name of selection to make, "
                         " as defined in Cuts/<analysis>/<selection>.json")
     parser.add_argument("-a", "--analysis", type=str,
-                        required=False, default="WZxsec2016",
+                        required=False,
                         help="Analysis name, used in selecting the cut json")
     if allow_from_file:
         input_group = parser.add_mutually_exclusive_group(required=True)

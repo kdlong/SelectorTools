@@ -56,7 +56,7 @@ public :
     static const unsigned int N_KEEP_GEN_ = 300;
 
     int MVAStudy, FourTopMVAEl, FourTopCutBasedEl, FakeRate;
-    
+    int yr2016, yr2017, yr2018;
     
     UInt_t    nElectron;
     Float_t   Electron_pt[N_KEEP_MU_E_];

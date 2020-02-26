@@ -212,7 +212,7 @@ rebin = mjj_binning if base_variable == "mjj" else None
 if variable == "MTWZ":
     rebin = array.array('d', ConfigureJobs.getBinning(isVBS=isVBS, isHiggs=args['higgs']))
 alldata = HistTools.makeCompositeHists(fIn, "AllData", 
-    ConfigureJobs.getListOfFilesWithXSec(["WZxsec2016data"], manager_path), args['lumi'],
+    ConfigureJobs.getListOfFilesWithXSec(["WZxsec2016data"]), args['lumi'],
     [variable +"_"+ c for c in chans], rebin=rebin)
 for chan in chans:
     hist = alldata.FindObject(variable+"_"+chan)
@@ -274,7 +274,7 @@ for plot_group in plot_groups:
         plots += ["backgroundControlYield_lheWeights_" + c for c in chans]
 
     group = HistTools.makeCompositeHists(fIn, plot_group, ConfigureJobs.getListOfFilesWithXSec(
-        config_factory.getPlotGroupMembers(plot_group), manager_path), args['lumi'], plots, rebin=rebin)
+        config_factory.getPlotGroupMembers(plot_group)), args['lumi'], plots, rebin=rebin)
     if scaleWZ and plot_group in wz_scalefacs.keys():
         for h in group:
             if h.InheritsFrom("TH1"):

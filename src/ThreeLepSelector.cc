@@ -57,17 +57,15 @@ void ThreeLepSelector::SetScaleFactors() {
 }
 
 void ThreeLepSelector::Init(TTree *tree) {
+    // Setup maps
     selectionMap_ = {{"MVAStudy", MVAStudy},
 		     {"FourTopMVAEl", FourTopMVAEl},
                      {"FourTopCutBasedEl", FourTopCutBasedEl},
-                     {"FakeRate", FakeRate},}; 
+                     {"FakeRate", FakeRate},};
+    yearMap_ = {{"yr2016", yr2016}, {"yr2017", yr2017}, {"yr2018", yr2018},};
+    
+    // Continue
     b.SetTree(tree);
-    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
-    std::string name_tmp = name->GetTitle();
-    if(name_tmp.find("2016") != std::string::npos) year_ = yr2016;
-    else if(name_tmp.find("2017") != std::string::npos) year_ = yr2017;
-    else if(name_tmp.find("2018") != std::string::npos) year_ = yr2018;
-    else year_ = yr2016;
     
     
     //allChannels_ = {{mm, "mm"}, {ee, "ee"}, {em, "em"}, {all, "all"}, {lll, "lll"}};
@@ -79,17 +77,23 @@ void ThreeLepSelector::Init(TTree *tree) {
 		//"CRZ_nbjet",    "CRZ_njet",    "CRZ_HT",   "CRZ_Met",
 		"Met",      "HT",           "weight","sphericity", "centrality",
 		//"CRW_HT",       "CRW_Met",     "CRZ_ptl3",  "CRW_nbjet",    "CRW_njet",
-		 "ptj1",         "ptj2",        "ptj3",     "ptj1OverHT",
-		 "etaj1", "etaj2","etaj3", "etab1", "etab2","etab3", "dphi_l1j1","dphi_l1j2","dphi_l1j3",
-		 "ptb1",         "ptb2",        "ptb3",     "ptb1OverHT",
-		 "dilepMass",    "dilepCharge", "DRLep", "DRjet", "dijetMass",
-		 "Shape1", "Shape2", "LepCos", "JLep1Cos", "JLep2Cos", "JBCos", "DRjb", "etaj", "etab",
-		 "ntightbjet", "nloosebjet","nlooseleps",
-     };
-     hists2D_ = {"bJetvsJets",    "Beff_b_btag", "Beff_j_btag", "Beff_b", "Beff_j"};
+		"ptj1",         "ptj2",        "ptj3",     "ptj1OverHT",
+		"etaj1", "etaj2","etaj3", "etab1", "etab2","etab3", "dphi_l1j1","dphi_l1j2","dphi_l1j3",
+		"ptb1",         "ptb2",        "ptb3",     "ptb1OverHT",
+		"dilepMass",    "dilepCharge", "DRLep", "DRjet", "dijetMass",
+		"Shape1", "Shape2", "LepCos", "JLep1Cos", "JLep2Cos", "JBCos", "DRjb", "etaj", "etab",
+		"ntightbjet", "nloosebjet","nlooseleps",
+    };
+    hists2D_ = {"bJetvsJets",    "Beff_b_btag", "Beff_j_btag", "Beff_b", "Beff_j"};
 
-     SelectorBase::Init(tree);
-    
+    SelectorBase::Init(tree);
+    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
+    std::string name_tmp = name->GetTitle();
+    if(name_tmp.find("2016") != std::string::npos) year_ = yr2016;
+    else if(name_tmp.find("2017") != std::string::npos) year_ = yr2017;
+    else if(name_tmp.find("2018") != std::string::npos) year_ = yr2018;
+    else year_ = yr2016;
+
 #ifdef USETREE
     AddObject<TTree>(treeMap["tree"], "testTree", "testTree");
     treeMap["tree"]->Branch("NJets", &bNJets);

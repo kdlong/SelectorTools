@@ -109,12 +109,7 @@ class SelectorBase : public TSelector {
 		     Bacon,
     };
 
-    enum Year {
-	       yrdefault,      yr2016,      yr2017,      yr2018
-    };
-
     typedef std::pair<Channel, std::string> ChannelPair;
-    
     
     typedef std::unordered_map<HistLabel, TH1D*> HistMap1D;
     typedef std::unordered_map<HistLabel, TH2D*> HistMap2D;
@@ -122,23 +117,7 @@ class SelectorBase : public TSelector {
     typedef std::pair<Systematic, std::string> SystPair;
     typedef std::map<Systematic, std::string> SystMap;
 
-    /****************************/
-    /*  __  __                  */
-    /* |  \/  | __ _ _ __  ___  */
-    /* | |\/| |/ _` | '_ \/ __| */
-    /* | |  | | (_| | |_) \__ \ */
-    /* |_|  |_|\__,_| .__/|___/ */
-    /*              |_|         */
-    /****************************/
 
-    
-    std::map<std::string, Year> yearMap_ = {
-					    {"default", yrdefault},
-					    {"2016", yr2016},
-					    {"2017", yr2017},
-					    {"2018", yr2018},
-    };
-    
     std::map<std::string, Channel> channelMap_ = {
 						  {"e", e},                   {"m", m},         
 						  {"ep", ep},                 {"mp", mp},       {"ep", ep},       {"mn", mn},  
@@ -248,13 +227,18 @@ class SelectorBase : public TSelector {
     std::string channelName_ = "Unnamed";
     Channel channel_ = Unknown;
     NtupleType ntupleType_ = NanoAOD;
+
+    // Enums
     DynEnum enumFactory;
     std::unordered_map<std::string, int&> selectionMap_;
     std::unordered_map<std::string, int&> addSelection_;
-    std::string selectionName_;
+    std::map<std::string, int&> yearMap_;
     int selection_;
+    int year_;
+
+    // default enum values
+    int yrdefault;
     
-    Year year_ = yrdefault;
     bool isMC_;
 
     cpplog::StdErrLogger log;

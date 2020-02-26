@@ -23,7 +23,7 @@ transformed_mjj_etajj_hists = HistTools.getTransformedHists(input_file,
             ['wzjj-vbfnlo-sf', 'wzjj-vbfnlo-of', ] + \
                 ['wz3lnu-mg5amcnlo','wz3lnu-powheg', 'zz4l-mg5amcnlo'] + \
                 ['AllData', 'WZxsec2016data', 'DataEWKCorrected'], 
-            'Wselection'),
+            input_tier='Wselection'),
         ["mjj_etajj_2D_%s" % c for c in ConfigureJobs.getChannels()] + \
         ["mjj_etajj_2D_Fakes_%s" % c for c in ConfigureJobs.getChannels()] + \
         ["mjj_etajj_2D_%s_%s" % (var, c) for c in ConfigureJobs.getChannels()
@@ -39,7 +39,7 @@ if adddRjj:
                 ['wzjj-vbfnlo-sf', 'wzjj-vbfnlo-of', ] + \
                     ['wz3lnu-mg5amcnlo','wz3lnu-powheg', 'zz4l-mg5amcnlo'] + \
                     ['AllData', 'WZxsec2016data', 'DataEWKCorrected'], 
-                'Wselection'),
+                input_tier='Wselection'),
             ["mjj_dRjj_2D_%s" % c for c in ConfigureJobs.getChannels()] + \
             ["mjj_dRjj_2D_Fakes_%s" % c for c in ConfigureJobs.getChannels()] + \
             ["mjj_dRjj_2D_%s_%s" % (var, c) for c in ConfigureJobs.getChannels()

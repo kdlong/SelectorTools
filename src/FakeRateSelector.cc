@@ -20,17 +20,16 @@ void FakeRateSelector::Init(TTree *tree) {
     Analyzer.SetInputList(slaveClassList);
     Analyzer.Init(tree);
     Analyzer.SetBranches();
+    
 }
 
 void FakeRateSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) {
     Analyzer.LoadBranchesNanoAOD(entry,variation);
-
     channelName_ = "all";
     if(Analyzer.looseLeptons.size() == 1) {
         if(Analyzer.looseLeptons[0].Id() == PID_MUON) channelName_ = "m";
 	else channelName_ = "e";
     } 
-        
     channel_ = channelMap_[channelName_];
 }
 
@@ -49,11 +48,10 @@ void FakeRateSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
 	    tagLepIdx = i;
 	}
     }
-    
     LorentzVector met(Analyzer.MET, 0, Analyzer.type1_pfMETPhi, Analyzer.MET);
     LorentzVector tagLep = Analyzer.looseLeptons[tagLepIdx].v;
-    
-    double mt = std::sqrt(2*met.Mt()*tagLep.Mt()*(1-VectorUtil::CosTheta(met, tagLep)));
+    double mt = std::sqrt(2.*met.Et()*tagLep.pt()*(1.-cos(VectorUtil::DeltaPhi(tagLep, met))));
+        
     if (mt > 20) return;
     if (met.Pt() > 20) return;  // need to fix with skim
     bool hasJet = false;
@@ -68,6 +66,13 @@ void FakeRateSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
     float tagPt = tagLep.Pt();
     float tagEta = std::abs(tagLep.Eta());
 
+    // int closeIdx = Analyzer.getCloseJetIndex(tagLep);
+    // LorentzVector closeJet  = Analyzer.get4Vector(PID_JET, closeIdx);
+    // if(Analyzer.LepRelPt(tagLep, closeJet) > 7.2)
+    // 	tagPt *= (1 + std::max(0, Im-I1));
+    // else
+    // 	tagPt = std::max(tagPt, closeJet.Pt()*I2);
+    
     float loose_weight = 1.;
     // float loose_weight = weight;
     // if (channel_ == eee || channel_ == emm) {

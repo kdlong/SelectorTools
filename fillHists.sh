@@ -29,7 +29,7 @@ EXE=./Utilities/scripts/makeFakeRates.py
 # # SEL=MVAStudy
 
 ANA=FR
-INP=FakeRate
+INP=FakeRateEOS
 YEAR=2016
 SEL=FakeRate
 

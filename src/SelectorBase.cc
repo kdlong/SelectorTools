@@ -25,24 +25,27 @@ void SelectorBase::Init(TTree *tree)
     fChain = tree;
     
     TString option = GetOption();
+    std::string selectionName_;
+    std::string yearName_ = "yrdefault";
+
     
     if (GetInputList() != nullptr) {
 	TNamed* ntupleType = (TNamed *) GetInputList()->FindObject("ntupleType");
-        TNamed* name = (TNamed *) GetInputList()->FindObject("name");
-        TNamed* chan = (TNamed *) GetInputList()->FindObject("channel");
-        TNamed* selection = (TNamed *) GetInputList()->FindObject("selection");
+	TNamed* name = (TNamed *) GetInputList()->FindObject("name");
+	TNamed* chan = (TNamed *) GetInputList()->FindObject("channel");
+	TNamed* selection = (TNamed *) GetInputList()->FindObject("selection");
 	TNamed* year = (TNamed *) GetInputList()->FindObject("year");
 
 	if (ntupleType != nullptr) {
 	    std::string ntupleName = ntupleType->GetTitle();
 	    if (ntupleName == "NanoAOD")
-		    ntupleType_ = NanoAOD;
+		ntupleType_ = NanoAOD;
 	    else if (ntupleName  == "UWVV")
 		ntupleType_ = UWVV;
 	    else if (ntupleName  == "Bacon")
 		ntupleType_ = Bacon;
 	    else
-		    throw std::invalid_argument("Unsupported ntuple type!");
+		throw std::invalid_argument("Unsupported ntuple type!");
 	}
 	else {
 	    std::cerr << "INFO: Assuming NanoAOD ntuples" << std::endl;
@@ -60,7 +63,7 @@ void SelectorBase::Init(TTree *tree)
             name_ = "Unknown";
         }
 	if(year != nullptr ) {
-	    year_ = yearMap_[year->GetTitle()];
+	    yearName_ = year->GetTitle();
 	}
 	
 	if (chan != nullptr) {
@@ -83,6 +86,18 @@ void SelectorBase::Init(TTree *tree)
 	selection_ = enumFactory.addEnum(selectionName_);
 	LOG_WARN(log) << "Selection ("<< selectionName_ << ") not found.\n";
     }
+    
+    // Setup Year
+    yrdefault = enumFactory.addEnum("yrdefault");
+    for(auto pair: yearMap_)
+	pair.second = enumFactory.addEnum(pair.first);
+    if (enumFactory.foundEnum(yearName_)) {
+	year_ = enumFactory.getEnum(yearName_);
+    } else {
+	year_ = enumFactory.addEnum(yearName_);
+	LOG_WARN(log) << "Year ("<< yearName_ << ") not found.\n";
+    }
+
     
     isMC_ = false;
     if (name_.find("data") == std::string::npos){
