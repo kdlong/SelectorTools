@@ -18,7 +18,8 @@
 #include <unordered_map>
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
 #include "Analysis/VVAnalysis/interface/dynEnum.h"
-#include "Analysis/VVAnalysis/interface/cpplog.hpp"
+#include "Fireworks/Core/interface/fwLog.h"
+
 
 enum Channel {
 	      e,           m,         
@@ -241,8 +242,6 @@ class SelectorBase : public TSelector {
     
     bool isMC_;
 
-    cpplog::StdErrLogger log;
-    
     float GetPrefiringEfficiencyWeight(std::vector<float>* jetPt, std::vector<float>* jetEta);
     virtual std::string GetNameFromFile() { return ""; }
     void InitializeHistogramFromConfig(std::string name, ChannelPair channel, std::vector<std::string>& histData);

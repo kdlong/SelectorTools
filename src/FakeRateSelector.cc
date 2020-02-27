@@ -6,15 +6,14 @@
 #define Fill1D(NAME, VALUE_) HistFullFill(histMap1D_, NAME, variation.first, VALUE_, weight);
 #define Fill2D(NAME, VALUE1_, VALUE2_) HistFullFill(histMap2D_, NAME, variation.first, VALUE1_, VALUE2_, weight);
 
-
 typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double>>LorentzVector;
 namespace VectorUtil=ROOT::Math::VectorUtil;
 
 void FakeRateSelector::Init(TTree *tree) {
     allChannels_ = {{e, "e"}, {m, "m"}};
-    
+
     SelectorBase::Init(tree);
-    
+
     TList* slaveClassList = (TList*)GetInputList()->Clone();
     slaveClassList->Add(new TNamed("isSlaveClass", "isSlaveClass"));
     Analyzer.SetInputList(slaveClassList);

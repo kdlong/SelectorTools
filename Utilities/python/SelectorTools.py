@@ -94,8 +94,10 @@ class SelectorDriver(object):
             self.inputs.Add(inp)
         self.addTNamed("ntupleType", self.ntupleType)
         self.addTNamed("selection", self.selection)
-        #self.addTNamed("year", self.year)
-
+        self.addTNamed("year", self.year)
+        self.addTNamed("logLevel", logging.getLevelName(logging.root.level))
+        print(logging.getLevelName(logging.root.level)) 
+        
     def setSelection(self, selection):
         self.selection = selection
         
