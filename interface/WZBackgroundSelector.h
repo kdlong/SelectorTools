@@ -6,10 +6,10 @@
 #include "Analysis/VVAnalysis/interface/WZSelector.h"
 
 class WZBackgroundSelector : public WZSelector {
-public :
-    ScaleFactor * fakeRate_allE_;
-    ScaleFactor * fakeRate_allMu_;
-    
+   public:
+    ScaleFactor* fakeRate_allE_;
+    ScaleFactor* fakeRate_allMu_;
+
     TH1D* mjjHistPPF_;
     TH1D* mjjHistPFP_;
     TH1D* mjjHistFPP_;
@@ -24,12 +24,13 @@ public :
     TH1D* ZMassHistFPF_;
     TH1D* ZMassHistPFF_;
     TH1D* ZMassHistFFF_;
-    
-    virtual void    SetupNewDirectory() override;
-    virtual void    SlaveBegin(TTree *tree) override;
 
-    ClassDefOverride(WZBackgroundSelector,0);
-private:
+    virtual void SetupNewDirectory() override;
+    virtual void SlaveBegin(TTree* tree) override;
+
+    ClassDefOverride(WZBackgroundSelector, 0);
+
+   private:
     float getl1FakeRate();
     float getl2FakeRate();
     float getl3FakeRate();
@@ -41,7 +42,8 @@ private:
     bool IsPFFRegion();
     bool IsFFFRegion();
     float getEventWeight();
-    void LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void LoadBranchesUWVV(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
 };
 
 #endif

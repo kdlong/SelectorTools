@@ -1,21 +1,20 @@
 #ifndef FakeRateSelector_h
 #define FakeRateSelector_h
 
-#include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TROOT.h>
 #include <exception>
 #include <iostream>
 
 // Headers needed by this particular selector
-#include "Analysis/VVAnalysis/interface/WZSelectorBase.h"
 #include <vector>
+#include "Analysis/VVAnalysis/interface/WZSelectorBase.h"
 
-
-class FakeRateSelector : public WZSelectorBase { 
-public :
+class FakeRateSelector : public WZSelectorBase {
+   public:
     TH2D* passingTight2D_;
     TH1D* passingTight1DPt_;
     TH1D* passingTight1DEta_;
@@ -29,16 +28,17 @@ public :
     Float_t type1_pfMETEt;
     UInt_t nCBVIDVetoElec;
     UInt_t nWZLooseMuon;
-    
+
     TBranch* b_type1_pfMETEt;
     TBranch* b_nCBVIDVetoElec;
     TBranch* b_nWZLooseMuon;
 
     // Readers to access the data (delete the ones you do not need).
-    virtual void    SetupNewDirectory() override;
-    virtual void    FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    virtual void SetupNewDirectory() override;
+    virtual void FillHistograms(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
 
-    ClassDefOverride(FakeRateSelector,0);
+    ClassDefOverride(FakeRateSelector, 0);
 };
 
 #endif

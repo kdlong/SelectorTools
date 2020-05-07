@@ -1,14 +1,13 @@
 #ifndef ZZGenSelector_h
 #define ZZGenSelector_h
 
+#include <TH3.h>
 #include <vector>
 #include "Analysis/VVAnalysis/interface/SelectorBase.h"
-#include <TH3.h>
 
 class ZZGenSelector : public SelectorBase {
-public :
-    
-    float GendPhiZZ; //DeltaPhi between Z1 and Z2
+   public:
+    float GendPhiZZ;  // DeltaPhi between Z1 and Z2
     Float_t GenMass;
     Float_t GenPt;
     Float_t GenEta;
@@ -19,7 +18,7 @@ public :
     Float_t GenZ2pt;
     Float_t GenZ1Phi;
     Float_t GenZ2Phi;
- 
+
     Float_t Genl1Pt;
     Float_t Genl2Pt;
     Float_t Genl3Pt;
@@ -32,7 +31,7 @@ public :
     Float_t Genl2Phi;
     Float_t Genl3Phi;
     Float_t Genl4Phi;
-    
+
     TBranch* b_GenZ1mass;
     TBranch* b_GenZ2mass;
     TBranch* b_GenZ1pt;
@@ -54,28 +53,31 @@ public :
     TBranch* b_Genl1Phi;
     TBranch* b_Genl2Phi;
     TBranch* b_Genl3Phi;
-    TBranch* b_Genl4Phi; 
+    TBranch* b_Genl4Phi;
 
     // Readers to access the data (delete the ones you do not need).
-    ZZGenSelector(TTree * /*tree*/ =0) { }
-    virtual ~ZZGenSelector() { }
-    virtual void    Init(TTree *tree) override;
-    virtual void    SetupNewDirectory() override;
+    ZZGenSelector(TTree* /*tree*/ = 0) {}
+    virtual ~ZZGenSelector() {}
+    virtual void Init(TTree* tree) override;
+    virtual void SetupNewDirectory() override;
 
-    ClassDefOverride(ZZGenSelector,0);
-protected:
-    void LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    virtual void    SetBranchesNanoAOD() override;
-    virtual void    SetBranchesUWVV() override;
-    
-    void SetVariables(Long64_t entry); 
+    ClassDefOverride(ZZGenSelector, 0);
+
+   protected:
+    void LoadBranchesUWVV(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void LoadBranchesNanoAOD(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    virtual void SetBranchesNanoAOD() override;
+    virtual void SetBranchesUWVV() override;
+
+    void SetVariables(Long64_t entry);
     bool ZZSelection();
     bool Z4lSelection();
     bool ZSelection();
-    void FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void FillHistograms(Long64_t entry,
+                        std::pair<Systematic, std::string> variation) override;
     bool e1e2IsZ1();
 };
 
 #endif
-

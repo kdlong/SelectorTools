@@ -1,29 +1,29 @@
 #ifndef NanoGenSelectorBase_h
 #define NanoGenSelectorBase_h
 
-#include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
-#include <TSelector.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TROOT.h>
+#include <TSelector.h>
+#include <TTreeReader.h>
+#include <TTreeReaderArray.h>
+#include <TTreeReaderValue.h>
 #include <exception>
 #include <iostream>
-#include <TTreeReader.h>
-#include <TTreeReaderValue.h>
-#include <TTreeReaderArray.h>
 
 // Headers needed by this particular selector
 #include <vector>
+#include "Analysis/VVAnalysis/interface/BranchManager.h"
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
 #include "Analysis/VVAnalysis/interface/SelectorBase.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "Analysis/VVAnalysis/interface/helpers.h"
-#include "Analysis/VVAnalysis/interface/BranchManager.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "PhysicsTools/HepMCCandAlgos/interface/PDFWeightsHelper.h"
 
 class NanoGenSelectorBase : public SelectorBase {
-public :
+   public:
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
     reco::GenParticleCollection leptons;
@@ -66,14 +66,14 @@ public :
     TH1D* mcPdfWeights_;
     TH1D* hesPdfWeights_;
     TH1D* scaleWeights_;
-    
+
     double LHEHessianPdfWeight[N_MC2HESSIAN_WEIGHTS_];
     // Values read from file
-    TTreeReader     fReader;
+    TTreeReader fReader;
     TTreeReaderValue<Float_t> genWeight = {fReader, "genWeight"};
     TTreeReaderValue<UInt_t> nLHEScaleWeight = {fReader, "nLHEScaleWeight"};
     TTreeReaderArray<Float_t> LHEScaleWeight = {fReader, "LHEScaleWeight"};
-    
+
     UInt_t nLHEPdfWeight = 0;
     Float_t LHEPdfWeight[N_LHEPDF_WEIGHTS_];
     UInt_t nLHEScaleWeightAltSet1 = 0;
@@ -98,12 +98,18 @@ public :
     bool unknownWeightsAlt_ = false;
 
     TTreeReaderValue<UInt_t> nGenDressedLepton = {fReader, "nGenDressedLepton"};
-    TTreeReaderArray<Bool_t> GenDressedLepton_hasTauAnc = {fReader, "GenDressedLepton_hasTauAnc"};
-    TTreeReaderArray<Float_t> GenDressedLepton_pt = {fReader, "GenDressedLepton_pt"};
-    TTreeReaderArray<Float_t> GenDressedLepton_eta = {fReader, "GenDressedLepton_eta"};
-    TTreeReaderArray<Float_t> GenDressedLepton_phi = {fReader, "GenDressedLepton_phi"};
-    TTreeReaderArray<Float_t> GenDressedLepton_mass = {fReader, "GenDressedLepton_mass"};
-    TTreeReaderArray<Int_t> GenDressedLepton_pdgId = {fReader, "GenDressedLepton_pdgId"};
+    TTreeReaderArray<Bool_t> GenDressedLepton_hasTauAnc = {
+        fReader, "GenDressedLepton_hasTauAnc"};
+    TTreeReaderArray<Float_t> GenDressedLepton_pt = {fReader,
+                                                     "GenDressedLepton_pt"};
+    TTreeReaderArray<Float_t> GenDressedLepton_eta = {fReader,
+                                                      "GenDressedLepton_eta"};
+    TTreeReaderArray<Float_t> GenDressedLepton_phi = {fReader,
+                                                      "GenDressedLepton_phi"};
+    TTreeReaderArray<Float_t> GenDressedLepton_mass = {fReader,
+                                                       "GenDressedLepton_mass"};
+    TTreeReaderArray<Int_t> GenDressedLepton_pdgId = {fReader,
+                                                      "GenDressedLepton_pdgId"};
     TTreeReaderValue<UInt_t> nGenPart = {fReader, "nGenPart"};
     TTreeReaderArray<Float_t> GenPart_pt = {fReader, "GenPart_pt"};
     TTreeReaderArray<Float_t> GenPart_eta = {fReader, "GenPart_eta"};
@@ -111,7 +117,8 @@ public :
     TTreeReaderArray<Float_t> GenPart_mass = {fReader, "GenPart_mass"};
     TTreeReaderArray<Int_t> GenPart_pdgId = {fReader, "GenPart_pdgId"};
     TTreeReaderArray<Int_t> GenPart_status = {fReader, "GenPart_status"};
-    TTreeReaderArray<Int_t> GenPart_statusFlags = {fReader, "GenPart_statusFlags"};
+    TTreeReaderArray<Int_t> GenPart_statusFlags = {fReader,
+                                                   "GenPart_statusFlags"};
     TTreeReaderValue<UInt_t> nLHEPart = {fReader, "nLHEPart"};
     TTreeReaderArray<Float_t> LHEPart_pt = {fReader, "LHEPart_pt"};
     TTreeReaderArray<Float_t> LHEPart_eta = {fReader, "LHEPart_eta"};
@@ -123,35 +130,40 @@ public :
     TTreeReaderArray<Float_t> GenJet_eta = {fReader, "GenJet_eta"};
     TTreeReaderArray<Float_t> GenJet_phi = {fReader, "GenJet_phi"};
     TTreeReaderArray<Float_t> GenJet_mass = {fReader, "GenJet_mass"};
-    //TTreeReaderValue<Float_t> GenMET_pt = {fReader, "GenMET_pt"};
-    //TTreeReaderValue<Float_t> GenMET_phi = {fReader, "GenMET_phi"};
-    TTreeReaderValue<Float_t> MET_fiducialGenPt = {fReader, "MET_fiducialGenPt"};
-    TTreeReaderValue<Float_t> MET_fiducialGenPhi = {fReader, "MET_fiducialGenPhi"};
+    // TTreeReaderValue<Float_t> GenMET_pt = {fReader, "GenMET_pt"};
+    // TTreeReaderValue<Float_t> GenMET_phi = {fReader, "GenMET_phi"};
+    TTreeReaderValue<Float_t> MET_fiducialGenPt = {fReader,
+                                                   "MET_fiducialGenPt"};
+    TTreeReaderValue<Float_t> MET_fiducialGenPhi = {fReader,
+                                                    "MET_fiducialGenPhi"};
     float ht;
     float ptVlhe;
-    
+
     BranchManager b;
-    
+
     // Readers to access the data (delete the ones you do not need).
-    virtual void    Init(TTree *tree) override;
-    NanoGenSelectorBase(TTree * /*tree*/ =0) { }
-    ~NanoGenSelectorBase() { }
-    virtual void    SetupNewDirectory() override;
+    virtual void Init(TTree* tree) override;
+    NanoGenSelectorBase(TTree* /*tree*/ = 0) {}
+    ~NanoGenSelectorBase() {}
+    virtual void SetupNewDirectory() override;
 
-    ClassDefOverride(NanoGenSelectorBase,0);
+    ClassDefOverride(NanoGenSelectorBase, 0);
 
-protected:
-    virtual void    SetBranchesNanoAOD() override;
-    virtual void    FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override {}
-    void LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+   protected:
+    virtual void SetBranchesNanoAOD() override;
+    virtual void FillHistograms(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override {
+    }
+    void LoadBranchesNanoAOD(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
     virtual void SetComposite() {}
-    bool overlapsCollection(const LorentzVector& cand, reco::GenParticleCollection& collection, const float deltaRCut, size_t maxCompare);
+    bool overlapsCollection(const LorentzVector& cand,
+                            reco::GenParticleCollection& collection,
+                            const float deltaRCut, size_t maxCompare);
     void buildHessian2MCSet();
-    reco::GenParticle makeGenParticle(int pdgid, int status, float pt, float eta, float phi, float m);
+    reco::GenParticle makeGenParticle(int pdgid, int status, float pt,
+                                      float eta, float phi, float m);
     double breitWignerWeight(double offset);
 };
 
 #endif
-
-
-

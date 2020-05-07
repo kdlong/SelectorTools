@@ -1,65 +1,62 @@
 #include "Analysis/VVAnalysis/interface/WZSelectorBase.h"
-#include "TLorentzVector.h"
 #include <TStyle.h>
 #include <regex>
+#include "TLorentzVector.h"
 #include "TParameter.h"
 
 // This is very WZ specific and should really be improved or likely removed
 std::string WZSelectorBase::GetNameFromFile() {
-    std::regex expr = std::regex("201[0-9]-[0-9][0-9]-[0-9][0-9]-(.*)-WZxsec2016");
+    std::regex expr =
+        std::regex("201[0-9]-[0-9][0-9]-[0-9][0-9]-(.*)-WZxsec2016");
     std::smatch matches;
-    std::string fileName = fChain->GetTree()->GetDirectory()->GetFile()->GetName(); 
+    std::string fileName =
+        fChain->GetTree()->GetDirectory()->GetFile()->GetName();
 
     std::regex_search(fileName, matches, expr);
     return std::string(matches.str(1));
 }
 
 void WZSelectorBase::SetScaleFactors() {
-    pileupSF_ = (ScaleFactor *) GetInputList()->FindObject("pileupSF");
-    if (pileupSF_ == nullptr ) 
+    pileupSF_ = (ScaleFactor*)GetInputList()->FindObject("pileupSF");
+    if (pileupSF_ == nullptr)
         std::invalid_argument("Must pass pileup weights SF");
-    eIdSF_ = (ScaleFactor *) GetInputList()->FindObject("electronTightIdSF");
-    if (eIdSF_ == nullptr ) 
-        std::invalid_argument("Must pass electron ID SF");
-    eGsfSF_ = (ScaleFactor *) GetInputList()->FindObject("electronGsfSF");
-    if (eGsfSF_ == nullptr ) 
-        std::invalid_argument("Must pass electron GSF SF");
-    mIdSF_ = (ScaleFactor *) GetInputList()->FindObject("muonTightIdSF");
-    if (mIdSF_ == nullptr ) 
-        std::invalid_argument("Must pass muon ID SF");
-    mIsoSF_ = (ScaleFactor *) GetInputList()->FindObject("muonIsoSF");
-    if (mIsoSF_ == nullptr ) 
-        std::invalid_argument("Must pass muon Iso SF");
+    eIdSF_ = (ScaleFactor*)GetInputList()->FindObject("electronTightIdSF");
+    if (eIdSF_ == nullptr) std::invalid_argument("Must pass electron ID SF");
+    eGsfSF_ = (ScaleFactor*)GetInputList()->FindObject("electronGsfSF");
+    if (eGsfSF_ == nullptr) std::invalid_argument("Must pass electron GSF SF");
+    mIdSF_ = (ScaleFactor*)GetInputList()->FindObject("muonTightIdSF");
+    if (mIdSF_ == nullptr) std::invalid_argument("Must pass muon ID SF");
+    mIsoSF_ = (ScaleFactor*)GetInputList()->FindObject("muonIsoSF");
+    if (mIsoSF_ == nullptr) std::invalid_argument("Must pass muon Iso SF");
 
-    prefireEff_ = (TEfficiency*) GetInputList()->FindObject("prefireEfficiencyMap");
-    if (prefireEff_ == nullptr ) 
+    prefireEff_ =
+        (TEfficiency*)GetInputList()->FindObject("prefireEfficiencyMap");
+    if (prefireEff_ == nullptr)
         std::invalid_argument("Must pass prefiring efficiency map");
 }
 
-void WZSelectorBase::Init(TTree *tree)
-{
-    isVBS_ = (selection_ == VBSselection_Loose || 
-        selection_ == VBSselection_Loose_Full || 
-        selection_ == VBSselection_NoZeppenfeld || 
-        selection_ == VBSselection_NoZeppenfeld_Full || 
-        selection_ == VBSselection_Tight || 
-        selection_ == VBSselection_Tight_Full || 
-        selection_ == VBSBackgroundControl || 
-        selection_ == VBSBackgroundControl_Full || 
-        selection_ == VBSBackgroundControlATLAS || 
-        selection_ == VBSBackgroundControlLoose ||
-        selection_ == VBSBackgroundControlLoose_Full
-        );
+void WZSelectorBase::Init(TTree* tree) {
+    isVBS_ = (selection_ == VBSselection_Loose ||
+              selection_ == VBSselection_Loose_Full ||
+              selection_ == VBSselection_NoZeppenfeld ||
+              selection_ == VBSselection_NoZeppenfeld_Full ||
+              selection_ == VBSselection_Tight ||
+              selection_ == VBSselection_Tight_Full ||
+              selection_ == VBSBackgroundControl ||
+              selection_ == VBSBackgroundControl_Full ||
+              selection_ == VBSBackgroundControlATLAS ||
+              selection_ == VBSBackgroundControlLoose ||
+              selection_ == VBSBackgroundControlLoose_Full);
 
     allChannels_ = {{eee, "eee"}, {eem, "eem"}, {emm, "emm"}, {mmm, "mmm"}};
 
-    if (isMC_){
+    if (isMC_) {
         isNonpromptMC_ = false;
         isZgamma_ = false;
-        if (std::find(nonprompt3l_.begin(), nonprompt3l_.end(), name_) != nonprompt3l_.end()) {
+        if (std::find(nonprompt3l_.begin(), nonprompt3l_.end(), name_) !=
+            nonprompt3l_.end()) {
             isNonpromptMC_ = true;
-        }
-        else if (name_ == "zg") {
+        } else if (name_ == "zg") {
             isZgamma_ = true;
         }
     }
@@ -70,11 +67,10 @@ void WZSelectorBase::Init(TTree *tree)
 
 void WZSelectorBase::SetBranchesUWVV() {
     b.CleanUp();
-    if (isMC_){
+    if (isMC_) {
         b.SetBranch("genWeight", genWeight);
         b.SetBranch("nTruePU", nTruePU);
-    }
-    else {
+    } else {
         b.SetBranch("Flag_duplicateMuonsPass", Flag_duplicateMuonsPass);
         b.SetBranch("Flag_badMuonsPass", Flag_badMuonsPass);
     }
@@ -109,8 +105,7 @@ void WZSelectorBase::SetBranchesUWVV() {
             b.SetBranch("e2GenPt", l2GenPt);
             b.SetBranch("e3GenPt", l3GenPt);
         }
-    }
-    else if (channel_ == eem) {
+    } else if (channel_ == eem) {
         b.SetBranch("e1IsCBVIDTight", l1IsTight);
         b.SetBranch("e2IsCBVIDTight", l2IsTight);
         b.SetBranch("mIsWZTight", l3IsTight);
@@ -139,8 +134,7 @@ void WZSelectorBase::SetBranchesUWVV() {
             b.SetBranch("e1GenPt", l1GenPt);
             b.SetBranch("e2GenPt", l2GenPt);
         }
-    }
-    else if (channel_ == emm) {
+    } else if (channel_ == emm) {
         b.SetBranch("eIsCBVIDTight", l3IsTight);
         b.SetBranch("m1IsWZTight", l1IsTight);
         b.SetBranch("m2IsWZTight", l2IsTight);
@@ -169,8 +163,7 @@ void WZSelectorBase::SetBranchesUWVV() {
             b.SetBranch("m1GenPt", l1GenPt);
             b.SetBranch("m2GenPt", l2GenPt);
         }
-    }
-    else if (channel_ == mmm) {
+    } else if (channel_ == mmm) {
         b.SetBranch("m1IsWZTight", l1IsTight);
         b.SetBranch("m2IsWZTight", l2IsTight);
         b.SetBranch("m3IsWZTight", l3IsTight);
@@ -208,14 +201,17 @@ void WZSelectorBase::SetBranchesUWVV() {
     b.SetBranch("nCBVIDVetoElec", nCBVIDVetoElec);
     b.SetBranch("nWZTightMuon", nWZTightMuon);
     b.SetBranch("nWZMediumMuon", nWZMediumMuon);
-    b.SetBranch("Flag_BadChargedCandidateFilterPass", Flag_BadChargedCandidateFilterPass);
+    b.SetBranch("Flag_BadChargedCandidateFilterPass",
+                Flag_BadChargedCandidateFilterPass);
     b.SetBranch("Flag_BadPFMuonFilterPass", Flag_BadPFMuonFilterPass);
     b.SetBranch("Flag_HBHENoiseFilterPass", Flag_HBHENoiseFilterPass);
     b.SetBranch("Flag_HBHENoiseIsoFilterPass", Flag_HBHENoiseIsoFilterPass);
-    b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilterPass", Flag_EcalDeadCellTriggerPrimitiveFilterPass);
+    b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilterPass",
+                Flag_EcalDeadCellTriggerPrimitiveFilterPass);
     b.SetBranch("Flag_goodVerticesPass", Flag_goodVerticesPass);
     b.SetBranch("Flag_eeBadScFilterPass", Flag_eeBadScFilterPass);
-    b.SetBranch("Flag_globalTightHalo2016FilterPass", Flag_globalTightHalo2016FilterPass);
+    b.SetBranch("Flag_globalTightHalo2016FilterPass",
+                Flag_globalTightHalo2016FilterPass);
 }
 
 void WZSelectorBase::SetBranchesNanoAOD() {
@@ -231,7 +227,7 @@ void WZSelectorBase::SetBranchesNanoAOD() {
     b.SetBranch("Muon_phi", Muon_phi);
     b.SetBranch("Muon_mass", Muon_mass);
     b.SetBranch("Muon_pfRelIso04_all", Muon_pfRelIso04_all);
-    //b.SetBranch("Electron_cutBased", Electron_cutBased);
+    // b.SetBranch("Electron_cutBased", Electron_cutBased);
     b.SetBranch("Electron_cutBased_Fall17_V1", Electron_cutBased);
     b.SetBranch("Electron_dxy", Electron_dxy);
     b.SetBranch("Electron_dz", Electron_dz);
@@ -244,38 +240,45 @@ void WZSelectorBase::SetBranchesNanoAOD() {
     b.SetBranch("Electron_charge", Electron_charge);
     b.SetBranch("Muon_charge", Muon_charge);
     if (isMC_) {
-        //b.SetBranch("e1GenPt", l1GenPt);
-        //b.SetBranch("e2GenPt", l2GenPt);
-        //b.SetBranch("e3GenPt", l3GenPt);
+        // b.SetBranch("e1GenPt", l1GenPt);
+        // b.SetBranch("e2GenPt", l2GenPt);
+        // b.SetBranch("e3GenPt", l3GenPt);
         b.SetBranch("genWeight", genWeight);
         b.SetBranch("Pileup_nPU", numPU);
     }
-    //else {
+    // else {
     //    b.SetBranch("Flag_duplicateMuonsPass", Flag_duplicateMuonsPass);
     //    b.SetBranch("Flag_badMuonsPass", Flag_badMuonsPass);
     //}
-    //b.SetBranch("Flag_BadChargedCandidateFilterPass", Flag_BadChargedCandidateFilterPass);
-    //b.SetBranch("Flag_BadPFMuonFilterPass", Flag_BadPFMuonFilterPass);
-    //b.SetBranch("Flag_HBHENoiseFilterPass", Flag_HBHENoiseFilterPass);
-    //b.SetBranch("Flag_HBHENoiseIsoFilterPass", Flag_HBHENoiseIsoFilterPass);
-    //b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilterPass", Flag_EcalDeadCellTriggerPrimitiveFilterPass);
-    //b.SetBranch("Flag_goodVerticesPass", Flag_goodVerticesPass);
-    //b.SetBranch("Flag_eeBadScFilterPass", Flag_eeBadScFilterPass);
-    //b.SetBranch("Flag_globalTightHalo2016FilterPass", Flag_globalTightHalo2016FilterPass);
+    // b.SetBranch("Flag_BadChargedCandidateFilterPass",
+    // Flag_BadChargedCandidateFilterPass);
+    // b.SetBranch("Flag_BadPFMuonFilterPass", Flag_BadPFMuonFilterPass);
+    // b.SetBranch("Flag_HBHENoiseFilterPass", Flag_HBHENoiseFilterPass);
+    // b.SetBranch("Flag_HBHENoiseIsoFilterPass", Flag_HBHENoiseIsoFilterPass);
+    // b.SetBranch("Flag_EcalDeadCellTriggerPrimitiveFilterPass",
+    // Flag_EcalDeadCellTriggerPrimitiveFilterPass);
+    // b.SetBranch("Flag_goodVerticesPass", Flag_goodVerticesPass);
+    // b.SetBranch("Flag_eeBadScFilterPass", Flag_eeBadScFilterPass);
+    // b.SetBranch("Flag_globalTightHalo2016FilterPass",
+    // Flag_globalTightHalo2016FilterPass);
 }
 
-void WZSelectorBase::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) { 
+void WZSelectorBase::LoadBranchesNanoAOD(
+    Long64_t entry, std::pair<Systematic, std::string> variation) {
     b.SetEntry(entry);
     weight = 1;
 
     if (nElectron > N_KEEP_MU_E_ || nMuon > N_KEEP_MU_E_) {
-        std::string message = "Found more electrons or muons than max read number.\n    Found ";
+        std::string message =
+            "Found more electrons or muons than max read number.\n    Found ";
         message += std::to_string(nElectron);
         message += " electrons.\n    Found ";
         message += std::to_string(nMuon);
         message += " Muons\n  --> Max read number was ";
         message += std::to_string(N_KEEP_MU_E_);
-        message += "\nExiting because this can cause problems. Increase N_KEEP_MU_E_ to avoid this error.\n";
+        message +=
+            "\nExiting because this can cause problems. Increase N_KEEP_MU_E_ "
+            "to avoid this error.\n";
         throw std::domain_error(message);
     }
 
@@ -293,11 +296,11 @@ void WZSelectorBase::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, s
     l3Mass = 0;
 
     SetChannelAndIndicesNano();
-    if (channel_ != eee && channel_ != eem && channel_ != emm && channel_ != mmm) {
+    if (channel_ != eee && channel_ != eem && channel_ != emm &&
+        channel_ != mmm) {
         passesLeptonVeto = false;
         return;
-    }
-    else
+    } else
         passesLeptonVeto = true;
 
     SetGoodLeptonsFromNano();
@@ -307,9 +310,8 @@ void WZSelectorBase::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, s
     if (isMC_) {
         ApplyScaleFactors();
     }
-    //else {
+    // else {
     //}
-
 }
 
 void WZSelectorBase::SetLeptonVarsNano() {
@@ -320,15 +322,15 @@ void WZSelectorBase::SetLeptonVarsNano() {
     l1Pt = l1.pt();
     l1Eta = l1.eta();
     l1Phi = l1.phi();
-    l1Mass= l1.mass();
+    l1Mass = l1.mass();
     l2Pt = l2.pt();
     l2Eta = l2.eta();
     l2Phi = l2.phi();
-    l2Mass= l2.mass();
+    l2Mass = l2.mass();
     l3Pt = l3.pt();
     l3Eta = l3.eta();
     l3Phi = l3.phi();
-    l3Mass= l3.mass();
+    l3Mass = l3.mass();
 
     if (channel_ == eee) {
         size_t ie = looseElecIndices.at(0);
@@ -343,8 +345,7 @@ void WZSelectorBase::SetLeptonVarsNano() {
         l3IsTight = (Electron_cutBased[ie] == 4);
         l3PVDXY = Electron_dxy[ie];
         l3PVDZ = Electron_dz[ie];
-    }
-    else if (channel_ == eem) {
+    } else if (channel_ == eem) {
         size_t ie = looseElecIndices.at(0);
         l1IsTight = (Electron_cutBased[ie] == 4);
         l1PVDXY = Electron_dxy[ie];
@@ -355,8 +356,7 @@ void WZSelectorBase::SetLeptonVarsNano() {
         l2PVDZ = Electron_dz[ie];
         size_t imu = looseMuonIndices.at(0);
         l3IsTight = (Muon_tightId[imu] && Muon_pfRelIso04_all[imu] < 0.15);
-    }
-    else if (channel_ == emm) {
+    } else if (channel_ == emm) {
         size_t imu = looseMuonIndices.at(0);
         l1IsTight = (Muon_tightId[imu] && Muon_pfRelIso04_all[imu] < 0.15);
         l1PVDXY = Muon_dxy[imu];
@@ -369,8 +369,7 @@ void WZSelectorBase::SetLeptonVarsNano() {
         l3IsTight = (Electron_cutBased[ie] == 4);
         l3PVDXY = Electron_dxy[ie];
         l3PVDZ = Electron_dz[ie];
-     }
-     else if (channel_ == mmm) {
+    } else if (channel_ == mmm) {
         size_t imu = looseMuonIndices.at(0);
         l1IsTight = (Muon_tightId[imu] && Muon_pfRelIso04_all[imu] < 0.15);
         l1PVDXY = Muon_dxy[imu];
@@ -383,10 +382,11 @@ void WZSelectorBase::SetLeptonVarsNano() {
         l3IsTight = (Muon_tightId[imu] && Muon_pfRelIso04_all[imu] < 0.15);
         l3PVDXY = Muon_dxy[imu];
         l3PVDZ = Muon_dz[imu];
-     }
+    }
 }
 
-// Always ordered: 0 - Zlep1, 1 - Zlep2, 2 - Wlep (lep IDs are clear from channel)
+// Always ordered: 0 - Zlep1, 1 - Zlep2, 2 - Wlep (lep IDs are clear from
+// channel)
 void WZSelectorBase::SetGoodLeptonsFromNano() {
     leptons.clear();
     bool zee = (channel_ == eem || channel_ == eee);
@@ -395,20 +395,24 @@ void WZSelectorBase::SetGoodLeptonsFromNano() {
         throw std::length_error("Invalid lepton indices");
     }
     for (const auto& i : indices) {
-        auto lep = zee ?
-            LorentzVector(Electron_pt[i], Electron_eta[i], Electron_phi[i], Electron_mass[i]) :
-            LorentzVector(Muon_pt[i], Muon_eta[i], Muon_phi[i], Muon_mass[i]);
+        auto lep = zee ? LorentzVector(Electron_pt[i], Electron_eta[i],
+                                       Electron_phi[i], Electron_mass[i])
+                       : LorentzVector(Muon_pt[i], Muon_eta[i], Muon_phi[i],
+                                       Muon_mass[i]);
         leptons.push_back(lep);
     }
 
     if (channel_ == eem || channel_ == emm) {
-        auto& wIndices = (channel_ == eem) ? looseMuonIndices : looseElecIndices;
+        auto& wIndices =
+            (channel_ == eem) ? looseMuonIndices : looseElecIndices;
         if (wIndices.size() != 1)
             throw std::length_error("Invalid W lepton indices");
         size_t wi = wIndices.at(0);
-        auto wlep = (channel_ == eem) ?
-                LorentzVector(Muon_pt[wi], Muon_eta[wi], Muon_phi[wi], Muon_mass[wi]) :
-                LorentzVector(Electron_pt[wi], Electron_eta[wi], Electron_phi[wi], Electron_mass[wi]);
+        auto wlep = (channel_ == eem)
+                        ? LorentzVector(Muon_pt[wi], Muon_eta[wi], Muon_phi[wi],
+                                        Muon_mass[wi])
+                        : LorentzVector(Electron_pt[wi], Electron_eta[wi],
+                                        Electron_phi[wi], Electron_mass[wi]);
         leptons.push_back(wlep);
     }
 }
@@ -420,7 +424,7 @@ void WZSelectorBase::SetChannelAndIndicesNano() {
     nWZTightMuon = 0;
     nWZMediumMuon = 0;
 
-    //TODO: Embed these variables in the NanoSkims
+    // TODO: Embed these variables in the NanoSkims
     looseMuonIndices.clear();
     looseElecIndices.clear();
     for (size_t i = 0; i < nMuon; i++) {
@@ -436,8 +440,7 @@ void WZSelectorBase::SetChannelAndIndicesNano() {
             nCBVIDVetoElec++;
             looseElecIndices.push_back(i);
         }
-        if (Electron_cutBased[i] == 4)
-            nCBVIDTightElec++;
+        if (Electron_cutBased[i] == 4) nCBVIDTightElec++;
     }
 
     if (nWZMediumMuon == 0 && nCBVIDVetoElec == 3)
@@ -450,14 +453,16 @@ void WZSelectorBase::SetChannelAndIndicesNano() {
         channelName_ = "mmm";
     else
         channelName_ = "Unknown";
-    
-    //std::cout << "Channel " << channelName_ << " " << channel_ << " elecIndices " << looseElecIndices.size() 
+
+    // std::cout << "Channel " << channelName_ << " " << channel_ << "
+    // elecIndices " << looseElecIndices.size()
     //          << " muon indices " << looseMuonIndices.size() << std::endl;
 
     channel_ = channelMap_[channelName_];
 }
 
-void WZSelectorBase::LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation){ 
+void WZSelectorBase::LoadBranchesUWVV(
+    Long64_t entry, std::pair<Systematic, std::string> variation) {
     b.SetEntry(entry);
     weight = 1;
 
@@ -467,14 +472,15 @@ void WZSelectorBase::LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std:
     // Veto on tight leptons
     // Make sure tight leptons also pass loose
     // passesLeptonVeto = nWZTightMuon + nCBVIDTightElec <= 3 &&
-    //                      (nWZMediumMuon + nCBVIDHLTSafeElec) >= (nWZTightMuon+nCBVIDTightElec);
+    //                      (nWZMediumMuon + nCBVIDHLTSafeElec) >=
+    //                      (nWZTightMuon+nCBVIDTightElec);
     // If tight isn't required to include loose
-    // passesLeptonVeto = std::abs(nWZMediumMuon + nCBVIDHLTSafeElec - (l1IsLoose +l2IsLoose +l3IsLoose)) < 0.1;
+    // passesLeptonVeto = std::abs(nWZMediumMuon + nCBVIDHLTSafeElec -
+    // (l1IsLoose +l2IsLoose +l3IsLoose)) < 0.1;
 
     // Veto on loose leptons
-    //passesLeptonVeto = (nWZMediumMuon + nCBVIDHLTSafeElec) == 3;
+    // passesLeptonVeto = (nWZMediumMuon + nCBVIDHLTSafeElec) == 3;
     passesLeptonVeto = (nWZMediumMuon + nCBVIDVetoElec) == 3;
- 
 }
 
 void WZSelectorBase::ApplyScaleFactors() {
@@ -490,8 +496,7 @@ void WZSelectorBase::ApplyScaleFactors() {
             weight *= eGsfSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
             weight *= eGsfSF_->Evaluate2D(std::abs(l3Eta), l3Pt);
         }
-    }
-    else if (channel_ == eem) {
+    } else if (channel_ == eem) {
         if (eIdSF_ != nullptr) {
             weight *= eIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
             weight *= eIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
@@ -506,8 +511,7 @@ void WZSelectorBase::ApplyScaleFactors() {
         if (mIsoSF_ != nullptr) {
             weight *= mIsoSF_->Evaluate2D(std::abs(l3Eta), l3Pt);
         }
-    }
-    else if (channel_ == emm) {
+    } else if (channel_ == emm) {
         if (eIdSF_ != nullptr) {
             weight *= eIdSF_->Evaluate2D(std::abs(l3Eta), l3Pt);
         }
@@ -522,8 +526,7 @@ void WZSelectorBase::ApplyScaleFactors() {
             weight *= mIsoSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
             weight *= mIsoSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
         }
-    }
-    else {
+    } else {
         if (mIdSF_ != nullptr) {
             weight *= mIdSF_->Evaluate2D(std::abs(l1Eta), l1Pt);
             weight *= mIdSF_->Evaluate2D(std::abs(l2Eta), l2Pt);
@@ -536,7 +539,7 @@ void WZSelectorBase::ApplyScaleFactors() {
         }
     }
     if (pileupSF_ != nullptr) {
-        //weight *= pileupSF_->Evaluate1D(numPU);
+        // weight *= pileupSF_->Evaluate1D(numPU);
         weight *= pileupSF_->Evaluate1D(nTruePU);
     }
 }
@@ -548,52 +551,52 @@ void WZSelectorBase::SetMasses() {
         leptons.push_back(LorentzVector(l3Pt, l3Eta, l3Phi, l3Mass));
     }
 
-    ZMass = (leptons.at(0)+leptons.at(1)).M();
-    Mass = (leptons.at(0)+leptons.at(1)+leptons.at(2)).M();
+    ZMass = (leptons.at(0) + leptons.at(1)).M();
+    Mass = (leptons.at(0) + leptons.at(1) + leptons.at(2)).M();
 }
 
 // Meant to be a wrapper for the tight ID just in case it changes
 // To be a function of multiple variables
 bool WZSelectorBase::zlep1IsTight() {
     bool l1IsE = (channel_ == eem || channel_ == eee);
-    if (l1IsE) { 
+    if (l1IsE) {
         // TODO: This should really be the supercluster eta, I think
         bool isEB = std::abs(l1Eta) > 1.479;
-        return l1IsTight && (
-            std::abs(l1PVDXY) < (isEB ? 0.05 : 0.1) && std::abs(l1PVDZ) < (isEB ? 0.1 : 0.2));
+        return l1IsTight && (std::abs(l1PVDXY) < (isEB ? 0.05 : 0.1) &&
+                             std::abs(l1PVDZ) < (isEB ? 0.1 : 0.2));
     }
-    return (l1IsTight && std::abs(l1PVDXY) < 0.02 && std::abs(l1PVDZ) < 0.1); 
+    return (l1IsTight && std::abs(l1PVDXY) < 0.02 && std::abs(l1PVDZ) < 0.1);
 }
 
 bool WZSelectorBase::zlep2IsTight() {
     bool l2IsE = (channel_ == eem || channel_ == eee);
-    if (l2IsE) { 
+    if (l2IsE) {
         // TODO: This should really be the supercluster eta, I think
         bool isEB = std::abs(l2Eta) > 1.479;
-        return l2IsTight && (
-            std::abs(l2PVDXY) < (isEB ? 0.05 : 0.1) && std::abs(l2PVDZ) < (isEB ? 0.1 : 0.2));
+        return l2IsTight && (std::abs(l2PVDXY) < (isEB ? 0.05 : 0.1) &&
+                             std::abs(l2PVDZ) < (isEB ? 0.1 : 0.2));
     }
-    return (l2IsTight && std::abs(l2PVDXY) < 0.02 && std::abs(l2PVDZ) < 0.1); 
+    return (l2IsTight && std::abs(l2PVDXY) < 0.02 && std::abs(l2PVDZ) < 0.1);
 }
 
 bool WZSelectorBase::tightZLeptons() {
-    return zlep1IsTight() && zlep2IsTight(); 
+    return zlep1IsTight() && zlep2IsTight();
 }
 
 bool WZSelectorBase::lepton3IsTight() {
     bool l3IsE = (channel_ == emm || channel_ == eee);
-    if (l3IsE) { 
+    if (l3IsE) {
         // TODO: This should really be the supercluster eta, I think
         bool isEB = std::abs(l3Eta) > 1.479;
-        return l3IsTight && (
-            std::abs(l3PVDXY) < (isEB ? 0.05 : 0.1) && std::abs(l3PVDZ) < (isEB ? 0.1 : 0.2));
+        return l3IsTight && (std::abs(l3PVDXY) < (isEB ? 0.05 : 0.1) &&
+                             std::abs(l3PVDZ) < (isEB ? 0.1 : 0.2));
     }
-    return (l3IsTight && std::abs(l3PVDXY) < 0.02 && std::abs(l3PVDZ) < 0.1); 
+    return (l3IsTight && std::abs(l3PVDXY) < 0.02 && std::abs(l3PVDZ) < 0.1);
 }
 
 bool WZSelectorBase::IsGenMatched3l() {
-    //return true;
-    return (!isMC_ || isNonpromptMC_ || 
-        (isZgamma_ && l1GenPt > 0 && l2GenPt > 0) ||
-        (l1GenPt > 0 && l2GenPt > 0 && l3GenPt > 0));
+    // return true;
+    return (!isMC_ || isNonpromptMC_ ||
+            (isZgamma_ && l1GenPt > 0 && l2GenPt > 0) ||
+            (l1GenPt > 0 && l2GenPt > 0 && l3GenPt > 0));
 }

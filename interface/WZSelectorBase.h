@@ -1,28 +1,28 @@
 #ifndef WZSelectorBase_h
 #define WZSelectorBase_h
 
-#include <TROOT.h>
 #include <TChain.h>
+#include <TEfficiency.h>
 #include <TFile.h>
-#include <TSelector.h>
 #include <TH1.h>
 #include <TH2.h>
-#include <TEfficiency.h>
+#include <TROOT.h>
+#include <TSelector.h>
 #include <exception>
 #include <iostream>
 
 // Headers needed by this particular selector
 #include <vector>
+#include "Analysis/VVAnalysis/interface/BranchManager.h"
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
 #include "Analysis/VVAnalysis/interface/SelectorBase.h"
 #include "Analysis/VVAnalysis/interface/helpers.h"
-#include "Analysis/VVAnalysis/interface/BranchManager.h"
 
 class WZSelectorBase : public SelectorBase {
-public :
+   public:
     ScaleFactor* pileupSF_;
     ScaleFactor* muonSF_;
-    ScaleFactor* eIdSF_ ;
+    ScaleFactor* eIdSF_;
     ScaleFactor* eGsfSF_;
     ScaleFactor* mIdSF_;
     ScaleFactor* mIsoSF_;
@@ -52,7 +52,7 @@ public :
     Float_t l2Mass;
     Float_t l3Mass;
 
-    //NanoAOD variables
+    // NanoAOD variables
     static const unsigned int N_KEEP_MU_E_ = 20;
     UInt_t nElectron;
     UInt_t nMuon;
@@ -118,18 +118,18 @@ public :
     Bool_t Flag_goodVerticesPass;
     Bool_t Flag_eeBadScFilterPass;
     Bool_t Flag_globalTightHalo2016FilterPass;
-    
+
     // Readers to access the data (delete the ones you do not need).
-    virtual void    SetScaleFactors() override;
-    virtual void    Init(TTree *tree) override;
+    virtual void SetScaleFactors() override;
+    virtual void Init(TTree* tree) override;
 
-    ClassDefOverride(WZSelectorBase,0);
+    ClassDefOverride(WZSelectorBase, 0);
 
-protected:
+   protected:
     std::vector<std::string> nonprompt3l_ = {
-        "tt-lep", "st-schan", "st-tchan-t", "st-tchan-tbar",
-        "st-tw", "st-tbarw", "DYm50", "DYm50-1j",
-        "DYm50-2j","DYm50-3j","DYm50-4j", "DYm50__LO",
+        "tt-lep",   "st-schan", "st-tchan-t", "st-tchan-tbar",
+        "st-tw",    "st-tbarw", "DYm50",      "DYm50-1j",
+        "DYm50-2j", "DYm50-3j", "DYm50-4j",   "DYm50__LO",
     };
 
     bool isNonpromptEstimate_;
@@ -143,10 +143,12 @@ protected:
     bool tightZLeptons();
     bool IsGenMatched3l();
     virtual std::string GetNameFromFile() override;
-    virtual void    SetBranchesNanoAOD() override;
-    virtual void    SetBranchesUWVV() override;
-    void LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    virtual void SetBranchesNanoAOD() override;
+    virtual void SetBranchesUWVV() override;
+    void LoadBranchesUWVV(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void LoadBranchesNanoAOD(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
     void ApplyScaleFactors();
     void SetLeptonVarsNano();
     void SetMasses();
@@ -155,4 +157,3 @@ protected:
 };
 
 #endif
-
