@@ -156,6 +156,7 @@ public :
     std::vector<GoodPart> goodJets;
     double HT;
     int nJets, nBJets;
+    std::vector<int> bjetList, jetList;
     bool passZVeto;
     BTagCalibration calib;
     BTagCalibrationReader btag_reader; // central sys type
@@ -220,7 +221,9 @@ public :
     bool MetFilter();
     float getBtagEffFromFile(double, double, int);
     double getWDecayScaleFactor();
-    
+
+    std::vector<GoodPart>::iterator findJet(std::vector<GoodPart>::iterator& start, int pid);
+
     //// General Functions
     int getSRBin() const;
     void clearValues();

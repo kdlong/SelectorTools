@@ -875,15 +875,15 @@ void ThreeLepSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
     Fill1D("dijetMass", (goodJets[0].v, goodJets[1].v).M());
     Fill1D("DRLep", reco::deltaR(goodLeptons[0].v, goodLeptons[1].v));
 
-    auto event_pair = EventShape(goodJets, goodLeptons, pow(MET, 2), type1_pfMETPhi);
-    Fill1D("Shape1", event_pair.first);
-    Fill1D("Shape2", event_pair.second);
-    Fill1D("LepCos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodLeptons[1].v));
-    Fill1D("JLep1Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodJets[0].v));
-    Fill1D("JLep2Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[1].v, goodJets[0].v));
+    //auto event_pair = EventShape(goodJets, goodLeptons, pow(MET, 2), type1_pfMETPhi);
+    //Fill1D("Shape1", event_pair.first);
+    //Fill1D("Shape2", event_pair.second);
+    //Fill1D("LepCos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodLeptons[1].v));
+    //Fill1D("JLep1Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[0].v, goodJets[0].v));
+    //Fill1D("JLep2Cos", ROOT::Math::VectorUtil::CosTheta(goodLeptons[1].v, goodJets[0].v));
     int goodjet1 = 0;
     if(bjetList.at(0) == 0) goodjet1 = 1;
-    Fill1D("JBCos", ROOT::Math::VectorUtil::CosTheta(goodJets[bjetList.at(0)].v, goodJets[goodjet1].v));
+    //Fill1D("JBCos", ROOT::Math::VectorUtil::CosTheta(goodJets[bjetList.at(0)].v, goodJets[goodjet1].v));
     Fill1D("DRjb", reco::deltaR(goodJets[bjetList.at(0)].v, goodJets[goodjet1].v));
     
     
@@ -903,7 +903,7 @@ void ThreeLepSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
 	LorentzVector jit = goodJets.at(it).v;
 	Fill1D(("ptj" + intStr).c_str(), jit.Pt());
 	Fill1D(("etaj" + intStr).c_str(), jit.Eta());
-	Fill1D(("dphi_l1j" + intStr).c_str(), abs(ROOT::Math::VectorUtil::DeltaPhi(goodLeptons[0].v, jit)));
+	//Fill1D(("dphi_l1j" + intStr).c_str(), abs(ROOT::Math::VectorUtil::DeltaPhi(goodLeptons[0].v, jit)));
 	k++;
     }
     k=1;
@@ -944,8 +944,8 @@ void ThreeLepSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std:
     bb2Pt = (bjetList.size() > 1) ? goodJets.at(bjetList[1]).Pt() : 0;
     bb3Pt = (bjetList.size() > 2) ? goodJets.at(bjetList[2]).Pt() : 0;
     bb4Pt = (bjetList.size() > 3) ? goodJets.at(bjetList[3]).Pt() : 0;
-    bShape1 = event_pair.first;
-    bShape2 = event_pair.second;
+    // bShape1 = event_pair.first;
+    // bShape2 = event_pair.second;
     
     // bHTb;
     // bjlMass;

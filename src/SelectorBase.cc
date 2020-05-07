@@ -94,7 +94,6 @@ void SelectorBase::Init(TTree *tree)
 	year_ = enumFactory.getEnum(yearName_);
     } else {
 	year_ = enumFactory.addEnum(yearName_);
-	LOG_WARN(log) << "Year ("<< yearName_ << ") not found.\n";
     }
 
     
