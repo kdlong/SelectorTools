@@ -17,12 +17,21 @@ if [ "$modTime" -gt "$runTime" ]; then
 fi
 
 EXE=./Utilities/scripts/makeHistFile.py
+# EXE=./Utilities/scripts/makeFakeRates.py
 ANA=ThreeLep
 YEAR=2016
-INP=TwoLep_Met40
-# SEL=FourTopCutBasedEl
-SEL=FourTopMVAEl
+# INP=TwoLep_Met40
+INP=NoSkim_MultYear
+# INP=TwoLep_Met25
 
+# # SEL=FourTopCutBasedEl
+# SEL=FourTopMVAEl
+SEL=MVAStudy
+
+# ANA=FR
+# INP=FakeRateEOS
+# YEAR=2016
+# SEL=FakeRate
 
 # EXE=./Utilities/scripts/makeHistFile.py
 # ANA=Efficiency:ThreeLep
@@ -33,9 +42,6 @@ SEL=FourTopMVAEl
 # SEL=test
 
 
-
-
-
 $EXE -a $ANA --input_tier $INP -s $SEL \
-     --year $YEAR --test ${@}
+     --year $YEAR ${@}
 

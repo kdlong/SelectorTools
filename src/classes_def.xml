@@ -1,6 +1,5 @@
 <lcgdict>
   <class name="FakeRateSelector"/>
-  <class name="TTTSelector"/>
   <class name="SelectorBase"/>
   <class name="ZSelector"/>
   <class name="LowPileupZSelector"/>

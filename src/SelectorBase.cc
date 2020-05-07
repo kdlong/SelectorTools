@@ -25,78 +25,110 @@ void SelectorBase::Init(TTree *tree)
     fChain = tree;
     
     TString option = GetOption();
-
+    std::string selectionName_ = "Unknown";
+    std::string yearName_ = "yrdefault";
+    fwlog::LogLevel fwlogLevel = fwlog::kError;
+        
+    yrdefault = enumFactory.addEnum("yrdefault");
+    for(auto pair: yearMap_)
+	pair.second = enumFactory.addEnum(pair.first);
+    selectionMap_.insert(addSelection_.begin(), addSelection_.end());
+    for(auto pair: selectionMap_)
+	pair.second = enumFactory.addEnum(pair.first);
+    
     if (GetInputList() != nullptr) {
 	TNamed* ntupleType = (TNamed *) GetInputList()->FindObject("ntupleType");
-    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
-    TNamed* chan = (TNamed *) GetInputList()->FindObject("channel");
-    TNamed* selection = (TNamed *) GetInputList()->FindObject("selection");
+	TNamed* name = (TNamed *) GetInputList()->FindObject("name");
+	TNamed* chan = (TNamed *) GetInputList()->FindObject("channel");
+	TNamed* selection = (TNamed *) GetInputList()->FindObject("selection");
 	TNamed* year = (TNamed *) GetInputList()->FindObject("year");
+	TNamed* logLevel = (TNamed *) GetInputList()->FindObject("logLevel");
 
 	if (ntupleType != nullptr) {
 	    std::string ntupleName = ntupleType->GetTitle();
-	    if (ntupleName == "NanoAOD")
-		    ntupleType_ = NanoAOD;
-	    else if (ntupleName  == "UWVV")
-		ntupleType_ = UWVV;
-	    else if (ntupleName  == "Bacon")
-		ntupleType_ = Bacon;
-	    else
+	    if (ntupleName == "NanoAOD")      ntupleType_ = NanoAOD;
+	    else if (ntupleName  == "UWVV")   ntupleType_ = UWVV;
+		else if (ntupleName  == "Bacon")  ntupleType_ = Bacon;
+		else
 		    throw std::invalid_argument("Unsupported ntuple type!");
-	}
-	else {
-	    std::cerr << "INFO: Assuming NanoAOD ntuples" << std::endl;
-	    ntupleType_ = NanoAOD;
-	}
+	    } else {
+		std::cerr << "INFO: Assuming NanoAOD ntuples" << std::endl;
+		ntupleType_ = NanoAOD;
+	    }
 
-        if (name != nullptr) {
-            name_ = name->GetTitle();
-        }
-        else {
-            name_ = GetNameFromFile();
-        }
-        if (name_.empty()){
-            std::cerr << "INFO: Using default name \"Unknown\" for file" << std::endl;
-            name_ = "Unknown";
-        }
-	if(year != nullptr) {
-	    year_ = yearMap_[year->GetTitle()];
+	if (name != nullptr) {
+	    name_ = name->GetTitle();
+	} else {
+	    name_ = GetNameFromFile();
+	}
+	
+	if(year != nullptr ) {
+	    yearName_ = year->GetTitle();
 	}
 	
 	if (chan != nullptr) {
 	    channelName_ = chan->GetTitle();
+	} else if (ntupleType_ == UWVV) {
+	    channelName_ = fChain->GetTree()->GetDirectory()->GetName();
 	}
-	else if (ntupleType_ == UWVV)
-            channelName_ = fChain->GetTree()->GetDirectory()->GetName();
-        if (selection != nullptr) {
+	
+	if (selection != nullptr) {
             selectionName_ = selection->GetTitle();
         }
+
+	if(logLevel != nullptr) {
+	    std::string logName = logLevel->GetTitle();
+	    if( logName == "DEBUG") fwlogLevel = fwlog::kDebug;
+	    else if( logName == "INFO") fwlogLevel = fwlog::kInfo;
+	    else if( logName == "WARNING") fwlogLevel = fwlog::kWarning;
+	    else fwlogLevel = fwlog::kError;
+	}
+    }
+    fwlog::setPresentLogLevel(fwlogLevel);
+
+    // Setup Name
+    if (name_.empty()){
+	std::cerr << "INFO: Using default name \"Unknown\" for file" << std::endl;
+	name_ = "Unknown";
     }
     
-    if (selectionMap_.find(selectionName_) != selectionMap_.end()) {
-	    selection_ = selectionMap_[selectionName_];
+    // Setup Selection
+    if (enumFactory.foundEnum(selectionName_)) {
+	selection_ = enumFactory.getEnum(selectionName_);
+    } else {
+	selection_ = enumFactory.addEnum(selectionName_);
+	fwLog(fwlog::kDebug) << "Selection ("<< selectionName_ << ") not found.\n";
     }
-    else
-        throw std::invalid_argument(selectionName_ + " is not a valid selection!");
+    
+    // Setup Year
+    if (enumFactory.foundEnum(yearName_)) {
+	year_ = enumFactory.getEnum(yearName_);
+    } else {
+	year_ = enumFactory.addEnum(yearName_);
+	fwLog(fwlog::kDebug)<< "Year ("<< yearName_ << ") not found.\n";
+    }
+
+    fwlog::setPresentLogLevel(fwlogLevel);
+
+    
     
     isMC_ = false;
     if (name_.find("data") == std::string::npos){
-        isMC_ = true;
+	isMC_ = true;
     }
     if (doSystematics_ && isMC_ && !isNonprompt_)
-        variations_.insert(systematics_.begin(), systematics_.end());
-
+	variations_.insert(systematics_.begin(), systematics_.end());
+    
     if (channelMap_.find(channelName_) != channelMap_.end())
-        channel_ = channelMap_[channelName_];
+	channel_ = channelMap_[channelName_];
     else {
-        std::string message = "Invalid channel choice! ";
-        message += "Choice was " + channelName_ + "\n";
-        message += "Valid choices are: ";
-        for (const auto& chan : channelMap_)
+	std::string message = "Invalid channel choice! ";
+	message += "Choice was " + channelName_ + "\n";
+	message += "Valid choices are: ";
+	for (const auto& chan : channelMap_)
             message += chan.first + ", " ;
         throw std::invalid_argument(message);
     }
-
     // only make the directory iff class isn't being run as a slave class /////
     TNamed* isSlaveClass = (TNamed *) GetInputList()->FindObject("isSlaveClass");
     if(isSlaveClass != nullptr) return;

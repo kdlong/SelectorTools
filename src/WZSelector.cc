@@ -8,9 +8,15 @@ void WZSelector::Init(TTree *tree)
         weight_info_ = GetLheWeightInfo();
     }
 
+    addSelection_ = {{"Inclusive2Jet_Full", Inclusive2Jet_Full},
+		     {"Wselection_Full", Wselection_Full},
+		     {"Inclusive2Jet", Inclusive2Jet},
+		     {"FakeRateSelectionTight", FakeRateSelectionTight},
+		     {"FakeRateSelectionLoose", FakeRateSelectionLoose}, };
+    
     systematics_ = {
-        {jetEnergyScaleUp, "CMS_scale_jUp"}, 
-        {jetEnergyScaleDown, "CMS_scale_jDown"}, 
+		    {jetEnergyScaleUp, "CMS_scale_jUp"}, 
+		    {jetEnergyScaleDown, "CMS_scale_jDown"}, 
         {jetEnergyResolutionUp, "CMS_res_jUp"},
         {jetEnergyResolutionDown, "CMS_res_jDown"},
         {metUnclusteredEnergyUp, "CMS_scale_unclEnergyUp"},
@@ -505,7 +511,7 @@ bool WZSelector::PassesFullWZSelection(Long64_t entry) {
     return true;
 }
 
-bool WZSelector::PassesBaseSelection(Long64_t entry, bool tightLeps, Selection selection) { 
+bool WZSelector::PassesBaseSelection(Long64_t entry, bool tightLeps, int selection) { 
     //if (!(Flag_BadChargedCandidateFilterPass
     //        && Flag_HBHENoiseFilterPass 
     //        && Flag_HBHENoiseIsoFilterPass 

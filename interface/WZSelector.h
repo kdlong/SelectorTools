@@ -12,6 +12,8 @@ public :
     bool isaQGC_ = false;
     bool doaQGC_ = false;
 
+    int Inclusive2Jet_Full, Wselection_Full, Inclusive2Jet, FakeRateSelectionTight, FakeRateSelectionLoose;
+    
     std::vector<float>* scaleWeights = NULL;
     std::vector<float>* pdfWeights = NULL;
     std::vector<float> lheWeights;
@@ -129,7 +131,7 @@ protected:
     void FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
     void FillVBSHistograms(float weight, bool noBlind, 
             std::pair<Systematic, std::string> variation);
-    bool PassesBaseSelection(Long64_t entry, bool tightLeps, Selection selection);
+    bool PassesBaseSelection(Long64_t entry, bool tightLeps, int selection);
     bool PassesVBSSelection(bool noBlind);
     bool PassesVBSBackgroundControlSelection();
     bool PassesFullWZSelection(Long64_t entry);

@@ -80,7 +80,8 @@ class CombineCardTools(object):
 
     def getVariationsForProcess(self, process):
         if process not in self.variations.keys():
-            raise ValueError("Variations not defined for process %s" % process)
+            
+           raise ValueError("Variations not defined for process %s" % process)
         return self.variations[process]
 
     def setVariationsByProcess(self, process, variations):
@@ -204,7 +205,7 @@ class CombineCardTools(object):
         self.channelsToCombine = groups
 
     def combineChannels(self, group, processName, central=True):
-        variations = self.variations[group.GetName()][:]
+        variations = self.variations[group.GetName()][:] if group.GetName() in self.variations else []
         fitVariable = self.getFitVariable(group.GetName())
         if central:
             variations.append("")
@@ -263,7 +264,7 @@ class CombineCardTools(object):
         #TODO:Make optional
         processedHists = []
         for chan in self.channels:
-            histName = "_".join([fitVariable, chan]) if chan != "all" else fitVariable
+            histName = "_".join([fitVariable, chan])
             hist = group.FindObject(histName)
             if not hist:
                 logging.warning("Failed to produce hist %s for process %s" % (histName, processName))
