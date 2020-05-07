@@ -181,15 +181,14 @@ def getListOfHDFSFiles(file_path):
 
 # TODO: Would be good to switch the order of the last two arguments
 # completely deprecate manager_path without breaking things
-def getListOfFiles(filelist, analysis, selection=""):
+def getListOfFiles(filelist, analysis="", input_tier=""):
     manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
     group_path = "%s/%s/PlotGroups" % (manager_path, getManagerName())
     data_info = UserInput.readAllInfo("/".join([data_path, "data/*"]))
     mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
     
-    valid_names = UserInput.readInfo("/".join([data_path, analysis, selection])) if selection \
-        else (data_info.keys() + mc_info.keys())
+    valid_names = UserInput.readInfo("/".join([data_path, analysis, input_tier])) if input_tier and analysis else (data_info.keys() + mc_info.keys())
     group_names = UserInput.readAllInfo("%s/%s.py" %(group_path, analysis))
     names = []
     for name in filelist:
@@ -237,10 +236,10 @@ def fillTemplatedFile(template_file_name, out_file_name, template_dict):
     with open(out_file_name, "w") as outFile:
         outFile.write(result)
 
-def getListOfFilesWithXSec(filelist, analysis, selection=""):
+def getListOfFilesWithXSec(filelist, analysis="", input_tier=""):
     manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
-    files = getListOfFiles(filelist, analysis, selection)
+    files = getListOfFiles(filelist, analysis, input_tier)
     mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
     info = {}
     for file_name in files:
@@ -258,20 +257,20 @@ def getListOfFilesWithXSec(filelist, analysis, selection=""):
             info.update({file_name : file_info["cross_section"]*kfac})
     return info
 
-def getListOfFilesWithPath(filelist, analysis, selection, das=True):
+def getListOfFilesWithPath(filelist, analysis, input_tier, das=True):
     manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
-    files = getListOfFiles(filelist, analysis, selection)
-    selection_info = UserInput.readInfo("/".join([data_path, analysis, selection]))
+    files = getListOfFiles(filelist, analysis, input_tier)
+    input_tier_info = UserInput.readInfo("/".join([data_path, analysis, input_tier]))
     info = {}
     for file_name in files:
-        if das and "DAS" not in selection_info[file_name].keys():
-            logging.error("DAS path not defined for file %s in analysis %s/%s" % (file_name, analysis, selection))
+        if das and "DAS" not in input_tier_info[file_name].keys():
+            logging.error("DAS path not defined for file %s in analysis %s/%s" % (file_name, analysis, input_tier))
             continue
-        elif not das and "file_path" not in selection_info[file_name].keys():
-            logging.error("File_path not defined for file %s in analysis %s/%s" % (file_name, analysis, selection))
+        elif not das and "file_path" not in input_tier_info[file_name].keys():
+            logging.error("File_path not defined for file %s in analysis %s/%s" % (file_name, analysis, input_tier))
             continue
-        info.update({file_name : selection_info[file_name]["DAS" if das else "file_path"]})
+        info.update({file_name : input_tier_info[file_name]["DAS" if das else "file_path"]})
     return info
 
 def getPreviousStep(selection, analysis):

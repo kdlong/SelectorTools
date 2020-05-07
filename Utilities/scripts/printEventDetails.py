@@ -41,7 +41,7 @@ args = parser.parse_args()
 
 isfile = any(os.path.isfile(name) or os.path.exists(name.rstrip("/*")) 
                 for name in args.filelist)
-filelist = ConfigureJobs.getListOfFiles(args.filelist, args.selection) if \
+filelist = ConfigureJobs.getListOfFiles(args.filelist, input_tier=args.selection) if \
     not isfile else args.filelist
 print filelist
 states = [x.strip() for x in args.channels.split(",")]

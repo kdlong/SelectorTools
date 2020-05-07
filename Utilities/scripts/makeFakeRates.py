@@ -6,6 +6,7 @@ from python import UserInput,OutputTools
 from python import ConfigureJobs
 from python import SelectorTools,HistTools
 import sys
+import logging
 
 ROOT.gROOT.SetBatch(True)
 
@@ -18,12 +19,16 @@ def getComLineArgs():
         default=35.87, help="luminosity value (in fb-1)")
     parser.add_argument("--output_file", "-o", type=str,
         default="", help="Output file name")
+    parser.add_argument("-j", "--numCores", type=int, default=1,
+        help="Number of cores to use (parallelize by dataset)")
     parser.add_argument("--input_tier", type=str,
         default="", help="Selection stage of input files")
     parser.add_argument("--year", type=str,
         default="default", help="Year of Analysis")
     parser.add_argument("--maxEntries", "-m", type=int,
         default=-1, help="Max entries to process")
+    parser.add_argument("--debug", action='store_true',
+        help="Print verbose info")
     return vars(parser.parse_args())
 
 def getHistNames(channels):
@@ -102,6 +107,7 @@ if manager_path not in sys.path:
         "AnalysisDatasetManager", "Utilities/python"]))
     
 args = getComLineArgs()
+logging.basicConfig(level=(logging.DEBUG if args['debug'] else logging.INFO))
 proof = 0
 if args['proof']:
     ROOT.TProof.Open("workers=12")
@@ -123,7 +129,7 @@ sf_inputs = [electronTightIdSF, electronGsfSF, muonIsoSF, muonIdSF, pileupSF]
 if runAnalysis:
     # Setup and run actual analysis
     selector = SelectorTools.SelectorDriver(args['analysis'], args['selection'], args['input_tier'], args['year'])
-    #selector.setNumCores(args['numCores'])
+    selector.setNumCores(args['numCores'])
     selector.setOutputfile(fileName)
     selector.setInputs(sf_inputs)
     selector.setMaxEntries(args['maxEntries'])
@@ -133,7 +139,7 @@ if runAnalysis:
     else:
         selector.setFileList(*args['inputs_from_file'])
 
-
+    
     mc = selector.applySelector()
 
     selector.outputFile().Close()

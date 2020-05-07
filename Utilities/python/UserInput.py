@@ -16,7 +16,7 @@ def getDefaultParser(allow_from_file=True):
                         required=False, help="Name of selection to make, "
                         " as defined in Cuts/<analysis>/<selection>.json")
     parser.add_argument("-a", "--analysis", type=str,
-                        required=False, default="WZxsec2016",
+                        required=False,
                         help="Analysis name, used in selecting the cut json")
     parser.add_argument("--selectorArgs", nargs='+', type=str,
         help="List of additional configurations to send to selector")
