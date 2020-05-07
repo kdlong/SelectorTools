@@ -25,6 +25,7 @@ class SelectorDriver(object):
             "ThreeLep" : "ThreeLepSelector",
             "Eff" : "Efficiency",
             "Efficiency" : "Efficiency",
+            "FR" : "FakeRateSelector",
         }
 
         self.subanalysis = None
@@ -94,7 +95,7 @@ class SelectorDriver(object):
             self.inputs.Add(inp)
         self.addTNamed("ntupleType", self.ntupleType)
         self.addTNamed("selection", self.selection)
-        self.addTNamed("year", self.year)
+        #self.addTNamed("year", self.year)
 
     def setSelection(self, selection):
         self.selection = selection
@@ -158,7 +159,7 @@ class SelectorDriver(object):
 
     def setDatasets(self, datalist):
         analysis = self.subanalysis if self.subanalysis else self.analysis
-        datasets = ConfigureJobs.getListOfFiles(datalist, self.input_tier, analysis=analysis)
+        datasets = ConfigureJobs.getListOfFiles(datalist, analysis, self.input_tier, )
         
         for dataset in datasets:
             if "@" in dataset:
@@ -303,6 +304,7 @@ class SelectorDriver(object):
 
     def processLocalFiles(self, selector, file_path, addSumweights, chan,):
         filenames = []
+
         for entry in file_path:
             filenames.extend(self.getFileNames(entry))
         for i, filename in enumerate(filenames):

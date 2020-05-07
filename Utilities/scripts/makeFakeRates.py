@@ -5,10 +5,11 @@ import datetime
 from python import UserInput,OutputTools
 from python import ConfigureJobs
 from python import SelectorTools,HistTools
+import sys
 
 ROOT.gROOT.SetBatch(True)
 
-channels = ["eee", "eem", "emm", "mmm"]
+
 def getComLineArgs():
     parser = UserInput.getDefaultParser()
     parser.add_argument("--proof", "-p", 
@@ -17,6 +18,12 @@ def getComLineArgs():
         default=35.87, help="luminosity value (in fb-1)")
     parser.add_argument("--output_file", "-o", type=str,
         default="", help="Output file name")
+    parser.add_argument("--input_tier", type=str,
+        default="", help="Selection stage of input files")
+    parser.add_argument("--year", type=str,
+        default="default", help="Year of Analysis")
+    parser.add_argument("--maxEntries", "-m", type=int,
+        default=-1, help="Max entries to process")
     return vars(parser.parse_args())
 
 def getHistNames(channels):
@@ -26,36 +33,35 @@ def getHistNames(channels):
         return base_hists
     return [x+"_"+y for x in base_hists for y in channels]
 
+def addOverflow(hist):
+    nxbins = hist.GetNbinsX()
+    nybins = hist.GetNbinsY()
+    for i in range(1, nybins+1):
+        setbin = hist.GetBin(nxbins, i)
+        obin = hist.GetBin(nxbins+1, i)
+        hist.SetBinContent(setbin, hist.GetBinContent(obin)+hist.GetBinContent(setbin))
+    for i in range(1,nxbins):
+        setbin = hist.GetBin(i, nybins)
+        obin = hist.GetBin(i, nybins+1)
+        hist.SetBinContent(setbin, hist.GetBinContent(obin)+hist.GetBinContent(setbin))
+    
+    return hist
+
 # Turn off overflow for FR hists (> 50 is pretty much all EWK anyway)
-def makeCompositeHists(name, members, addRatios=True, overflow=False):
+def makeCompositeHists(infile, name, members, channels, addRatios=True, overflow=False):
     composite = ROOT.TList()
     composite.SetName(name)
     for directory in [str(i) for i in members.keys()]:
-        for histname in getHistNames(["eee", "eem", "emm", "mmm"]):
-            hist = fOut.Get("/".join([directory, histname]))
+        for histname in getHistNames(channels):
+            hist = infile.Get("/".join([directory, histname]))
             if hist:
                 sumhist = composite.FindObject(hist.GetName())
                 if "data" not in directory and hist.GetEntries() > 0:
-                    sumweights_hist = fOut.Get("/".join([directory, "sumweights"]))
+                    sumweights_hist = infile.Get("/".join([directory, "sumweights"]))
                     sumweights = sumweights_hist.Integral()
                     hist.Scale(members[directory]*1000*args['lumi']/sumweights)
                 if overflow and isinstance(hist, ROOT.TH1):
-                    xbins = hist.GetNbinsX()
-                    ybins = hist.GetNbinsY()
-                    for i in range(1,xbins):
-                        setbin = hist.GetBin(i, ybins)
-                        obin = hist.GetBin(i, ybins+1)
-                        hist.SetBinContent(setbin, 
-                            hist.GetBinContent(obin)+hist.GetBinContent(setbin))
-                    for i in range(1, ybins):
-                        setbin = hist.GetBin(xbins, i)
-                        obin = hist.GetBin(xbins+1, i)
-                        hist.SetBinContent(setbin, 
-                            hist.GetBinContent(obin)+hist.GetBinContent(setbin))
-                    setbin = hist.GetBin(xbins, ybins)
-                    obin = hist.GetBin(xbins+1, ybins+1)
-                    hist.SetBinContent(setbin, 
-                        hist.GetBinContent(obin)+hist.GetBinContent(setbin))
+                    addOverflow(hist)
             else:
                 raise RuntimeError("hist %s was not produced for "
                     "dataset %s!" % (histname, directory))
@@ -64,15 +70,7 @@ def makeCompositeHists(name, members, addRatios=True, overflow=False):
                 composite.Add(sumhist)
             else:
                 sumhist.Add(hist)
-    for hist_name in getHistNames([]):
-        etot = composite.FindObject(hist_name+"_eee").Clone()
-        etot.SetName(hist_name+"_allE")
-        etot.Add(composite.FindObject(hist_name+"_emm"))
-        composite.Add(etot)
-        mtot = composite.FindObject(hist_name+"_mmm").Clone()
-        mtot.SetName(hist_name+"_allMu")
-        mtot.Add(composite.FindObject(hist_name+"_eem"))
-        composite.Add(mtot)
+
     if addRatios:
         ratios = getRatios(composite)
         for ratio in ratios:
@@ -92,16 +90,28 @@ def getRatios(hists):
         ratios.append(ratio)
     return ratios
 
+
+
+runAnalysis = True
+channels = ["e", "m"]
+
+
+manager_path = ConfigureJobs.getManagerPath()
+if manager_path not in sys.path:
+    sys.path.insert(0, "/".join([manager_path, 
+        "AnalysisDatasetManager", "Utilities/python"]))
+    
 args = getComLineArgs()
 proof = 0
 if args['proof']:
     ROOT.TProof.Open("workers=12")
     proof = ROOT.gProof
 today = datetime.date.today().strftime("%d%b%Y")
-fileName = "data/fakeRate%s-%s.root" % (today, args['selection']) if args['output_file'] == "" \
-        else args['output_file']
-fOut = ROOT.TFile(fileName, "recreate")
+fileName = args['output_file']
+if not fileName:
+    fileName = "data/fakeRate%s-%s.root" % (today, args['selection'])        
 
+# scale factors
 fScales = ROOT.TFile('data/scaleFactors.root')
 muonIsoSF = fScales.Get('muonIsoSF')
 muonIdSF = fScales.Get('muonTightIdSF')
@@ -110,18 +120,43 @@ electronGsfSF = fScales.Get('electronGsfSF')
 pileupSF = fScales.Get('pileupSF')
 sf_inputs = [electronTightIdSF, electronGsfSF, muonIsoSF, muonIdSF, pileupSF]
 
-SelectorTools.applySelector(args["filenames"],
-        "FakeRateSelector", args['selection'], fOut, 
-        extra_inputs=sf_inputs, proof=args['proof'],
-        addSumweights=True)
+if runAnalysis:
+    # Setup and run actual analysis
+    selector = SelectorTools.SelectorDriver(args['analysis'], args['selection'], args['input_tier'], args['year'])
+    #selector.setNumCores(args['numCores'])
+    selector.setOutputfile(fileName)
+    selector.setInputs(sf_inputs)
+    selector.setMaxEntries(args['maxEntries'])
+    selector.setNtupeType("NanoAOD")
+    if args['filenames']:
+        selector.setDatasets(args['filenames'])
+    else:
+        selector.setFileList(*args['inputs_from_file'])
 
-alldata = makeCompositeHists("AllData", ConfigureJobs.getListOfFilesWithXSec(["WZxsec2016data"]))
-OutputTools.writeOutputListItem(alldata, fOut)
-allewk = makeCompositeHists("AllEWK", ConfigureJobs.getListOfFilesWithXSec(
-    ConfigureJobs.getListOfEWKFilenames()), False)
-OutputTools.writeOutputListItem(allewk, fOut)
-allnonprompt = makeCompositeHists("NonpromptMC", ConfigureJobs.getListOfFilesWithXSec(
-    ConfigureJobs.getListOfNonpromptFilenames()))
-OutputTools.writeOutputListItem(allnonprompt, fOut)
-final = HistTools.getDifference(fOut, "DataEWKCorrected", "AllData", "AllEWK", getRatios)
-OutputTools.writeOutputListItem(final, fOut)
+
+    mc = selector.applySelector()
+
+    selector.outputFile().Close()
+    #OutputTools.addMetaInfo(ROOT.TFile(fileName, "UPDATE"))
+
+
+# Create end files
+fOut = ROOT.TFile(fileName, "UPDATE")
+
+combinedHist = makeCompositeHists(fOut, "AllData", ConfigureJobs.getListOfFilesWithXSec(args["filenames"], args['analysis']), channels)
+for i in combinedHist:
+    i.Print()
+OutputTools.writeOutputListItem(combinedHist, fOut)
+combinedHist.Clear()
+# alldata = makeCompositeHists("AllData", ConfigureJobs.getListOfFilesWithXSec(["WZxsec2016data"]), channels)
+# OutputTools.writeOutputListItem(alldata, fOut)
+# allewk = makeCompositeHists("AllEWK", ConfigureJobs.getListOfFilesWithXSec(
+#     ConfigureJobs.getListOfEWKFilenames()), channels, False)
+# OutputTools.writeOutputListItem(allewk, fOut)
+# allnonprompt = makeCompositeHists("NonpromptMC", ConfigureJobs.getListOfFilesWithXSec(
+#     ConfigureJobs.getListOfNonpromptFilenames()), channels)
+# OutputTools.writeOutputListItem(allnonprompt, fOut)
+# final = HistTools.getDifference(fOut, "DataEWKCorrected", "AllData", "AllEWK", getRatios)
+# OutputTools.writeOutputListItem(final, fOut)
+
+

@@ -54,6 +54,8 @@ public :
     static const unsigned int N_KEEP_JET_ = 35;
     static const unsigned int N_KEEP_GEN_ = 300;
 
+    int MVAStudy, FourTopMVAEl, FourTopCutBasedEl, FakeRate;
+    
     
     UInt_t    nElectron;
     Float_t   Electron_pt[N_KEEP_MU_E_];

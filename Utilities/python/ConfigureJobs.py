@@ -181,17 +181,16 @@ def getListOfHDFSFiles(file_path):
 
 # TODO: Would be good to switch the order of the last two arguments
 # completely deprecate manager_path without breaking things
-def getListOfFiles(filelist, selection, manager_path="", analysis=""):
-    if manager_path is "":
-        manager_path = getManagerPath()
+def getListOfFiles(filelist, analysis, selection=""):
+    manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
-    group_path = "%s/AnalysisDatasetManager/PlotGroups" % manager_path
+    group_path = "%s/%s/PlotGroups" % (manager_path, getManagerName())
     data_info = UserInput.readAllInfo("/".join([data_path, "data/*"]))
     mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
-    analysis_info = UserInput.readInfo("/".join([data_path, analysis, selection])) \
-        if analysis != "" else []
-    valid_names = (data_info.keys() + mc_info.keys()) if not analysis_info else analysis_info.keys()
-    group_names = UserInput.readAllInfo("%s/%s.py" %(group_path, analysis)) if analysis else dict()
+    
+    valid_names = UserInput.readInfo("/".join([data_path, analysis, selection])) if selection \
+        else (data_info.keys() + mc_info.keys())
+    group_names = UserInput.readAllInfo("%s/%s.py" %(group_path, analysis))
     names = []
     for name in filelist:
         if ".root" in name:
@@ -199,17 +198,8 @@ def getListOfFiles(filelist, selection, manager_path="", analysis=""):
         # Allow negative contributions
         elif name[0] == "-" :
             names.append(name)
-        elif "WZxsec2016" in name:
-            dataset_file = manager_path + \
-                "%s/FileInfo/WZxsec2016/%s.json" % (getManagerPath(), selection)
-            allnames = json.load(open(dataset_file)).keys()
-            if "nodata" in name:
-                nodata = [x for x in allnames if "data" not in x]
-                names += nodata
-            elif "data" in name:
-                names += [x for x in allnames if "data" in x]
-            else:
-                names += allnames
+        elif "*" in name:
+            names += fnmatch.filter(valid_names, name)
         elif name in group_names:
             names += group_names[name]['Members']
         elif "*" in name:
@@ -247,11 +237,10 @@ def fillTemplatedFile(template_file_name, out_file_name, template_dict):
     with open(out_file_name, "w") as outFile:
         outFile.write(result)
 
-def getListOfFilesWithXSec(filelist, manager_path="", selection="ntuples"):
-    if manager_path is "":
-        manager_path = getManagerPath()
+def getListOfFilesWithXSec(filelist, analysis, selection=""):
+    manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
-    files = getListOfFiles(filelist, selection, manager_path)
+    files = getListOfFiles(filelist, analysis, selection)
     mc_info = UserInput.readAllInfo("/".join([data_path, "montecarlo/*"]))
     info = {}
     for file_name in files:
@@ -269,11 +258,10 @@ def getListOfFilesWithXSec(filelist, manager_path="", selection="ntuples"):
             info.update({file_name : file_info["cross_section"]*kfac})
     return info
 
-def getListOfFilesWithPath(filelist, analysis, selection, das=True, manager_path=""):
-    if manager_path is "":
-        manager_path = getManagerPath()
+def getListOfFilesWithPath(filelist, analysis, selection, das=True):
+    manager_path = getManagerPath()
     data_path = "%s/%s/FileInfo" % (manager_path, getManagerName())
-    files = getListOfFiles(filelist, selection, manager_path, analysis)
+    files = getListOfFiles(filelist, analysis, selection)
     selection_info = UserInput.readInfo("/".join([data_path, analysis, selection]))
     info = {}
     for file_name in files:
@@ -331,9 +319,8 @@ def getConfigFileName(config_file_name):
     raise ValueError("Invalid configuration file. Tried to read %s which does not exist" % \
             config_file_name)
 
-def getInputFilesPath(sample_name, selection, analysis, manager_path=""):
-    if manager_path is "":
-        manager_path = getManagerPath()
+def getInputFilesPath(sample_name, selection, analysis):
+    manager_path = getManagerPath()
     if ".root" in sample_name:
         logging.info("Using simple file %s" % sample_name)
         return sample_name
