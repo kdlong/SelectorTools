@@ -21,10 +21,10 @@ class SelectorDriver(object):
             "ZZGen" : "ZZGenSelector",
             "WGen" : "WGenSelector",
             "ZGen" : "ZGenSelector",
-            "TTT" : "TTTSelector",
             "ThreeLep" : "ThreeLepSelector",
             "Eff" : "Efficiency",
             "Efficiency" : "Efficiency",
+            "FR" : "FakeRateSelector",
         }
 
         self.subanalysis = None
@@ -94,7 +94,7 @@ class SelectorDriver(object):
             self.inputs.Add(inp)
         self.addTNamed("ntupleType", self.ntupleType)
         self.addTNamed("selection", self.selection)
-        self.addTNamed("year", self.year)
+        #self.addTNamed("year", self.year)
 
     def setSelection(self, selection):
         self.selection = selection
@@ -158,7 +158,7 @@ class SelectorDriver(object):
 
     def setDatasets(self, datalist):
         analysis = self.subanalysis if self.subanalysis else self.analysis
-        datasets = ConfigureJobs.getListOfFiles(datalist, self.input_tier, analysis=analysis)
+        datasets = ConfigureJobs.getListOfFiles(datalist, analysis, self.input_tier)
         
         for dataset in datasets:
             if "@" in dataset:
@@ -189,8 +189,10 @@ class SelectorDriver(object):
         self.selector_name = self.selector_name.replace("Selector", "BackgroundSelector")
 
     def processDataset(self, dataset, file_path, chan):
+        
         logging.info("Processing dataset %s" % dataset)
         select = getattr(ROOT, self.selector_name)()
+        
         select.SetInputList(self.inputs)
         self.addTNamed("name", dataset)
         if dataset in self.regions:
@@ -200,6 +202,7 @@ class SelectorDriver(object):
             select.addSubprocesses(vec)
         # Only add for one channel
         addSumweights = self.addSumweights and self.channels.index(chan) == 0 and "data" not in dataset
+        
         if addSumweights:
             # Avoid accidentally combining sumweights across datasets
             currfile_name = self.current_file.GetName()
@@ -215,8 +218,8 @@ class SelectorDriver(object):
                 sumweights_hist = ROOT.TH1D("sumweights", "sumweights", 1000, 0, 1000)
             sumweights_hist.SetDirectory(ROOT.gROOT)
             self.current_file = ROOT.TFile.Open(currfile_name, "update")
+        
         self.processLocalFiles(select, file_path, addSumweights, chan)
-
         output_list = select.GetOutputList()
         processes = [dataset] + (self.regions[dataset] if dataset in self.regions else [])
         self.writeOutput(output_list, chan, processes, dataset, addSumweights)
@@ -296,7 +299,7 @@ class SelectorDriver(object):
         # Store arrays in temp files, since it can get way too big to keep around in memory
         tempfiles = [self.tempfileName(d) for d in datasets] 
         self.combineParallelFiles(tempfiles, chan)
-
+        
     # Pool.map can only take in one argument, so expand the array
     def processDatasetHelper(self, args):
         self.processDataset(*args)

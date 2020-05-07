@@ -7,6 +7,8 @@
 
 void NanoGenSelectorBase::Init(TTree *tree)
 {
+    selectionMap_ = {{"None", None},}; 
+    
     refWeight = 1;
     TParameter<bool>* doTheory = (TParameter<bool>*) GetInputList()->FindObject("theoryUnc");
     doTheoryVars_ = doTheory != nullptr && doTheory->GetVal();

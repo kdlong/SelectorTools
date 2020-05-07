@@ -27,6 +27,12 @@ public :
     ScaleFactor* mIdSF_;
     ScaleFactor* mIsoSF_;
 
+    int VBSBackgroundControlLoose_Full, VBSBackgroundControl_Full, VBSBackgroundControl, VBSBackgroundControlLoose, VBSBackgroundControlATLAS, VBSselection_Loose_Full, VBSselection_Tight_Full, VBSselection_Tight, VBSselection_Loose, VBSselection_NoZeppenfeld, VBSselection_NoZeppenfeld_Full;
+
+
+
+
+    
     // Derived variables
     bool isVBS_;
     bool passesLeptonVeto;

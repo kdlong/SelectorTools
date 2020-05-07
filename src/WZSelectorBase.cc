@@ -53,9 +53,22 @@ void WZSelectorBase::Init(TTree *tree)
 
     allChannels_ = {{eee, "eee"}, {eem, "eem"}, {emm, "emm"}, {mmm, "mmm"}};
 
+    selectionMap_ = {{"VBSBackgroundControlLoose_Full", VBSBackgroundControlLoose_Full},
+		     {"VBSBackgroundControl_Full", VBSBackgroundControl_Full},
+                    {"VBSBackgroundControl", VBSBackgroundControl},
+                    {"VBSBackgroundControlLoose", VBSBackgroundControlLoose},
+                    {"VBSBackgroundControlATLAS", VBSBackgroundControlATLAS},
+                    {"VBSselection_Loose_Full", VBSselection_Loose_Full},
+                    {"VBSselection_Tight_Full", VBSselection_Tight_Full},
+                    {"VBSselection_Tight", VBSselection_Tight},
+                    {"VBSselection_Loose", VBSselection_Loose},
+                    {"VBSselection_NoZeppenfeld", VBSselection_NoZeppenfeld},
+                    {"VBSselection_NoZeppenfeld_Full", VBSselection_NoZeppenfeld_Full},
+    };
+    
     if (isMC_){
-        isNonpromptMC_ = false;
-        isZgamma_ = false;
+	isNonpromptMC_ = false;
+	isZgamma_ = false;
         if (std::find(nonprompt3l_.begin(), nonprompt3l_.end(), name_) != nonprompt3l_.end()) {
             isNonpromptMC_ = true;
         }
