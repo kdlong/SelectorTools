@@ -1,28 +1,28 @@
 #ifndef ZSelector_h
 #define ZSelector_h
 
-#include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
-#include <TSelector.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TROOT.h>
+#include <TSelector.h>
 #include <exception>
 #include <iostream>
 
 // Headers needed by this particular selector
 #include <vector>
+#include "Analysis/VVAnalysis/interface/BranchManager.h"
 #include "Analysis/VVAnalysis/interface/ScaleFactor.h"
 #include "Analysis/VVAnalysis/interface/SelectorBase.h"
-#include "Analysis/VVAnalysis/interface/BranchManager.h"
 
 #include "Analysis/VVAnalysis/interface/helpers.h"
 
 class ZSelector : public SelectorBase {
-public :
+   public:
     ScaleFactor* pileupSF_ = nullptr;
     ScaleFactor* muonSF_ = nullptr;
-    ScaleFactor* eIdSF_  = nullptr;
+    ScaleFactor* eIdSF_ = nullptr;
     ScaleFactor* eGsfSF_ = nullptr;
     ScaleFactor* mIdSF_ = nullptr;
     ScaleFactor* mIsoSF_ = nullptr;
@@ -89,7 +89,7 @@ public :
     Bool_t SingleMuon_Trigger;
     Bool_t SingleElectron_Trigger;
     Int_t numPU;
-    
+
     // UWVV specific branches
     Float_t nTruePU;
 
@@ -110,29 +110,30 @@ public :
     TBranch* b_ZMass;
 
     BranchManager b;
-    
+
     // Readers to access the data (delete the ones you do not need).
-    virtual void    SetScaleFactors() override;
-    virtual void    Init(TTree *tree) override;
-    ZSelector(TTree * /*tree*/ =0) { }
-    ~ZSelector() { }
-    virtual void    SetupNewDirectory() override;
+    virtual void SetScaleFactors() override;
+    virtual void Init(TTree* tree) override;
+    ZSelector(TTree* /*tree*/ = 0) {}
+    ~ZSelector() {}
+    virtual void SetupNewDirectory() override;
 
-    ClassDefOverride(ZSelector,0);
+    ClassDefOverride(ZSelector, 0);
 
-protected:
+   protected:
     bool zlep1IsTight();
     bool zlep2IsTight();
     bool tightZLeptons();
-    virtual void    SetBranchesNanoAOD() override;
-    virtual void    SetBranchesUWVV() override;
-    void LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    virtual void SetBranchesNanoAOD() override;
+    virtual void SetBranchesUWVV() override;
+    void LoadBranchesUWVV(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void LoadBranchesNanoAOD(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
     void ApplyScaleFactors();
     void SetComposite();
-    void FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void FillHistograms(Long64_t entry,
+                        std::pair<Systematic, std::string> variation) override;
 };
 
 #endif
-
-

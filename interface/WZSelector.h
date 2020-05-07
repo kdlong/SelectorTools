@@ -1,12 +1,12 @@
 #ifndef WZSelector_h
 #define WZSelector_h
 
+#include <TH3.h>
 #include <vector>
 #include "Analysis/VVAnalysis/interface/WZSelectorBase.h"
-#include <TH3.h>
 
 class WZSelector : public WZSelectorBase {
-public :
+   public:
     bool doSystematics_ = false;
     bool applyFullSelection_ = true;
     bool isaQGC_ = false;
@@ -73,7 +73,7 @@ public :
     Float_t l1PtScaleCorrErr;
     Float_t l2PtScaleCorrErr;
     Float_t l3PtScaleCorrErr;
-    
+
     TBranch* b_l3MtToMET;
     TBranch* b_MtToMET;
     TBranch* b_pdfWeights;
@@ -119,17 +119,21 @@ public :
     TBranch* b_type1_pfMETEt_unclusteredEnDown;
 
     // Readers to access the data (delete the ones you do not need).
-    virtual void    Init(TTree *tree) override;
-    virtual void    SetupNewDirectory() override;
+    virtual void Init(TTree* tree) override;
+    virtual void SetupNewDirectory() override;
 
-    ClassDefOverride(WZSelector,0);
-protected:
-    virtual void    SetBranchesUWVV() override;
-    void LoadBranchesUWVV(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void FillVBSHistograms(float weight, bool noBlind, 
-            std::pair<Systematic, std::string> variation);
-    bool PassesBaseSelection(Long64_t entry, bool tightLeps, Selection selection);
+    ClassDefOverride(WZSelector, 0);
+
+   protected:
+    virtual void SetBranchesUWVV() override;
+    void LoadBranchesUWVV(
+        Long64_t entry, std::pair<Systematic, std::string> variation) override;
+    void FillHistograms(Long64_t entry,
+                        std::pair<Systematic, std::string> variation) override;
+    void FillVBSHistograms(float weight, bool noBlind,
+                           std::pair<Systematic, std::string> variation);
+    bool PassesBaseSelection(Long64_t entry, bool tightLeps,
+                             Selection selection);
     bool PassesVBSSelection(bool noBlind);
     bool PassesVBSBackgroundControlSelection();
     bool PassesFullWZSelection(Long64_t entry);
@@ -139,4 +143,3 @@ protected:
 };
 
 #endif
-
