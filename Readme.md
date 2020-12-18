@@ -14,7 +14,8 @@ Analysis code for WZ/ZZ analyses. Some scripts using selections to skim Ntuples 
         + [WZ Background estimation](#nonprompt-background-estimate-for-wz)
     + [Statistical analysis](#running-statistical-analysis)
     + [Producing plots](#plotting)
-    
+    + [FAQ](#faq)
+    + [Tips and tricks](#tips-and-tricks)    
 
 # Setup
 -----------
@@ -221,4 +222,11 @@ Like the FileInfo directory, the PlotObjects contains folders for each analysis 
 
 With all of these understood, one can create different selection and apply different coloring convientions, have different skims for different studies, etc in one place so that one's skimming, analysis, and plotting software all have a common area to look for the configuration input.
 
+# FAQ
 
+Q: Do I have to run on AFS?
+A: Currently you do if you want to submit jobs to condor. There are some library files that have to be read from the shared file system. There may be a workaround, but I haven't found this yet
+
+# Tips and tricks
+
+The git hash, git diff, and command argument are stored in each ROOT file created. You can use the script [getCommandFromFile.py](Utilities/scripts/getCommandFromFile.py)
