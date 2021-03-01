@@ -331,7 +331,6 @@ class CombineCardTools(object):
                     if self.isUnrolledFit:
                         pdfFunction = pdfFunction.replace("get", "getTransformed3D")
                         args = args[0:1] + [HistTools.makeUnrolledHist, [self.unrolledBinsX, self.unrolledBinsY]] + args[1:]
-                    print(args)
                     updatePdfs = getattr(HistTools, pdfFunction)(*args)
                     pdfHists += updatePdfs
 

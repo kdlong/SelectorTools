@@ -16,6 +16,6 @@ process                         ${w_sample}
 process                         1               
 rate                            ${w_yield}    
 ------------                                     
-mWShift100MeV   shapeNoConstraint 1
+mWBWShift100MeV   shapeNoConstraint 1
 lumi2016_13TeV          lnN     1.025            
 ${card_append}

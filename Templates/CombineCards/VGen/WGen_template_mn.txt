@@ -16,12 +16,9 @@ process                         ${w_sample}
 process                         1               
 rate                            ${w_yield}    
 ------------                                     
-mWShift100MeV   shapeNoConstraint 1
+mWBWShift100MeV   shapeNoConstraint 1
 lumi2016_13TeV          lnN     1.025            
 CMS_scale_m             shape   1
-#QCDscale_muR_${w_sample} shape   1                
-#QCDscale_muF_${w_sample} shape   1                
-#QCDscale_muRmuF_${w_sample}     shape   1                
 ${card_append}
 
 

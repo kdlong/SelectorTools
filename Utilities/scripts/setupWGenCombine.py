@@ -126,7 +126,6 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'other', massVars(5), exclude=[], central=0, specName="massShift50MeV")
         cardtool.addTheoryVar(process, 'other', massVars(10), exclude=[], central=0, specName="massShift100MeV")
         width = (18+890+21+3) if not isAltTh else (18+21+3)
-        print(width)
         cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
         if not args.noPdf:
             # NNPDF3.1
@@ -187,10 +186,11 @@ nnu = 2
 if args.splitPtV:
     nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
 if not args.theoryOnly:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/scalemu_template.txt")
+    nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
 
 if not args.noPdf:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
+    nnu += cardtool.addCustomizeCard(path+"/Customize/pdfHessian_template.txt") \
+            if args.allHessianVars else cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
 else:
     nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
 
