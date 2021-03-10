@@ -99,7 +99,7 @@ def copyLibs():
 # very tight and don't let condor access some dumb file it needs
 # TODO: Understand what it needs and why
 def modifyAFSPermissions():
-    if not re.findall("system:anyuser *.*l", subprocess.check_output(["fs", "la"])):
+    if not re.findall("system:anyuser *.*l", subprocess.check_output(["fs", "la"]), encoding='UTF-8'):
         subprocess.call(["find", os.environ["CMSSW_BASE"], "-type", "d",
             "-exec", "fs", "setacl", "-dir", "{}", "-acl", "system:anyuser", "rl", ";"])
         raise OSError("AFS permissions have been relaxed for condor submission. You should recompile and resubmit")
