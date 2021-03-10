@@ -22,10 +22,10 @@ def addMetaInfo(fOut):
     command.Write()
 
 def gitHash():
-    return subprocess.check_output(['git', 'log', '-1', '--format="%H"'])
+    return subprocess.check_output(['git', 'log', '-1', '--format="%H"'], encoding='UTF-8')
 
 def gitDiff():
-    return subprocess.check_output(['git', 'diff',])
+    return subprocess.check_output(['git', 'diff',], encoding='UTF-8')
 
 def getScriptCall():
     return ' '.join(sys.argv)

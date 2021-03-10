@@ -35,7 +35,7 @@ def makeFileList(filenames, output_file, analysis, selection, das):
     name_path_map = ConfigureJobs.getListOfFilesWithPath(filenames, analysis, selection, das)
 
     files = []
-    for name, path in name_path_map.iteritems():
+    for name, path in name_path_map.items():
         logging.debug("Trying to add name %s with path %s" % (name, path))
         try:
             files.extend(getFilesWithName(name, path, das))
