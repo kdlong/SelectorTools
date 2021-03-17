@@ -76,6 +76,36 @@ TH2D * ScaleFactor::Get2DHist(Variation var)
   return nullptr;
 }
 
+void ScaleFactor::Set3DHist(TH3D * central, TH3D * shiftUp, TH3D * shiftDown, OverflowBehavior b)
+{
+  histCentral3D_ = (TH3D *) central->Clone("Central3D");
+  histCentral3D_->SetDirectory(0);
+  SetOverflowBins(histCentral3D_, b);
+  if ( shiftUp != nullptr ) {
+    histShiftUp3D_ = (TH3D *) shiftUp->Clone("Up3D");
+    histShiftUp3D_->SetDirectory(0);
+    SetOverflowBins(histShiftUp3D_, b);
+  }
+  if ( shiftDown != nullptr ) {
+    histShiftDown3D_ = (TH3D *) shiftDown->Clone("Down3D");
+    histShiftDown3D_->SetDirectory(0);
+    SetOverflowBins(histShiftDown3D_, b);
+  }
+}
+
+TH3D * ScaleFactor::Get3DHist(Variation var)
+{
+  switch (var) {
+    case CentralValue:
+      return histCentral3D_;
+    case ShiftUp:
+      return histShiftUp3D_;
+    case ShiftDown:
+      return histShiftDown3D_;
+  }
+  return nullptr;
+}
+
 double ScaleFactor::Evaluate1D(double x, Variation var) const
 {
   if ( var == CentralValue && histCentral1D_ != nullptr ) {
@@ -123,6 +153,32 @@ double ScaleFactor::Evaluate2D(double x, double y, Variation var) const
   else if ( var == ShiftDown && histCentral2D_ != nullptr ) {
     auto bin = histCentral2D_->FindBin(x, y);
     return histCentral2D_->GetBinContent(bin) - histCentral2D_->GetBinError(bin);
+  }
+  // If here, we probably forgot to add the hist
+  return 1.;
+}
+
+double ScaleFactor::Evaluate3D(double x, double y, double z, Variation var) const
+{
+  if ( var == CentralValue && histCentral3D_ != nullptr ) {
+    auto bin = histCentral3D_->FindBin(x, y, z);
+    return histCentral3D_->GetBinContent(bin);
+  }
+  else if ( var == ShiftUp && histShiftUp3D_ != nullptr ) {
+    auto bin = histShiftUp3D_->FindBin(x, y, z);
+    return histShiftUp3D_->GetBinContent(bin);
+  }
+  else if ( var == ShiftUp && histCentral3D_ != nullptr ) {
+    auto bin = histCentral3D_->FindBin(x, y, z);
+    return histCentral3D_->GetBinContent(bin) + histCentral3D_->GetBinError(bin);
+  }
+  else if ( var == ShiftDown && histShiftDown3D_ != nullptr ) {
+    auto bin = histShiftDown3D_->FindBin(x, y, z);
+    return histShiftDown3D_->GetBinContent(bin);
+  }
+  else if ( var == ShiftDown && histCentral3D_ != nullptr ) {
+    auto bin = histCentral3D_->FindBin(x, y, z);
+    return histCentral3D_->GetBinContent(bin) - histCentral3D_->GetBinError(bin);
   }
   // If here, we probably forgot to add the hist
   return 1.;
@@ -176,7 +232,7 @@ void ScaleFactor::SetOverflowBins(TH1D * hist, OverflowBehavior b)
   }
 }
 
-void ScaleFactor::SetOverflowBins(TH2D * hist, OverflowBehavior b)
+void ScaleFactor::SetOverflowBins(TH1 * hist, OverflowBehavior b)
 {
   if ( b == AsInHist ) return;
   else if ( b == NearestEntry ) {

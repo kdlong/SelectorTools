@@ -27,6 +27,7 @@ void WGenSelector::Init(TTree *tree)
         "ptl_smear",
     };
     hists2D_ = {"etal_ptl_2D", "etal_ptl_smear_2D"};
+    hists3D_ = {"mass_y_pT_3D", };
 
     TParameter<bool>* massVar = (TParameter<bool>*) GetInputList()->FindObject("massVar");
     doMassVar_ = massVar != nullptr && massVar->GetVal();
@@ -341,6 +342,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
     SafeHistFill(histMap1D_, concatenateNames("nJets", toAppend), channel_, variation.first, jets.size(), weight);
     SafeHistFill(histMap2D_, concatenateNames("etal_ptl_2D", toAppend), channel_, variation.first, lep.eta(), lep.pt(), weight);
     SafeHistFill(histMap2D_, concatenateNames("etal_ptl_smear_2D", toAppend), channel_, variation.first, lep.eta(), ptl_smear_fill, weight);
+    SafeHistFill(histMap3D_, "mass_y_pT_3D", channel_, variation.first, wCand.mass(), wCand.Rapidity(), wCand.Pt(), weight);
     for (size_t i = 1; i <= 3; i++) {
         if (jets.size() >= i ) {
             const auto& jet = jets.at(i-1);

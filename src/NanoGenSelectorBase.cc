@@ -453,5 +453,7 @@ void NanoGenSelectorBase::SetupNewDirectory() {
     AddObject<TH1D>(hesPdfWeights_, "Hesweights", "Hessian pdf weights", 200, 0, 2);
     AddObject<TH1D>(scaleWeightsHist_, "scaleweights", "Scale weights", 200, 0, 2);
 
+    std::cout << "Initializing\n";
     InitializeHistogramsFromConfig();
+    std::cout << "Initialized\n";
 }

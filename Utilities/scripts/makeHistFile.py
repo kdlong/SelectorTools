@@ -93,6 +93,7 @@ def makeHistFile(args):
     selection = args['selection'].split("_")[0]
     analysis = "/".join([args['analysis'], selection])
     hists, hist_inputs = UserInput.getHistInfo(analysis, args['hist_names'], args['noHistConfig'])
+    print([h for h in hists], [i.GetName() for i in hist_inputs])
 
     extra_inputs = [] if not args['selectorArgs'] else \
             [ROOT.TParameter(int)(x.split("=")[0], int(x.split("=")[1])) for x in args['selectorArgs']]

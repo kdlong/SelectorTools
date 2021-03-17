@@ -111,7 +111,10 @@ def getHistInfo(analysis, input_hists, noConfig=False):
     config_hist = ConfigHistTools.getAllHistNames(manager_path, analysis) \
         if "all" in input_hists else input_hists
 
-    hists = filter(lambda x : all(y not in x for y in excludedHistPatterns), config_hist)
+    print(input_hists)
+    print(config_hist)
+    hists = [x for x in filter(lambda x : all(y not in x for y in excludedHistPatterns), config_hist)]
+    print(hists)
     hist_inputs = [getHistExpr(hists, analysis)]
 
     return hists, hist_inputs
@@ -125,10 +128,15 @@ def getHistExpr(hist_names, selection):
     info.SetName("histinfo")
     for hist_name in hist_names:
         bin_info = ConfigHistTools.getHistBinInfo(manager_path, selection, hist_name)
-        if "TH1" in ConfigHistTools.getHistType(manager_path, selection, hist_name):
+        hist_type = ConfigHistTools.getHistType(manager_path, selection, hist_name)
+        if "TH1" in hist_type:
             bin_expr = "{nbins}, {xmin}, {xmax}".format(**bin_info)
-        else:
+        elif "TH2" in hist_type:
             bin_expr = "{nbinsx}, {xmin}, {xmax}, {nbinsy}, {ymin}, {ymax}".format(**bin_info)
+        elif "TH3" in hist_type:
+            bin_expr = "{nbinsx}, {xmin}, {xmax}, {nbinsy}, {ymin}, {ymax}, {nbinsz}, {zmin}, {zmax}".format(**bin_info)
+        else:
+            raise ValueError("HistType %s is invalid!" % hist_type)
         info.Add(ROOT.TNamed(hist_name, " $ ".join([hist_name, bin_expr])))
     return info
 

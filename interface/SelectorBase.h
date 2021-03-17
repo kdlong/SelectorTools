@@ -288,11 +288,13 @@ class SelectorBase : public TSelector {
     std::unordered_map<std::string, HistMap1D> subprocessHistMaps1D_ = {};
     std::vector<HistMap2D> subprocessWeightHistMaps1D_ = {};
     HistMap2D histMap2D_ = {};
+    HistMap3D histMap3D_ {};
     HistMap2D weighthistMap1D_ = {};
     HistMap3D weighthistMap2D_ {};
 
     std::vector<std::string> hists1D_ = {};
     std::vector<std::string> hists2D_ = {};
+    std::vector<std::string> hists3D_ = {};
     std::vector<std::string> weighthists1D_ = {};
     std::vector<std::string> weighthists2D_ = {};
     // The histograms for which you also want systematic variations

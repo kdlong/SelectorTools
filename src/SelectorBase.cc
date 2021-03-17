@@ -234,6 +234,7 @@ void SelectorBase::InitializeHistogramsFromConfig() {
 
     InitializeHistMap(hists1D_,histMap1D_);
     InitializeHistMap(hists2D_,histMap2D_);
+    InitializeHistMap(hists3D_,histMap3D_);
     InitializeHistMap(weighthists1D_, weighthistMap1D_);
     InitializeHistMap(weighthists2D_, weighthistMap2D_);
 
@@ -259,7 +260,8 @@ void SelectorBase::InitializeHistogramsFromConfig() {
 
         for (const auto& chan : channels) {
             HistLabel centralLabel = {name, chan.first, Central};
-            if (histMap1D_.find(centralLabel) != histMap1D_.end() || histMap2D_.find(centralLabel) != histMap2D_.end()) { 
+            if (histMap1D_.find(centralLabel) != histMap1D_.end() || histMap2D_.find(centralLabel) != histMap2D_.end()
+                                                                        || histMap3D_.find(centralLabel) != histMap3D_.end()) { 
                 InitializeHistogramFromConfig(name, chan, histData);
             }
             //Don't print out a ton of annoying errors if it's a syst hist
@@ -291,7 +293,7 @@ void SelectorBase::InitializeHistogramsFromConfig() {
 }
 
 void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair channel, std::vector<std::string>& histData) {
-    if (histData.size() != 4 && histData.size() != 7) {
+    if (histData.size() != 4 && histData.size() != 7 && histData.size() != 10) {
         std::cerr << "Malformed data string for histogram '" << name
                     << ".' Must have form: 'Title; (optional info) $ nbins, xmin, xmax'"
                     << "\n   OR form: 'Title; (optional info) $ nbins, xmin, xmax nbinsy ymin ymax'"
@@ -308,6 +310,11 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
     float ymin = is1D ? 1. : std::stof(histData[5]);
     float ymax = is1D ? 1. : std::stof(histData[6]);
 
+    bool is3D = histData.size() == 10;
+    int nbinsz = !is3D ? 1 : std::stoi(histData[7]);
+    float zmin = !is3D ? 1. : std::stof(histData[8]);
+    float zmax = !is3D ? 1. : std::stof(histData[9]);
+
     for (auto& variation : variations_) {
         std::string histName = getHistName(name, variation.second, channel.second);
         HistLabel histlabel = {name, channel.first, variation.first};
@@ -316,6 +323,27 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
             if (is1D) {
                 AddObject<TH1D>(histMap1D_[histlabel], histName.c_str(), histData.at(0).c_str(),
                         nbins, xmin, xmax);
+            }
+            // For now, only allow 3D without variations
+            else if (is3D) {
+                // Ths is obviously a hack, but it's too much trouble to support this generally
+                if (nbins == 3 && xmin == 5 && xmax == 1000) {
+                    float xrange[4]  = {5., 75., 85., 1000,};
+                    float yrange[nbinsy+1];
+                    float zrange[nbinsz+1];
+                    for (int i = 0; i <= nbinsy; i++) {
+                        yrange[i] = ymin + (ymax - ymin)/nbinsy*i;
+                    }
+                    for (int i = 0; i <= nbinsz; i++) {
+                        zrange[i] = zmin + (zmax - zmin)/nbinsz*i;
+                    }
+
+                    AddObject<TH3D>(histMap3D_[histlabel], histName.c_str(), histData.at(0).c_str(), 
+                            nbins, xrange, nbinsy, yrange, nbinsz, zrange);
+                }
+                else
+                    AddObject<TH3D>(histMap3D_[histlabel], histName.c_str(), histData.at(0).c_str(), 
+                            nbins, xmin, xmax, nbinsy, ymin, ymax, nbinsz, zmin, zmax);
             }
             else {
                 AddObject<TH2D>(histMap2D_[histlabel], histName.c_str(), histData.at(0).c_str(), 
