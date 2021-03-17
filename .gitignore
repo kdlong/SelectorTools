@@ -2,6 +2,8 @@
 *.root
 Cuts/*/aliases.json
 Utilities/Selectors/disambiguateFinalStates_*
+Utilities/python/ConfigHistTools.py
+Utilities/python/ConfigHistFactory.py
 *.cs
 *_C*
 *_cc*

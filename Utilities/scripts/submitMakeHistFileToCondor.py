@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import makeFileList 
@@ -70,15 +70,15 @@ def setupMergeStep(submit_dir, queue, numjobs, merge, removeUnmerged):
     }
     template = "Templates/CondorSubmit/merge_template.jdl"
     outfile = "/".join([submit_dir, "merge.jdl"])
-    ConfigureJobs.fillTemplatedFile(template, outfile, template_dict)
+    ConfigureJobs.fillTemplatedFile([template], outfile, template_dict)
 
     template = "Templates/CondorSubmit/merge.sh"
     outfile = "/".join([submit_dir, "merge.sh"])
-    ConfigureJobs.fillTemplatedFile(template, outfile, {"CMSSW_RELEASE_BASE" : os.environ["CMSSW_BASE"]})
+    ConfigureJobs.fillTemplatedFile([template], outfile, {"CMSSW_RELEASE_BASE" : os.environ["CMSSW_BASE"]})
 
     template = "Templates/CondorSubmit/submit_and_merge_template.dag"
     outfile = "/".join([submit_dir, "submit_and_merge.dag"])
-    ConfigureJobs.fillTemplatedFile(template, outfile, 
+    ConfigureJobs.fillTemplatedFile([template], outfile, 
             {"minComplete" : int(completeFraction*numjobs),
             "postMerge" : ("SCRIPT POST B removeRootFiles.sh %s" % merge_file) if removeUnmerged else ""})
 
@@ -99,7 +99,7 @@ def copyLibs():
 # very tight and don't let condor access some dumb file it needs
 # TODO: Understand what it needs and why
 def modifyAFSPermissions():
-    if not re.findall("system:anyuser *.*l", subprocess.check_output(["fs", "la"]), encoding='UTF-8'):
+    if not re.findall("system:anyuser *.*l", subprocess.check_output(["fs", "la"], encoding='UTF-8')):
         subprocess.call(["find", os.environ["CMSSW_BASE"], "-type", "d",
             "-exec", "fs", "setacl", "-dir", "{}", "-acl", "system:anyuser", "rl", ";"])
         raise OSError("AFS permissions have been relaxed for condor submission. You should recompile and resubmit")
@@ -167,7 +167,7 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, 
 
     template = "Templates/CondorSubmit/submit_template.jdl"
     outfile = "/".join([submit_dir, "submit.jdl"])
-    ConfigureJobs.fillTemplatedFile(template, outfile, template_dict)
+    ConfigureJobs.fillTemplatedFile([template], outfile, template_dict)
 
 def writeWrapperFile(submit_dir, tarball_name):
     template_dict = { 
@@ -176,7 +176,7 @@ def writeWrapperFile(submit_dir, tarball_name):
     }
     template = "Templates/CondorSubmit/wrapRunSelector.sh"
     outfile = "/".join([submit_dir, "wrapRunSelector.sh"])
-    ConfigureJobs.fillTemplatedFile(template, outfile, template_dict)
+    ConfigureJobs.fillTemplatedFile([template], outfile, template_dict)
 
 def writeMetaInfo(submit_dir, filename):
     with open("/".join([submit_dir, filename]), "w") as metafile:
