@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import ROOT
 import argparse
 import os
@@ -16,7 +16,7 @@ def getHist(rtfile, dataset, histname, xsec, rebin):
 
     if rebin:
         hist = HistTools.rebinHist(hist, histname+"rebin", rebin)
-    print "Dataset", dataset, "Integral is", hist.Integral()
+    print("Dataset", dataset, "Integral is", hist.Integral())
     return hist
 
 parser = argparse.ArgumentParser()
@@ -32,7 +32,8 @@ parser.add_argument("-r", "--rebin",
                     "values (bin edges) separated by commas.")
 args = parser.parse_args()
 
-args.rebin = array.array('d', UserInput.getRebin(args.rebin))
+if args.rebin:
+    args.rebin = array.array('d', UserInput.getRebin(args.rebin))
 
 output_file = os.environ["CMSSW_BASE"]+'/src/Analysis/SelectorTools/data/%s_scaleFactors.root' % args.analysis
 fScales = ROOT.TFile(output_file, 'recreate' if not args.append else 'update')
@@ -45,10 +46,18 @@ xsecs  = ConfigureJobs.getListOfFilesWithXSec([args.numerator, args.denominator]
 histnum = getHist(rtfile, args.numerator, args.hist_names[0], xsecs[args.numerator], args.rebin)
 histdenom = getHist(rtfile, args.denominator, args.hist_names[1], xsecs[args.denominator], args.rebin)
 
+print(args.name)
 hist = histnum.Clone(args.name)
+print(hist.GetNbinsX(), hist.GetNbinsY(), hist.GetNbinsZ())
+print(histdenom.GetNbinsX(), histdenom.GetNbinsY(), histdenom.GetNbinsZ())
+print(hist.GetName(), hist)
+print(histdenom.GetName(), histdenom)
 hist.Divide(histdenom)
 
 sf = ROOT.ScaleFactor(args.name, args.name)
-sf.Set1DHist(hist, 0, 0)
+if hist.InheritsFrom("TH3"):
+    sf.Set3DHist(hist, 0, 0)
+elif hist.InheritsFrom("TH1"):
+    sf.Set1DHist(hist, 0, 0)
 fScales.cd()
 sf.Write()
