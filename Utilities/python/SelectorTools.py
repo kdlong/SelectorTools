@@ -395,7 +395,7 @@ class SelectorDriver(object):
     def fillSumweightsHist(self, rtfile, filenum=1):
         sumWeightsType = "fromTree"
         weightSignOnly = list(filter(lambda x: "wSignOnly" in x.GetName(), self.inputs))
-        wSuppress = list(filter(lambda x: "wSuppress" in x.GetName(), self.inputs))
+        wSuppress = list(filter(lambda x: x.GetName() == "wSuppress", self.inputs))
         weightSignOnly = weightSignOnly[0].GetVal() if weightSignOnly else False
         wSuppress = wSuppress[0].GetVal() if wSuppress else 0
 
@@ -436,6 +436,7 @@ class SelectorDriver(object):
                 draw_weight += "*%i/%s" % (self.maxEntries, nevents_branch)
 
             meta_tree.Draw("%i>>%s" % (filenum, tmplabel), draw_weight)
+            print(draw_weight)
             sumweights_hist.Add(tmpweights_hist)
         elif sumWeightsType == "fromHist":
             new_sumweights_hist = rtfile.Get(weightshist_name)

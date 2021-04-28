@@ -37,7 +37,7 @@ def getComLineArgs():
     parser.add_argument("-j", "--numCores", type=int, default=1,
         help="Number of cores to use (parallelize by dataset)")
     parser.add_argument("--input_tier", type=str,
-        default="", help="Selection stage of input files")
+        default="NanoAOD", help="Selection stage of input files")
     parser.add_argument("--with_background", action='store_true',
                     help="Don't run background selector")
     parser.add_argument("--background_input", type=str, default="",
@@ -86,14 +86,14 @@ def makeHistFile(args):
 
     fScales = ROOT.TFile(sf_file) if addScaleFactors else None
     if fScales:
-        map(lambda x: sf_inputs.append(fScales.Get(x.GetName())), fScales.GetListOfKeys())
+        [x for x in map(lambda x: sf_inputs.append(fScales.Get(x.GetName())), fScales.GetListOfKeys())]
+        for f in sf_inputs: print(f.GetName())
 
     if args['input_tier'] == '':
         args['input_tier'] = args['selection']
     selection = args['selection'].split("_")[0]
     analysis = "/".join([args['analysis'], selection])
     hists, hist_inputs = UserInput.getHistInfo(analysis, args['hist_names'], args['noHistConfig'])
-    print([h for h in hists], [i.GetName() for i in hist_inputs])
 
     extra_inputs = [] if not args['selectorArgs'] else \
             [ROOT.TParameter(int)(x.split("=")[0], int(x.split("=")[1])) for x in args['selectorArgs']]

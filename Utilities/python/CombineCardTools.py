@@ -41,6 +41,9 @@ class CombineCardTools(object):
     def setRebin(self, rebin):
         self.rebin = rebin
 
+    def setCardGroups(self, groups):
+        self.cardGroups = groups
+
     def setAddOverflow(self, overflow):
         self.addOverflow = overflow
 
@@ -201,6 +204,7 @@ class CombineCardTools(object):
 
     def setInputFile(self, inputFile):
         self.inputFile = self.getRootFile(inputFile)
+        self.inputFile.ls()
 
     def setChannels(self, channels):
         self.channels = channels
@@ -281,6 +285,8 @@ class CombineCardTools(object):
         for chan in self.channels:
             histName = "_".join([fitVariable, chan]) if chan != "all" else fitVariable
             hist = group.FindObject(histName)
+            print(hist)
+            print("Integral is", hist.Integral())
             if not hist:
                 logging.warning("Failed to produce hist %s for process %s" % (histName, processName))
                 continue
@@ -358,7 +364,8 @@ class CombineCardTools(object):
                     self.variations[processName].extend(set(theoryVarLabels))
 
                 normVarNames = []
-                map(lambda x: normVarNames.extend([x+"Up", x+"Down"]), self.normalizedVariations)
+                for x in self.normalizedVariations:
+                    normVarNames.extend([x+"Up", x+"Down"])
                 for normvar in normVarNames:
                     varHistName = histName.replace(chan, "_".join([normvar, chan]))
                     hist = group.FindObject(varHistName)

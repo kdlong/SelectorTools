@@ -3,6 +3,8 @@ import datetime
 import subprocess
 import sys
 import logging
+import numpy as np
+import array
 
 def addMetaInfo(fOut):
     metaInfo = fOut.mkdir("MetaInfo")
@@ -44,3 +46,13 @@ def writeOutputListItem(item, directory):
     else:
         logging.warning("Couldn't write output item: %s " % repr(item))
     directory.cd()
+
+def numpy3DHistToRoot(histName, bins, hist):
+    rthist = ROOT.TH3D(histName, histName, 
+        len(bins[0])-1, array.array('d', bins[0]), len(bins[1])-1, 
+        array.array('d', bins[1]), len(bins[2])-1, array.array('d', bins[2]))
+    for ix, x in enumerate(hist):
+        for iy, y in enumerate(x):
+            for iz, val in enumerate(y):
+                rthist.SetBinContent(ix+1, iy+1, iz+1, val)
+    return rthist

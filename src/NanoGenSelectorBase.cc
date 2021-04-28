@@ -87,6 +87,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
     scaleWeights_ = (tree->GetListOfBranches()->FindObject("nLHEScaleWeight") != nullptr);
     altScaleWeights_ = (tree->GetListOfBranches()->FindObject("nLHEScaleWeightAltSet1") != nullptr);
     paramWeights_ = (tree->GetListOfBranches()->FindObject("nMEParamWeight") != nullptr);
+    paramWeightsUpd_ = (tree->GetListOfBranches()->FindObject("nLHEReweightingWeightCorrectMass") != nullptr);
     unknownWeights_ = (tree->GetListOfBranches()->FindObject("nLHEUnknownWeight") != nullptr);
     unknownWeightsAlt_ = (tree->GetListOfBranches()->FindObject("nLHEUnknownWeightAltSet1") != nullptr);
     
@@ -162,6 +163,10 @@ void NanoGenSelectorBase::SetBranchesNanoAOD() {
         b.SetSpecificBranch("nMEParamWeight", nMEParamWeight);
         b.SetSpecificBranch("MEParamWeight", MEParamWeight);
     }
+    else if (paramWeightsUpd_) {
+        b.SetSpecificBranch("nLHEReweightingWeightCorrectMass", nMEParamWeight);
+        b.SetSpecificBranch("LHEReweightingWeightCorrectMass", MEParamWeight);
+    }
 }
 
 void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) { 
@@ -195,6 +200,10 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
         b.SetSpecificEntry(entry, "MEParamWeight");
         b.SetSpecificEntry(entry, "nMEParamWeight");
     }
+    else if (paramWeightsUpd_) {
+        b.SetSpecificEntry(entry, "nLHEReweightingWeightCorrectMass");
+        b.SetSpecificEntry(entry, "LHEReweightingWeightCorrectMass");
+    }
 
     if (!scaleWeights_)
         nLHEScaleWeight = 0;
@@ -206,6 +215,8 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
         nLHEUnknownWeight = 0;
     if (!unknownWeightsAlt_)
         nLHEUnknownWeightAltSet1 = 0;
+    if (!(paramWeights_ || paramWeightsUpd_))
+        nMEParamWeight = 0;
     fReader.SetLocalEntry(entry);
 
     channel_ = channelMap_[channelName_];
@@ -419,10 +430,12 @@ reco::GenParticle NanoGenSelectorBase::makeGenParticle(int pdgid, int status, fl
 }
 
 void NanoGenSelectorBase::SetScaleFactors() {
-    ptZSF_ = (ScaleFactor *) GetInputList()->FindObject("ptZ_N3LLCorr");
-    ptWSF_ = (ScaleFactor *) GetInputList()->FindObject("ptW_N3LLCorr");
-    if (ptWSF_ == nullptr && ptZSF_ == nullptr && name_.find("N3LLCorr") != std::string::npos) 
-        std::invalid_argument("Must pass pt correction SF");
+    std::cout << "Seting scale factors \n";
+    n3llZSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Z");
+    n3llWmSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Wm");
+    n3llWpSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Wp");
+    if (n3llWpSF_ == nullptr && n3llWmSF_ == nullptr && n3llZSF_ == nullptr && name_.find("N3LLCorr") != std::string::npos) 
+        std::invalid_argument("Must pass N3LL correction SF");
 }
 
 void NanoGenSelectorBase::buildHessian2MCSet() {
@@ -438,7 +451,7 @@ double NanoGenSelectorBase::breitWignerWeight(double offset) {
     double targetMass = MV_GEN_ + offset;
     //double gamma_cen = std::sqrt(MV_GEN_*MV_GEN_*(MV_GEN_*MV_GEN_+GAMMAV_GEN_*GAMMAV_GEN_));
     //double gamma = std::sqrt(targetMass*targetMass*(targetMass*targetMass+GAMMAV_GEN_*GAMMAV_GEN_));
-    double s_hat = mVlhe*mVlhe;
+    double s_hat = mVcorr*mVcorr*1000*1000;
     double offshell = s_hat - MV_GEN_*MV_GEN_;
     double offshellOffset = s_hat - targetMass*targetMass;
     double weight = (offshell*offshell + GAMMAV_GEN_*GAMMAV_GEN_*MV_GEN_*MV_GEN_)/
@@ -453,7 +466,5 @@ void NanoGenSelectorBase::SetupNewDirectory() {
     AddObject<TH1D>(hesPdfWeights_, "Hesweights", "Hessian pdf weights", 200, 0, 2);
     AddObject<TH1D>(scaleWeightsHist_, "scaleweights", "Scale weights", 200, 0, 2);
 
-    std::cout << "Initializing\n";
     InitializeHistogramsFromConfig();
-    std::cout << "Initialized\n";
 }

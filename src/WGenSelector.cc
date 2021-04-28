@@ -28,6 +28,7 @@ void WGenSelector::Init(TTree *tree)
     };
     hists2D_ = {"etal_ptl_2D", "etal_ptl_smear_2D"};
     hists3D_ = {"mass_y_pT_3D", };
+    systHists3D_ = hists3D_;
 
     TParameter<bool>* massVar = (TParameter<bool>*) GetInputList()->FindObject("massVar");
     doMassVar_ = massVar != nullptr && massVar->GetVal();
@@ -81,11 +82,14 @@ void WGenSelector::Init(TTree *tree)
         GAMMAV_GEN_ = 2050;
     }
 
+    NanoGenSelectorBase::Init(tree);
+
     if (name_.find("N3LLCorr") != std::string::npos) {
         n3llcorr_ = true;
+        SetScaleFactors();
+        if (n3llWmSF_ == nullptr && n3llWpSF_ == nullptr)
+            throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
     }
-
-    NanoGenSelectorBase::Init(tree);
 }
 
 void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) { 
@@ -107,20 +111,24 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
         }
     }
      
+    // This means the observable is corrected differently depending on 
+    // the type of leptons. This isn't ideal but oh well
     if (variation.first == Central) {
         cenWeight = weight;
-        ptVlhe = wCand.pt();
-        mVlhe = wCand.mass()*1000.;
+        ptVcorr = wCand.pt();
+        mVcorr = wCand.mass();
         ratio_mass = wCand.mass();
     }
-    else if (variation.first == LHEParticles) {
-        // define at LHE level if it exists
-        ptVlhe = wCand.pt();
-        mVlhe = wCand.mass()*1000.;
+    else if (variation.first == PreFSRLeptons) { 
+            ptVcorr = wCand.pt();
+            mVcorr = wCand.mass();
+            yVcorr = wCand.Rapidity();
     }
-    else if (variation.first == BareLeptons) { 
-            ptVlhe = wCand.pt();
-            mVlhe = wCand.mass()*1000.;
+    else if (variation.first == LHEParticles && systematics_.find(PreFSRLeptons) == std::end(systematics_)) {
+        // define at LHE level if it exists
+        ptVcorr = wCand.pt();
+        mVcorr = wCand.mass();
+        yVcorr = wCand.Rapidity();
     }
     else if (variation.first == mWShift10MeVUp)
         weight = cenWeight*breitWignerWeight(10.);
@@ -171,7 +179,9 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
     }
 
     if (n3llcorr_) {
-        weight *= ptWSF_->Evaluate1D(ptVlhe);
+        //auto* sf = channel_ == mp ? n3llWpSF_ : n3llWmSF_;
+        auto* sf = n3llWpSF_;
+        weight *= sf->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 
@@ -276,16 +286,16 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
             //if (centralWeightIndex_ != -1 && scaleWeights_)
             //    thweight /= LHEScaleWeight[centralWeightIndex_];
 
-            if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVlhe > 3.) ||
-                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVlhe < 3. || ptVlhe > 5.))  ||
-                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVlhe < 5. || ptVlhe > 7.)) ||
-                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVlhe < 7. || ptVlhe > 9.)) ||
-                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVlhe < 9. || ptVlhe > 12.)) ||
-                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVlhe < 12. || ptVlhe > 15.)) ||
-                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVlhe < 15. || ptVlhe > 20.)) ||
-                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVlhe < 20. || ptVlhe > 27.)) ||
-                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVlhe < 27. || ptVlhe > 40.)) ||
-                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVlhe < 40. )) {
+            if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
                 thweight = 1;
             }
 
@@ -309,16 +319,16 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         }
     }
 
-    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVlhe > 3.) ||
-            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVlhe < 3. || ptVlhe > 5.))  ||
-            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVlhe < 5. || ptVlhe > 7.)) ||
-            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVlhe < 7. || ptVlhe > 9.)) ||
-            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVlhe < 9. || ptVlhe > 12.)) ||
-            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVlhe < 12. || ptVlhe > 15.)) ||
-            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVlhe < 15. || ptVlhe > 20.)) ||
-            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVlhe < 20. || ptVlhe > 27.)) ||
-            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVlhe < 27. || ptVlhe > 40.)) ||
-            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVlhe < 40. )) {
+    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
         return;
     }
 

@@ -24,8 +24,9 @@
 
 class NanoGenSelectorBase : public SelectorBase {
 public :
-    ScaleFactor* ptZSF_;
-    ScaleFactor* ptWSF_;
+    ScaleFactor* n3llZSF_;
+    ScaleFactor* n3llWmSF_;
+    ScaleFactor* n3llWpSF_;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
     reco::GenParticleCollection leptons;
@@ -114,6 +115,7 @@ public :
     std::array<bool, MAX_PDF_SETS> pdfWeights_ = {{false}};
     bool unknownWeights_ = false;
     bool paramWeights_ = false;
+    bool paramWeightsUpd_ = false;
     bool unknownWeightsAlt_ = false;
 
     TTreeReaderValue<UInt_t> nGenDressedLepton = {fReader, "nGenDressedLepton"};
@@ -147,7 +149,9 @@ public :
     TTreeReaderValue<Float_t> MET_fiducialGenPt = {fReader, "MET_fiducialGenPt"};
     TTreeReaderValue<Float_t> MET_fiducialGenPhi = {fReader, "MET_fiducialGenPhi"};
     float ht;
-    float ptVlhe;
+    float ptVcorr;
+    float yVcorr;
+    float mVcorr;
     
     BranchManager b;
     

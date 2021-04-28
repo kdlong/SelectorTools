@@ -26,6 +26,8 @@ void ZGenSelector::Init(TTree *tree)
     //        hists1D_.push_back(chan + "_" + hist);
     //}
     systHists_ = hists1D_;
+    hists3D_ = {"mass_y_pT_3D", };
+    systHists3D_ = hists3D_;
 
     weighthists1D_ = {"CutFlow", "ZMass", "yZ", "ptZ", "phiZ", "ptl1", "etal1", "ptl2", "etal2", 
         "ptj1", "ptj2", "ptj3", "etaj1", "etaj2", "etaj3", "nJets",
@@ -57,16 +59,33 @@ void ZGenSelector::Init(TTree *tree)
     }
 
     NanoGenSelectorBase::Init(tree);
+    if (name_.find("N3LLCorr") != std::string::npos) {
+        n3llcorr_ = true;
+        SetScaleFactors();
+        if (n3llZSF_ == nullptr)
+            throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
+    }
 }
 
 void ZGenSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) {
     NanoGenSelectorBase::LoadBranchesNanoAOD(entry, variation);
 
-    if (variation.first == Central)
+    if (variation.first == Central) {
         cenWeight = weight;
-    else if (variation.first == LHEParticles) {
-        ptVlhe = zCand.pt();
-        mVlhe = zCand.mass()*1000.;
+        ptVcorr = zCand.pt();
+        mVcorr = zCand.mass();
+        ratio_mass = zCand.mass();
+    }
+    else if (variation.first == PreFSRLeptons) { 
+            ptVcorr = zCand.pt();
+            mVcorr = zCand.mass();
+            yVcorr = zCand.Rapidity();
+    }
+    else if (variation.first == LHEParticles && systematics_.find(PreFSRLeptons) == std::end(systematics_)) {
+        // define at LHE level if it exists
+        ptVcorr = zCand.pt();
+        mVcorr = zCand.mass();
+        yVcorr = zCand.Rapidity();
     }
     else if (variation.first == mZShift10MeVUp)
         weight = cenWeight*breitWignerWeight(10.);
@@ -107,6 +126,10 @@ void ZGenSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std
     else {
         channel_ = Unknown;
         channelName_ = "Unknown";
+    }
+    if (n3llcorr_) {
+        //std::cout << "Correcting weight by " << n3llZSF_->Evaluate3D(mVcorr, yVcorr, ptVcorr) << std::endl;
+        weight *= n3llZSF_->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 
@@ -179,16 +202,16 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
             if (centralWeightIndex_ != -1 && scaleWeights_)
                 thweight /= LHEScaleWeight[centralWeightIndex_];
 
-            if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVlhe > 3.) ||
-                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVlhe < 3. || ptVlhe > 5.))  ||
-                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVlhe < 5. || ptVlhe > 7.)) ||
-                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVlhe < 7. || ptVlhe > 9.)) ||
-                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVlhe < 9. || ptVlhe > 12.)) ||
-                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVlhe < 12. || ptVlhe > 15.)) ||
-                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVlhe < 15. || ptVlhe > 20.)) ||
-                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVlhe < 20. || ptVlhe > 27.)) ||
-                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVlhe < 27. || ptVlhe > 40.)) ||
-                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVlhe < 40. )) {
+            if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
                 thweight = 1;
             }
 
@@ -207,16 +230,16 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
             SafeHistFill(weighthistMap1D_, "MET", channel_, variation.first, genMet.pt(), i, thweight);
         }
     }
-    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVlhe > 3.) ||
-            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVlhe < 3. || ptVlhe > 5.))  ||
-            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVlhe < 5. || ptVlhe > 7.)) ||
-            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVlhe < 7. || ptVlhe > 9.)) ||
-            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVlhe < 9. || ptVlhe > 12.)) ||
-            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVlhe < 12. || ptVlhe > 15.)) ||
-            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVlhe < 15. || ptVlhe > 20.)) ||
-            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVlhe < 20. || ptVlhe > 27.)) ||
-            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVlhe < 27. || ptVlhe > 40.)) ||
-            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVlhe < 40. )) {
+    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
         return;
     }
 
@@ -234,6 +257,7 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
     SafeHistFill(histMap1D_, "nJets", channel_, variation.first, jets.size(), weight);
     SafeHistFill(histMap1D_, "MET", channel_, variation.first, genMet.pt(), weight);
     SafeHistFill(histMap1D_, "HT", channel_, variation.first, ht, weight);
+    SafeHistFill(histMap3D_, "mass_y_pT_3D", channel_, variation.first, zCand.mass(), zCand.Rapidity(), zCand.Pt(), weight);
     for (size_t i = 1; i <= 3; i++) {
         if (jets.size() >= i ) {
             const auto& jet = jets.at(i-1);

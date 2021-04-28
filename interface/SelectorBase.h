@@ -300,6 +300,7 @@ class SelectorBase : public TSelector {
     // The histograms for which you also want systematic variations
     std::vector<std::string> systHists_ = {};
     std::vector<std::string> systHists2D_ = {};
+    std::vector<std::string> systHists3D_ = {};
     std::vector<Systematic> theoryVarSysts_ = {};
 
     // Variables

@@ -327,8 +327,8 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
             // For now, only allow 3D without variations
             else if (is3D) {
                 // Ths is obviously a hack, but it's too much trouble to support this generally
-                if (nbins == 3 && xmin == 5 && xmax == 1000) {
-                    float xrange[4]  = {5., 75., 85., 1000,};
+                if (nbins == 4 && xmin == 5 && xmax == 1000) {
+                    float xrange[nbins+1]  = {5., 75., 80, 85., 1000,};
                     float yrange[nbinsy+1];
                     float zrange[nbinsz+1];
                     for (int i = 0; i <= nbinsy; i++) {
@@ -351,14 +351,38 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
             }
         }
         else if ((is1D && std::find(systHists_.begin(), systHists_.end(), name) != systHists_.end()) ||
-                    (!is1D && std::find(systHists2D_.begin(), systHists2D_.end(), name) != systHists2D_.end())) {
+                    (!is1D && !is3D && std::find(systHists2D_.begin(), systHists2D_.end(), name) != systHists2D_.end()) ||
+                    (is3D && std::find(systHists3D_.begin(), systHists3D_.end(), name) != systHists3D_.end())) {
             if (is1D) {
                 histMap1D_[histlabel] = {};
                 AddObject<TH1D>(histMap1D_[histlabel], histName.c_str(), 
                     histData.at(0).c_str(), nbins, xmin, xmax);
             }
+            else if (is3D) {
+                histMap3D_[histlabel] = {};
+                // Ths is obviously a hack, but it's too much trouble to support this generally
+                if (((nbins == 4 && xmin == 5) || (nbins == 5 && xmin == 50)) && xmax == 1000) {
+                    std::vector<float> xrange = {50., 75., 85., 90., 95., 1000.};
+                    if (nbins == 4)
+                        xrange = {5., 75., 80, 85., 1000,};
+                    float yrange[nbinsy+1];
+                    float zrange[nbinsz+1];
+                    for (int i = 0; i <= nbinsy; i++) {
+                        yrange[i] = ymin + (ymax - ymin)/nbinsy*i;
+                    }
+                    for (int i = 0; i <= nbinsz; i++) {
+                        zrange[i] = zmin + (zmax - zmin)/nbinsz*i;
+                    }
+
+                    AddObject<TH3D>(histMap3D_[histlabel], histName.c_str(), histData.at(0).c_str(), 
+                            nbins, xrange.data(), nbinsy, yrange, nbinsz, zrange);
+                }
+                else
+                    AddObject<TH3D>(histMap3D_[histlabel], histName.c_str(), histData.at(0).c_str(), 
+                            nbins, xmin, xmax, nbinsy, ymin, ymax, nbinsz, zmin, zmax);
+            }
             else {
-                histMap1D_[histlabel] = {};
+                histMap2D_[histlabel] = {};
                 AddObject<TH2D>(histMap2D_[histlabel], histName.c_str(), 
                     histData.at(0).c_str(), nbins, xmin, xmax, nbinsy, ymin, ymax);
             }

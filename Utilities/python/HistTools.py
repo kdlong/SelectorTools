@@ -38,10 +38,9 @@ def makeUnrolledHist(init_2D_hist, xbins, ybins, name="", overflow=False):
         ylower = ybins[i]
         yupper = ybins[i+1]
         hist_name = ("%s_%0.1fTo%0.1f" % (init_2D_hist.GetName(), ylower, yupper)).replace(".","p")
-        # Global bin number = nbinx + nbinsx*nbiny
-        lower_bin = init_2D_hist.FindBin(0,ylower)/init_2D_hist.GetNbinsX()
+        lower_bin = init_2D_hist.GetYaxis().FindBin(ylower)
         # Range is inclusive, so don't count upper bin twice
-        upper_bin = init_2D_hist.FindBin(0,yupper*(1-0.0001))/init_2D_hist.GetNbinsX()
+        upper_bin = init_2D_hist.GetYaxis().FindBin(yupper*(1-0.0001))
         ybinned_hist = init_2D_hist.ProjectionX(hist_name, lower_bin, upper_bin, "e")
         ybinned_hist = ybinned_hist.Rebin(len(xbins)-1, hist_name+"_rebin", xbins)
         hists_half_rolled.append(ybinned_hist)

@@ -13,7 +13,7 @@ import logging
 
 def getDefaultParser(allow_from_file=True):
     parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--selection", type=str, default="Default",
+    parser.add_argument("-s", "--selection", type=str, default="None",
                         required=False, help="Name of selection to make, "
                         " as defined in Cuts/<analysis>/<selection>.json")
     parser.add_argument("-a", "--analysis", type=str,
@@ -111,10 +111,7 @@ def getHistInfo(analysis, input_hists, noConfig=False):
     config_hist = ConfigHistTools.getAllHistNames(manager_path, analysis) \
         if "all" in input_hists else input_hists
 
-    print(input_hists)
-    print(config_hist)
     hists = [x for x in filter(lambda x : all(y not in x for y in excludedHistPatterns), config_hist)]
-    print(hists)
     hist_inputs = [getHistExpr(hists, analysis)]
 
     return hists, hist_inputs

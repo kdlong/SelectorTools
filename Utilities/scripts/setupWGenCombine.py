@@ -30,8 +30,7 @@ parser.add_argument("--channels", type=lambda x: x.split(','),
     default=["mp","mn"], help="List of channels (separated by comma)")
 parser.add_argument("-l", "--lumi", type=float, 
     default=35.9*0.7, help="lumi")
-parser.add_argument("--noPdf", action='store_true', 
-    help="don't add PDF uncertainties")
+parser.add_argument("--pdfs", type=str, default="NNPDF31", help="List of PDFs to store")
 parser.add_argument("--ssd", action='store_true', 
     help="Write to /data/kelong, not /eos/user")
 parser.add_argument("--splitPtV", action='store_true', 
@@ -53,10 +52,10 @@ cardtool = CombineCardTools.CombineCardTools()
 
 manager_path = ConfigureJobs.getManagerPath() 
 sys.path.append("/".join([manager_path, "AnalysisDatasetManager",
-    "Utilities/python"]))
+    "Utilities"]))
 
-from ConfigHistFactory import ConfigHistFactory
-config_factory = ConfigHistFactory(
+from configTools import ConfigHistFactory
+config_factory = ConfigHistFactory.ConfigHistFactory(
     "%s/AnalysisDatasetManager" % manager_path,
     "WGen/NanoAOD",
 )
@@ -93,7 +92,7 @@ normVariations = [] if args.theoryOnly else ["mWBWShift100MeV", "mWBWShift50MeV"
 cardtool.setNormalizedVariations(normVariations)
 
 folder_name = "_".join([args.fitvar,args.append]) if args.append != "" else args.fitvar
-basefolder = "/data/kelong/" if args.ssd else "/eos/user/k/kelong"
+basefolder = "/data/shared/kelong/" if args.ssd else "/eos/user/k/kelong"
 cardtool.setOutputFolder(basefolder+"/CombineStudies/WGen/%s" % folder_name)
 
 cardtool.setLumi(args.lumi)
@@ -115,8 +114,9 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0)
         # NNPDF3.0 scale unc
         cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0, specName="NNPDF30")
-        isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
-        cenMassIdx = 919 if not isAltTh else 29
+        #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
+        isAltTh = True
+        cenMassIdx = 919 if not isAltTh else 18+103+11
         #massVars = lambda i: [1, cenMassIdx, cenMassIdx+i, cenMassIdx-i]
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
@@ -127,45 +127,55 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'other', massVars(10), exclude=[], central=0, specName="massShift100MeV")
         width = (18+890+21+3) if not isAltTh else (18+21+3)
         cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
-        if not args.noPdf:
+        if args.pdfs != "none":
             # NNPDF3.1
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(19, 120), central=0, specName="NNPDF31")
-            # NNPDF31_nnlo_as_0118_CMSW1_hessian_100; LHAPDFID = 325700, AltSet5
-            # 9+9 scale + 104+2+2+2+2 PDF
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(130, 231), central=0, specName="CMSW1")
-            # NNPDF31_nnlo_as_0118_CMSW2_hessian_100; LHAPDFID = 325900, AltSet6
-            # 9+9 scale + 104+2+2+2+2+101 PDF
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(231, 332), central=0, specName="CMSW2")
-            # NNPDF31_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 326100, AltSet7
-            # 9+9 scale + 104+2+2+2+2+101+101 PDF
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(332, 433), central=0, specName="CMSW3")
-            # NNPDF31_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 326300, AltSet8
-            # 9+9 scale + 104+2+2+2+2+101+101+101 PDF
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(433, 534), central=0, specName="CMSW4")
-            # NNPDF30_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 303200, AltSet9
-            # 9+9 scale + 104+2+2+2+2+101+101+101+101 PDF
-            cardtool.addTheoryVar(process, 'pdf_hessian', range(534, 635), central=0, specName="NNPDF30")
-            # CT18, LHAPDF ID = 14000
-            # 9+9 scale + 104+2+2+2+2+101+101+101+101+101+2+2 PDF
-            cardtool.addTheoryVar(process, 'pdf_assymhessian', range(639, 698), central=0, specName="CT18")
-            # CT18Z, LHAPDF ID = 14000
-            # 9+9 scale + 104+2+2+2+2+101+101+101+101+101+2+2+59+2 PDF
-            cardtool.addTheoryVar(process, 'pdf_assymhessian', range(700, 759), central=0, specName="CT18Z")
-            # MMHT
-            # 9+9 scale 104+2+2+2+2+101+101+101+101+101+2+2+59+2+59+2
-            cardtool.addTheoryVar(process, 'pdf_assymhessian', range(761, 812), central=0, specName="MMHT")
-            # HERA20_EIG, LHAPDF=61200
-            # 9+9 scale 104+2+2+2+2+101+101+101+101+101+2+2+59+2+59+2+30
-            cardtool.addTheoryVar(process, 'pdf_assymhessian', range(791, 820), central=0, specName="HERA2")
+            if "nnpdf31" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(19, 120), central=0, specName="NNPDF31")
+                # NNPDF31_nnlo_as_0118_CMSW1_hessian_100; LHAPDFID = 325700, AltSet5
+                # 9+9 scale + 104+2+2+2+2 PDF
+            if "cmsw1" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(130, 231), central=0, specName="CMSW1")
+                # NNPDF31_nnlo_as_0118_CMSW2_hessian_100; LHAPDFID = 325900, AltSet6
+                # 9+9 scale + 104+2+2+2+2+101 PDF
+            if "cmsw2" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(231, 332), central=0, specName="CMSW2")
+                # NNPDF31_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 326100, AltSet7
+                # 9+9 scale + 104+2+2+2+2+101+101 PDF
+            if "cmsw3" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(332, 433), central=0, specName="CMSW3")
+                # NNPDF31_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 326300, AltSet8
+                # 9+9 scale + 104+2+2+2+2+101+101+101 PDF
+            if "cmsw4" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(433, 534), central=0, specName="CMSW4")
+                # NNPDF30_nnlo_as_0118_CMSW3_hessian_100; LHAPDFID = 303200, AltSet9
+                # 9+9 scale + 104+2+2+2+2+101+101+101+101 PDF
+            if "nnpdf30" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_hessian', range(534, 635), central=0, specName="NNPDF30")
+                # CT18, LHAPDF ID = 14000
+                # 9+9 scale + 104+2+2+2+2+101+101+101+101+101+2+2 PDF
+            if "ct18" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_assymhessian', range(639, 698), central=0, specName="CT18")
+                # CT18Z, LHAPDF ID = 14000
+                # 9+9 scale + 104+2+2+2+2+101+101+101+101+101+2+2+59+2 PDF
+            if "ct18z" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_assymhessian', range(700, 759), central=0, specName="CT18Z")
+                # MMHT
+                # 9+9 scale 104+2+2+2+2+101+101+101+101+101+2+2+59+2+59+2
+            if "mmht" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_assymhessian', range(761, 812), central=0, specName="MMHT")
+                # HERA20_EIG, LHAPDF=61200
+                # 9+9 scale 104+2+2+2+2+101+101+101+101+101+2+2+59+2+59+2+30
+            if "hera" in args.pdfs.lower():
+                cardtool.addTheoryVar(process, 'pdf_assymhessian', range(791, 820), central=0, specName="HERA2")
     elif "nnlops" in process:
         cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[15, 17], central=0)
         cardtool.setScaleVarGroups(process, [(3,6), (1,2), (4,8)])
-        if not args.noPdf:
+        if args.pdfs != "none":
             # NNPDF3.1
             cardtool.addTheoryVar(process, 'pdf_hessian', range(885, 986), central=0, specName="NNPDF31")
     elif process not in ["nonprompt", "data"]:
         cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[3, 7], central=4)
-        if not args.noPdf:
+        if args.pdfs != "none":
             cardtool.addTheoryVar(process, 'pdf_mc' if "cp5" not in process else "pdf_hessian", range(10,111), central=0)
 
     if args.splitPtV:
@@ -188,11 +198,13 @@ if args.splitPtV:
 if not args.theoryOnly:
     nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
 
-if not args.noPdf:
+if args.pdfs != "none":
     nnu += cardtool.addCustomizeCard(path+"/Customize/pdfHessian_template.txt") \
             if args.allHessianVars else cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
-else:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
+
+nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
+
+cardtool.setCardGroups("noigroup massShift100MeV")
 
 nuissance_map = {"mn" : nnu, "mp" : nnu, "m" : nnu}
 for i, chan in enumerate(args.channels):
