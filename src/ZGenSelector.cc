@@ -7,6 +7,7 @@
 
 void ZGenSelector::Init(TTree *tree)
 {
+    isZ_ = true;
     // Don't waste memory on empty e hists
     TParameter<bool>* muOnlyParam = (TParameter<bool>*) GetInputList()->FindObject("muOnly");
     bool muOnly = muOnlyParam != nullptr && muOnlyParam->GetVal();
@@ -62,7 +63,7 @@ void ZGenSelector::Init(TTree *tree)
     if (name_.find("N3LLCorr") != std::string::npos) {
         n3llcorr_ = true;
         SetScaleFactors();
-        if (n3llZSF_ == nullptr)
+        if (scetlibCorrs_.at(0) == nullptr)
             throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
     }
 }
@@ -128,8 +129,7 @@ void ZGenSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std
         channelName_ = "Unknown";
     }
     if (n3llcorr_) {
-        //std::cout << "Correcting weight by " << n3llZSF_->Evaluate3D(mVcorr, yVcorr, ptVcorr) << std::endl;
-        weight *= n3llZSF_->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+        weight *= scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 
@@ -186,6 +186,8 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
         size_t nWeights = minimalWeights+allPdfWeights;
         size_t pdfOffset = nScaleWeights;
         size_t pdfIdx = 0;
+        if (n3llcorr_)
+            nWeights += nScetlibWeights_;
         for (size_t i = 0; i < nWeights; i++) {
             float thweight = 1;
             if (i < nLHEScaleWeight)
@@ -198,6 +200,13 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
             }
+            else {
+                int idx = i-nScaleWeights-allPdfWeights;
+                auto* sf = scetlibCorrs_.at(idx);
+                float refW = scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+                thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
+            }
+
 
             if (centralWeightIndex_ != -1 && scaleWeights_)
                 thweight /= LHEScaleWeight[centralWeightIndex_];

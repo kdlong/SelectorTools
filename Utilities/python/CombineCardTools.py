@@ -160,9 +160,11 @@ class CombineCardTools(object):
         return varHists
 
     def addTheoryVar(self, processName, varName, entries, central=0, exclude=[], specName=""):
-        if varName.lower() not in ["scale", "pdf_hessian", "pdf_mc", "pdf_assymhessian", "other"]:
-            raise ValueError("Invalid theory uncertainty %s. Must be type 'scale,' 'pdf,' or 'other'" % varName)
-        name = "scale" if "scale" in varName.lower() else ("pdf"+specName if "pdf" in varName.lower() else specName)
+        validVars = ["scale", "resumscale", "pdf_hessian", "pdf_mc", "pdf_assymhessian", "other"]
+        if not any([x in varName.lower() for x in validVars]):
+            raise ValueError("Invalid theory uncertainty %s. Must be type %s" % (varName, " ".join(validVars)))
+        name = varName if "scale" in varName.lower() else ("pdf"+specName if "pdf" in varName.lower() else specName)
+        logging.debug("Adding theory var %s" % name)
 
         if not processName in self.theoryVariations:
             self.theoryVariations[processName] = {}
@@ -173,7 +175,7 @@ class CombineCardTools(object):
                 "central" : central,
                 "exclude" : exclude,
                 "groups" : [(3,6), (1,2), (4,8)],
-                "combine" : "envelope" if varName in ["scale", "other"] else varName.replace("pdf_", ""),
+                "combine" : "envelope" if "pdf" not in varName.lower() else varName.replace("pdf_", ""),
             }
         })
 
@@ -396,14 +398,6 @@ class CombineCardTools(object):
             hists,name = HistTools.getTransformed3DLHEHists(weightHist, HistTools.makeUnrolledHist,
                 [self.unrolledBinsX, self.unrolledBinsY], var['entries'], "", varName)
         
-        # In this case, should be central, varCentral, varUp, varDown
-        if len(var['entries']) == 4:
-            for i in range(hists[0].GetNbinsX()+1):
-                central_ratio = hists[0].GetBinContent(i)/hists[1].GetBinContent(i) if hists[1].GetBinContent(i) > 0 else 1
-                hists[2].SetBinContent(i, hists[2].GetBinContent(i)*central_ratio)
-                hists[3].SetBinContent(i, hists[3].GetBinContent(i)*central_ratio)
-            hists = [hists[2], hists[3]]
-
         hists[0] = HistTools.rebinHist(hists[0], name, self.rebin)
         hists[1] = HistTools.rebinHist(hists[1], name.replace("Up", "Down"), self.rebin)
         return hists
@@ -413,33 +407,44 @@ class CombineCardTools(object):
         weightHist = group.FindObject(weighthist_name)
         if not weightHist:
             raise ValueError("Failed to find %s. Skipping" % weighthist_name)
-        if 'scale' not in self.theoryVariations[processName]:
-            return []
-        scaleVars = self.theoryVariations[processName]['scale']
-        
-        scaleHists = HistTools.getScaleHists(weightHist, processName, self.rebin, 
-                entries=scaleVars['entries'], 
-                exclude=scaleVars['exclude'], 
-                central=scaleVars['central']) if not self.isUnrolledFit else \
-            HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
-                    [self.unrolledBinsX, self.unrolledBinsY], processName,
-                entries=scaleVars['entries'], 
-                exclude=scaleVars['exclude'])
 
-        if expandedTheory:
-            name = processName if not self.correlateScaleUnc else ""
-            expandedScaleHists = HistTools.getExpandedScaleHists(weightHist, name, self.rebin, 
+        scaleHists = []
+        for name in self.theoryVariations[processName]:
+            if "scale" not in name.lower():
+                continue
+            scaleVars = self.theoryVariations[processName][name]
+            
+            hists = HistTools.getScaleHists(weightHist, 
+                    "" if self.correlateScaleUnc else processName, 
+                    self.rebin, 
                     entries=scaleVars['entries'], 
-                    pairs=scaleVars['groups'], 
-                ) if not self.isUnrolledFit else \
-                HistTools.getTransformed3DExpandedScaleHists(weightHist, 
-                        HistTools.makeUnrolledHist,
-                    [self.unrolledBinsX, self.unrolledBinsY], name,
+                    exclude=scaleVars['exclude'], 
+                    central=scaleVars['central'],
+                    label="QCDscale" if name == "scale" else name) \
+            if not self.isUnrolledFit else \
+                HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
+                        [self.unrolledBinsX, self.unrolledBinsY], processName,
+                    "" if self.correlateScaleUnc else processName, 
                     entries=scaleVars['entries'], 
-                    pairs=scaleVars['groups'], 
-                )
+                    exclude=scaleVars['exclude'])
+            #)
+            scaleHists.extend(hists)
+
+            if expandedTheory and name == "scale":
+                expandedScaleHists = HistTools.getExpandedScaleHists(weightHist, 
+                        "" if self.correlateScaleUnc else processName, 
+                        self.rebin, 
+                        entries=scaleVars['entries'], 
+                        pairs=scaleVars['groups'], 
+                    ) if not self.isUnrolledFit else \
+                    HistTools.getTransformed3DExpandedScaleHists(weightHist, 
+                            HistTools.makeUnrolledHist,
+                        [self.unrolledBinsX, self.unrolledBinsY], name,
+                        entries=scaleVars['entries'], 
+                        pairs=scaleVars['groups'], 
+                    )
                 
-            scaleHists.extend(expandedScaleHists)
+                scaleHists.extend(expandedScaleHists)
         return scaleHists
 
     #def makeNuisanceShapeOnly(process, central_hist, uncertainty, channels):

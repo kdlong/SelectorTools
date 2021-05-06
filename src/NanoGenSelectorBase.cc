@@ -430,11 +430,19 @@ reco::GenParticle NanoGenSelectorBase::makeGenParticle(int pdgid, int status, fl
 }
 
 void NanoGenSelectorBase::SetScaleFactors() {
-    std::cout << "Seting scale factors \n";
-    n3llZSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Z");
-    n3llWmSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Wm");
-    n3llWpSF_ = (ScaleFactor *) GetInputList()->FindObject("scetlibCorr3D_Wp");
-    if (n3llWpSF_ == nullptr && n3llWmSF_ == nullptr && n3llZSF_ == nullptr && name_.find("N3LLCorr") != std::string::npos) 
+    if (name_.find("N3LLCorr") == std::string::npos) 
+        return;
+
+    std::cout << "Setting scale factors \n";
+    // Need to check Wm or Wp
+    std::string corrName = "scetlibCorr3D_";
+    corrName += isZ_ ? "Z" : (name_.find("wm") != std::string::npos ? "Wm" : "Wp");
+    for (int i = 0; i < nScetlibWeights_; i ++) {
+        auto objName = corrName+"_var"+std::to_string(i);
+        scetlibCorrs_.push_back(static_cast<ScaleFactor*>(GetInputList()->FindObject(objName.c_str())));
+    }
+
+    if (scetlibCorrs_.at(0) == nullptr && name_.find("N3LLCorr") != std::string::npos) 
         std::invalid_argument("Must pass N3LL correction SF");
 }
 

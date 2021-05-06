@@ -87,7 +87,7 @@ void WGenSelector::Init(TTree *tree)
     if (name_.find("N3LLCorr") != std::string::npos) {
         n3llcorr_ = true;
         SetScaleFactors();
-        if (n3llWmSF_ == nullptr && n3llWpSF_ == nullptr)
+        if (scetlibCorrs_.at(0) == nullptr)
             throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
     }
 }
@@ -152,6 +152,7 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
     else if (variation.first == mWShift100MeVDown || variation.first == BareLeptons_mWShift100MeVDown)
         weight = cenWeight*breitWignerWeight(-100.);
 
+
     if (leptons.size() > 0 && std::abs(leptons.at(0).pdgId()) == 11) {
         if (leptons.at(0).pdgId() > 0) {
             channel_ = en;
@@ -180,8 +181,7 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
 
     if (n3llcorr_) {
         //auto* sf = channel_ == mp ? n3llWpSF_ : n3llWmSF_;
-        auto* sf = n3llWpSF_;
-        weight *= sf->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+        weight *= scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 
@@ -244,7 +244,6 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
     if (variation.first == Central)
         mcWeights_->Fill(weight/std::abs(refWeight));
 
-
     float ptl_smear_fill = ptl_smear;
     if (variation.first == muonScaleUp)
         ptl_smear_fill *= 1.001;
@@ -253,38 +252,39 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
 
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
-        size_t minimalWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1+nMEParamWeight;
+        size_t minimalWeights = nLHEScaleWeight+nMEParamWeight;
         size_t allPdfWeights = std::accumulate(nLHEPdfWeights.begin(), nLHEPdfWeights.end(), 0);
 
-        size_t nWeights = variation.first == Central ? minimalWeights+nLHEUnknownWeight+nLHEUnknownWeightAltSet1+allPdfWeights : minimalWeights; 
+        size_t nWeights = minimalWeights+allPdfWeights;
+        if (n3llcorr_)
+            nWeights += nScetlibWeights_;
         size_t pdfOffset = nScaleWeights;
         size_t pdfIdx = 0;
         for (size_t i = 0; i < nWeights; i++) {
             float thweight = 1;
             if (i < nLHEScaleWeight)
                 thweight = LHEScaleWeight[i];
-            else if (i < nScaleWeights && variation.first == Central)
+            else if (i < nScaleWeights)
                 thweight = LHEScaleWeightAltSet1[i-nLHEScaleWeight];
-            else if (i < nScaleWeights+allPdfWeights && variation.first == Central) {
+            else if (i < nScaleWeights+allPdfWeights) {
                 thweight = LHEPdfWeights[pdfIdx][i-pdfOffset];
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
             }
-            else {
-                size_t offset = variation.first == Central ? nLHEScaleWeight+allPdfWeights : nLHEScaleWeight;
+            else if (i < minimalWeights+allPdfWeights) {
+                size_t offset = nLHEScaleWeight+allPdfWeights;
                 thweight = MEParamWeight[i-offset];
             }
-            //TODO: This is broken
-            //else if (i < minimalWeights-nLHEUnknownWeightAltSet1)
-            //    thweight = LHEUnknownWeight[i-minimalWeights+nLHEUnknownWeight+nLHEUnknownWeightAltSet1];
-            //else if (i < minimalWeights)
-            //    thweight = LHEUnknownWeightAltSet1[i-minimalWeights+nLHEUnknownWeightAltSet1];
-            //else 
-            //    thweight = LHEPdfWeight[i-minimalWeights];
+            else {
+                int idx = i-minimalWeights-allPdfWeights;
+                auto* sf = scetlibCorrs_.at(idx);
+                float refW = scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+                thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
+            }
 
-            //if (centralWeightIndex_ != -1 && scaleWeights_)
-            //    thweight /= LHEScaleWeight[centralWeightIndex_];
+            if (centralWeightIndex_ != -1 && scaleWeights_)
+                thweight /= LHEScaleWeight[centralWeightIndex_];
 
             if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
                     ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||

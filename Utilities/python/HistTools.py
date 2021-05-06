@@ -248,9 +248,10 @@ def getPDFPercentVariation(values):
         return 0
     return abs(values[upvar] - values[downvar])/denom
 
-def getScaleHists(scale_hist2D, name, rebin=None, entries=[i for i in range(1,10)], central=0, exclude=[7,9]):
-    entries = filter(lambda x: x not in exclude, entries)
-    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, "QCDscale", rebin)
+def getScaleHists(scale_hist2D, name, rebin=None, entries=[i for i in range(1,10)], central=0, exclude=[7,9], label="QCDscale"):
+    entries = [x for x in filter(lambda x: x not in exclude, entries)]
+    print("Final entries are", entries)
+    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, label, rebin)
     map(lambda h: logging.debug("Hist %s has integral %0.2f" % (h.GetName(), h.Integral())), hists)
     return getVariationHists(hists, name, hist_name, lambda x: x[-1], lambda x: x[1], central)
 

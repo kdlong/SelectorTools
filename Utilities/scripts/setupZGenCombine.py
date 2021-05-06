@@ -27,7 +27,7 @@ parser.add_argument("--files", type=lambda x: [i.strip() for i in x.split(",")],
     default=[], help="Samples to add to output file")
 parser.add_argument("-l", "--lumi", type=float, 
     default=35.9*0.85, help="lumi")
-parser.add_argument("--noPtVSplit", action='store_true', 
+parser.add_argument("--splitPtV", action='store_true', 
     help="Don't split scale uncertainties by pt(V)")
 parser.add_argument("--channels", type=lambda x: x.split(','), 
     default=["mm","ee"], help="List of channels (separated by comma)")
@@ -39,6 +39,7 @@ args = parser.parse_args()
 logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
 
 cardtool = CombineCardTools.CombineCardTools()
+cardtool.setCorrelateScaleUnc(True)
 
 if args.rebin:
     if ":" in args.rebin:
@@ -51,10 +52,10 @@ if args.rebin:
 
 manager_path = ConfigureJobs.getManagerPath() 
 sys.path.append("/".join([manager_path, "AnalysisDatasetManager",
-    "Utilities/python"]))
+    "Utilities"]))
 
-from ConfigHistFactory import ConfigHistFactory
-config_factory = ConfigHistFactory(
+from configTools import ConfigHistFactory
+config_factory = ConfigHistFactory.ConfigHistFactory(
     "%s/AnalysisDatasetManager" % manager_path,
     "ZGen/NanoAOD",
 )
@@ -105,7 +106,14 @@ for process in plot_groups:
         #cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
         #cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
-        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0, specName="NNPDF30")
+        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0)
+        if "N3LLCorr" in process:
+            resumIdx = 910
+            cardtool.addTheoryVar(process, 'resumscale', range(resumIdx, resumIdx+45), central=0)
+            cardtool.addTheoryVar(process, 'resumscaleDFO', range(resumIdx, resumIdx+3), central=0)
+            cardtool.addTheoryVar(process, 'resumscaleDLambda', range(resumIdx+3, resumIdx+5), central=-1)
+            cardtool.addTheoryVar(process, 'resumscaleDMatch', range(resumIdx+5, resumIdx+9), central=-1)
+            cardtool.addTheoryVar(process, 'resumscaleDResum', range(resumIdx+9, resumIdx+45), central=-1)
         if not args.noPdf:
             # NNPDF3.1
             cardtool.addTheoryVar(process, 'pdf_hessian', range(19, 120), central=0, specName="NNPDF31")
@@ -149,7 +157,7 @@ for process in plot_groups:
         #cardtool.addTheoryVar(process, 'pdf_mc' if "cp5" in process else "pdf_hessian", pdf_entries, central=0)
         cardtool.addTheoryVar(process, 'pdf_hessian', pdf_entries, central=0)
 
-    if not args.noPtVSplit:
+    if args.splitPtV:
         for pair in ptbinPairs:
             varName = 'ptV%ito%i' % pair
             varName = varName.replace("100", "Inf")

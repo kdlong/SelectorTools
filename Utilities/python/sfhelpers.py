@@ -40,20 +40,18 @@ def setScaleFactorObj(infoVector, scaleFactorsObj, fScales):
     fScales.cd()
     scaleFactorsObj.Write()
     
-def smoothingWeights(histlow, histhigh, bins, turnon, turnoff, k=0.2, axishigh=2, axislow=3):
-    high = np.digitize(turnon, bins[axishigh], right=True)
-    print("bin of interest is", bins[axislow])
-    low = np.digitize(turnoff, bins[axislow], right=True)
+def smoothingWeights(histlow, histhigh, binsl, turnon, turnoff, k=0.2, axishigh=2, axislow=3):
+    low = np.digitize(turnon, binsl[axislow], right=True)
+    high = np.digitize(turnoff, binsl[axislow], right=True)
     if histlow.shape[axislow] < histhigh.shape[axishigh]:
         temp = np.copy(histhigh)
         # This assumes axis is the Z axis...
         temp[:,:,:,:histlow.shape[axislow]] = histlow
         histlow = temp
     mid = int(low+0.5*(high-low))
-    midval = bins[axislow][mid]
+    midval = binsl[axislow][mid]
     print(low, high, mid, midval)
-    corr = 0.5*(1-special.erf(k*(bins[axislow][:-1]-midval)))
-    print("Corr:", corr)
+    corr = 0.5*(1-special.erf(k*(binsl[axislow][:-1]-midval)))
     weights = (corr*histlow + (1-corr)*histhigh[np.newaxis,:,:,:])/histhigh[np.newaxis,:,:,:]
 	# Not sure what's going on in the last bin now
     #weights[:,:,-1] = 1.

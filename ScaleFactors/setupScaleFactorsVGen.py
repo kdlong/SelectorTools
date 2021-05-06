@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Example: python3 ScaleFactors/setupScaleFactorsVGen.py --name scetlibCorr3D_Z --hist_names hist mass_y_pT_3D_prefsr_mm -n DYm50_scetlib -d DYm50_minnlo --vars 0 1 2 3 4 5 6 7 8 --smooth 35 45 --npOut test.npz /eos/user/k/kelong/HistFiles/ZGen/Scetlib/inclusive_Z_pT.npz /eos/user/k/kelong/HistFiles/ZGen/DY_MiNNLO_3Dreweight.root -a ZGen
+# Example: python3 ScaleFactors/setupScaleFactorsVGen.py --name scetlibCorr3D_Z --hist_names hist mass_y_pT_3D_prefsr_mm -n DYm50_scetlib -d DYm50_minnlo --smooth 35 45 --npOut test.npz /eos/user/k/kelong/HistFiles/ZGen/Scetlib/inclusive_Z_pT.npz /eos/user/k/kelong/HistFiles/ZGen/DY_MiNNLO_3Dreweight.root -a ZGen
 import ROOT
 import argparse
 import os
@@ -10,6 +10,7 @@ from python import UserInput,OutputTools,HistTools,ConfigureJobs,sfhelpers
 import array
 import uproot
 import numpy as np
+import logging
 
 def getRootHist(rtfile, dataset, histname, xsec, rebin):
     hist = rtfile.Get("/".join([dataset, histname]))
@@ -62,8 +63,10 @@ parser.add_argument("-d", "--denominator", required=True, type=str, help="Name o
 parser.add_argument("inputFiles", type=str, nargs=2, help="file(s) with histograms. <numerator> <denominator> if there are two")
 parser.add_argument("--smooth", type=float, nargs='+', help="<low pt> <high pt>")
 parser.add_argument("--npOut", type=str, help="store ratio as npz file")
-parser.add_argument("--vars", nargs="*", type=int, default=[0], help="Variation (in numpy hist)")
+parser.add_argument("--debug", action='store_true', help="Output debug info")
 args = parser.parse_args()
+
+logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
 
 output_file = os.environ["CMSSW_BASE"]+'/src/Analysis/SelectorTools/data/%s_scaleFactors.root' % args.analysis
 fScales = ROOT.TFile(output_file, 'recreate' if not args.append else 'update')
@@ -82,17 +85,20 @@ if len(histnum.shape) == len(histdenom.shape):
 elif len(histnum.shape) == 4 and len(histdenom.shape) == 3:
     corr = histnum/histdenom[np.newaxis,:,:,:]
 
+logging.debug("HistNum is %s" % histnum)
+logging.debug("HistDenom is %s" % histdenom)
+
 if args.smooth:
     corr = sfhelpers.smoothingWeights(histnum, histdenom, binsn, *args.smooth)
 
 if args.npOut:
     labels = {args.name : corr,
-                "bins" : binsd,
+                "bins" : binsn,
                 "numerator" : histnum,
                 "denominator" : histdenom}
     np.savez(args.npOut, **labels)
 
-for var in args.vars:
+for var in range(histnum.shape[0]):
     varname = args.name+"_var%i" % var
 
     hist = OutputTools.numpy3DHistToRoot(varname, binsd, corr[var,:,:,:])

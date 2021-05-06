@@ -24,9 +24,9 @@
 
 class NanoGenSelectorBase : public SelectorBase {
 public :
-    ScaleFactor* n3llZSF_;
-    ScaleFactor* n3llWmSF_;
-    ScaleFactor* n3llWpSF_;
+    bool isZ_ = false;
+    std::vector<ScaleFactor*> scetlibCorrs_;
+    const int nScetlibWeights_ = 45;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
     reco::GenParticleCollection leptons;

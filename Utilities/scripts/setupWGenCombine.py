@@ -49,6 +49,7 @@ args = parser.parse_args()
 logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
 
 cardtool = CombineCardTools.CombineCardTools()
+cardtool.setCorrelateScaleUnc(True)
 
 manager_path = ConfigureJobs.getManagerPath() 
 sys.path.append("/".join([manager_path, "AnalysisDatasetManager",
@@ -111,9 +112,10 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0)
+        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[])#[6, 8], central=0)
+        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
         # NNPDF3.0 scale unc
-        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[6, 8], central=0, specName="NNPDF30")
+        # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
         isAltTh = True
         cenMassIdx = 919 if not isAltTh else 18+103+11
@@ -127,6 +129,13 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'other', massVars(10), exclude=[], central=0, specName="massShift100MeV")
         width = (18+890+21+3) if not isAltTh else (18+21+3)
         cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
+        if "N3LLCorr" in process:
+            resumIdx = cenMassIdx+11
+            cardtool.addTheoryVar(process, 'resumscale', range(resumIdx, resumIdx+45), central=0)
+            cardtool.addTheoryVar(process, 'resumscaleDFO', range(resumIdx, resumIdx+3), central=0)
+            cardtool.addTheoryVar(process, 'resumscaleDLambda', range(resumIdx+3, resumIdx+5), central=-1)
+            cardtool.addTheoryVar(process, 'resumscaleDMatch', range(resumIdx+5, resumIdx+9), central=-1)
+            cardtool.addTheoryVar(process, 'resumscaleDResum', range(resumIdx+9, resumIdx+45), central=-1)
         if args.pdfs != "none":
             # NNPDF3.1
             if "nnpdf31" in args.pdfs.lower():
