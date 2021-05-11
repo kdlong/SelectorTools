@@ -49,7 +49,7 @@ args = parser.parse_args()
 logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
 
 cardtool = CombineCardTools.CombineCardTools()
-cardtool.setCorrelateScaleUnc(True)
+cardtool.setCorrelateScaleUnc(False)
 
 manager_path = ConfigureJobs.getManagerPath() 
 sys.path.append("/".join([manager_path, "AnalysisDatasetManager",
@@ -112,8 +112,10 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[])#[6, 8], central=0)
-        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
+        # If using the NanoGen
+        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
+        cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
+        cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
@@ -192,8 +194,8 @@ for process in plot_groups:
             varName = 'ptV%ito%i' % pair
             varName = varName.replace("100", "Inf")
             cardtool.addScaleBasedVar(process, varName) 
-    #if process in args.central.split(","):
-    #    cardtool.addPerBinVariation(process, "CMS_eff_m", 0.01, False)
+    if process in args.central.split(",") and args.addEff:
+        cardtool.addPerBinVariation(process, "CMS_eff_m", 0.01, False)
 
     cardtool.loadHistsForProcess(process, expandedTheory=args.allHessianVars)
     cardtool.writeProcessHistsToOutput(process)
@@ -201,7 +203,7 @@ for process in plot_groups:
 scriptdir = os.path.dirname(os.path.realpath(__file__)) 
 path = "/".join(scriptdir.split("/")[:-2]+["Templates", "CombineCards", "VGen"])
 
-nnu = 2
+nnu = 3
 if args.splitPtV:
     nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
 if not args.theoryOnly:
@@ -213,7 +215,7 @@ if args.pdfs != "none":
 
 nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
 
-cardtool.setCardGroups("noigroup massShift100MeV")
+cardtool.setCardGroups("massnoi noiGroup = massShift100MeV")
 
 nuissance_map = {"mn" : nnu, "mp" : nnu, "m" : nnu}
 for i, chan in enumerate(args.channels):

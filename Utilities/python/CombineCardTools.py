@@ -306,7 +306,8 @@ class CombineCardTools(object):
 
             if processName in self.perbinVariations:
                 for varName, var, corr in self.perbinVariations[processName]:
-                    map(lambda x: group.Add(x), self.perBinVariationHists(hist, varName, var, corr, chan == self.channels[0]))
+                    for x in self.perBinVariationHists(hist, varName, var, corr, chan == self.channels[0]):
+                        group.Add(x)
 
             scaleHists = []
             if processName in self.theoryVariations:
@@ -376,10 +377,13 @@ class CombineCardTools(object):
                         continue
                     hist.Scale(self.yields[chan][processName]/hist.Integral())
 
-        if self.addOverflow:
-            map(HistTools.addOverflow, filter(lambda x: (x.GetName() not in processedHists), group))
-        if self.removeZeros and "data" not in group.GetName().lower():
-            map(HistTools.removeZeros, filter(lambda x: (x.GetName() not in processedHists), group))
+        unzero = self.removeZeros and "data" not in group.GetName().lower()
+        if self.addOverflow or unzero:
+            for x in filter(lambda x: (x.GetName() not in processedHists), group):
+                if self.addOverflow:
+                    HistTools.addOverflow(x)
+                if unzero:
+                    HistTools.removeZeros(x)
         #TODO: You may want to combine channels before removing zeros
         if self.channelsToCombine.keys():
             self.combineChannels(group, processName)
@@ -470,7 +474,8 @@ class CombineCardTools(object):
         for key, value in extraArgs.items():
             if "yield:" in value:
                 chan_dict[key] = chan_dict[value.replace("yield:", "")]
-        chan_dict["nuisances"] = nuisances
+        chan_dict["nuisances"] = nuisances + len(self.extraCardVars.splitlines())
+        print("Length is",  len(self.extraCardVars.splitlines()))
         chan_dict["fit_variable"] = self.fitVariable
         chan_dict["output_file"] = self.outputFile.GetName()
         chan_dict["card_append"] = self.extraCardVars + "\n\n" + self.cardGroups 
