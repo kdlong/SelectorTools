@@ -58,7 +58,7 @@ void WGenSelector::Init(TTree *tree)
         }
     }
 
-    systHists_ = {"ptl", "yW", "ptW", "mW"};
+    systHists_ = {"ptl", "yW", "ptW", "mW", "mTrue", "mTmet"};
     systHists2D_ = hists2D_;
 
     weighthists1D_ = systHists_;
