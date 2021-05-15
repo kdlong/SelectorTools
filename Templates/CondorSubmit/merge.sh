@@ -9,7 +9,11 @@ export LD_LIBRARY_PATH=$$PWD/lib:$$LD_LIBRARY_PATH
 
 outfile=$$1
 if [[ $$1 == /eos/user* ]]; then
-    outfile="root://eosuser.cern.ch/$$1"
+    outfile=`basename $$1`
 fi
 
 hadd -f -k -j 8 $$outfile *.root
+
+if [[ $$1 == /eos/user* ]]; then
+    eoscp $$outfile $$1
+fi
