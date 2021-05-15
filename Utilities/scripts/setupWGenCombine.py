@@ -41,6 +41,8 @@ parser.add_argument("--addEff", action='store_true',
     help="add dummy efficiency uncertainties")
 parser.add_argument("--theoryOnly", action='store_true', 
     help="Only add theory uncertainties")
+parser.add_argument("--scetlibUnc", action='store_true', 
+    help="Use SCETlib scale uncertainties")
 parser.add_argument("-r", "--rebin", 
                     type=str, default=None, help="Rebin array: "
                     "values (bin edges) separated by commas.")
@@ -49,7 +51,7 @@ args = parser.parse_args()
 logging.basicConfig(level=(logging.DEBUG if args.debug else logging.INFO))
 
 cardtool = CombineCardTools.CombineCardTools()
-cardtool.setCorrelateScaleUnc(True)
+cardtool.setCorrelateScaleUnc(False)
 
 manager_path = ConfigureJobs.getManagerPath() 
 sys.path.append("/".join([manager_path, "AnalysisDatasetManager",
@@ -67,7 +69,7 @@ plotGroupsMap = {name : config_factory.getPlotGroupMembers(name) for name in plo
 
 xsecs  = ConfigureJobs.getListOfFilesWithXSec([f for files in plotGroupsMap.values() for f in files])
 
-if args.rebin:
+if args.rebin and "unrolled" not in args.fitvar:
     if ":" in args.rebin:
         bins = UserInput.getRebin(args.rebin)
         args.rebin = array.array('d', bins)
@@ -101,6 +103,7 @@ cardtool.setInputFile(args.input_file)
 cardtool.setOutputFile("WGenCombineInput.root")
 if "mp" in args.channels and "mn" in args.channels:
     cardtool.setCombineChannels({"m" : ["mp", "mn"]})
+    channels = args.channels+["m"]
 cardtool.setRemoveZeros(False)
 cardtool.setAddOverflow(False)
 
@@ -112,8 +115,10 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[])#[6, 8], central=0)
-        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
+        # If using the NanoGen
+        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
+        cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
+        cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
@@ -192,8 +197,9 @@ for process in plot_groups:
             varName = 'ptV%ito%i' % pair
             varName = varName.replace("100", "Inf")
             cardtool.addScaleBasedVar(process, varName) 
-    #if process in args.central.split(","):
-    #    cardtool.addPerBinVariation(process, "CMS_eff_m", 0.01, False)
+    if process in args.central.split(",") and args.addEff:
+        cardtool.addPerBinVariation(process, "CMS_eff_m", 0.005, False)
+
 
     cardtool.loadHistsForProcess(process, expandedTheory=args.allHessianVars)
     cardtool.writeProcessHistsToOutput(process)
@@ -206,17 +212,27 @@ if args.splitPtV:
     nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
 if not args.theoryOnly:
     nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
+    cardtool.addCardGroup("CMS_scale_m group = CMS_scale_m")
 
 if args.pdfs != "none":
-    nnu += cardtool.addCustomizeCard(path+"/Customize/pdfHessian_template.txt") \
-            if args.allHessianVars else cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
+    if args.allHessianVars:
+        npdfs = cardtool.addCustomizeCard(path+"/Customize/pdfHessian_template.txt")
+        nnu += npdfs
+        cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
+    else:
+        nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
+if not args.scetlibUnc:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
+    cen = args.central
+    cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
+else:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/scetlibscale_template.txt")
+    cardtool.addCardGroup("QCDscale group = resumscaleDLambda resumscaleDFO resumscaleDMatch resumscaleDResum")
 
-nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
-
-cardtool.setCardGroups("noigroup massShift100MeV")
+cardtool.addCardGroup("massnoi noiGroup = massShift100MeV")
 
 nuissance_map = {"mn" : nnu, "mp" : nnu, "m" : nnu}
-for i, chan in enumerate(args.channels):
+for i, chan in enumerate(channels):
     data = args.data if "," not in args.data else args.data.split(",")[i]
     central = args.central if "," not in args.central else args.data.split(",")[i]
     cardtool.setTemplateFileName("%s/WGen_template_{channel}.txt" % path)

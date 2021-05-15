@@ -31,9 +31,10 @@ class CombineCardTools(object):
         self.channelsToCombine = {}
         self.theoryVariations = {}
         self.extraCardVars = ""
-        self.cardGroups = ""
+        self.cardGroups = []
         self.customizeCards = []
         self.addOverflow = False
+        self.theoryHists = []
 
     def setPlotGroups(self, xsecMap):
         self.crossSectionMap = xsecMap
@@ -43,6 +44,9 @@ class CombineCardTools(object):
 
     def setCardGroups(self, groups):
         self.cardGroups = groups
+
+    def addCardGroup(self, group):
+        self.cardGroups.append(group)
 
     def setAddOverflow(self, overflow):
         self.addOverflow = overflow
@@ -139,13 +143,19 @@ class CombineCardTools(object):
 
         varHists = []
         # TODO: this needs to be made more general
+        group = []
         if correlation and addToCard:
-            self.extraCardVars += "%s    shape   1\n" % varName
+            cardline = "%s    shape   1\n" % varName
+            if cardline not in self.extraCardVars:
+                self.extraCardVars += cardline
         for i in range(1, hist.GetNbinsX()+1):
             if not correlation:
                 varUp = varUpRef.Clone(varUpRef.GetName().replace(varName, varName+str(i)))
                 varDown = varDownRef.Clone(varDownRef.GetName().replace(varName, varName+str(i)))
-                self.extraCardVars += "%s%i    shape   1\n" % (varName, i)
+                cardline = "%s%i    shape   1\n" % (varName, i)
+                if cardline not in self.extraCardVars:
+                    self.extraCardVars += cardline
+                group.append(varName+str(i))
             else:
                 varUp = varUpRef
                 varDown = varDownRef
@@ -156,6 +166,10 @@ class CombineCardTools(object):
             varDown.SetBinError(i, 1/(1.+var)*hist.GetBinError(i))
             if i == 0 or not correlation:
                 varHists.extend([varUp, varDown])
+        if not correlation:
+            groupline = "%s group = %s" % (varName, " ".join(group))
+            if groupline not in self.cardGroups:
+                self.addCardGroup(groupline)
                 
         return varHists
 
@@ -226,28 +240,28 @@ class CombineCardTools(object):
         self.channelsToCombine = groups
 
     def combineChannels(self, group, processName, central=True):
-        variations = self.variations[group.GetName()][:]
         fitVariable = self.getFitVariable(group.GetName())
-        if central:
-            variations.insert(0, "")
         for label, channels in self.channelsToCombine.items():
             if label not in self.yields:
                 self.yields[label] = {}
-            for var in variations:
-                name = "_".join([fitVariable, var]) if var != "" else fitVariable
-                hist_name = name + "_" + channels[0]
+            c0 = "_"+channels[0]
+            allhist_names = map(lambda x: x.GetName(), group)
+            hist_names = filter(lambda x: c0 in x[-len(c0):], allhist_names)
+            for hist_name in hist_names:
                 tmphist = group.FindObject(hist_name)
                 if not tmphist:
                     logging.warning("Failed to find hist %s in group %s. Skipping" % (hist_name, group.GetName()))
                     continue
-                hist = tmphist.Clone("_".join([name, label]))
+                basename = "_".join(hist_name.split("_")[:-1])
+                hist = tmphist.Clone(basename+"_"+label)
                 del tmphist
                 ROOT.SetOwnership(hist, False)
                 group.Add(hist) 
                 for chan in channels[1:]:
-                    chan_hist = group.FindObject(name + "_" + chan)
+                    chan_hist = group.FindObject(basename+"_"+chan)
                     hist.Add(chan_hist)
-                if var == "":
+                # Central hist
+                if hist.GetName() == fitVariable+"_"+label:
                     self.yields[label][processName] = round(hist.Integral(), 3)
 
     def listOfHistsByProcess(self, processName, nameReplace=None):
@@ -287,8 +301,6 @@ class CombineCardTools(object):
         for chan in self.channels:
             histName = "_".join([fitVariable, chan]) if chan != "all" else fitVariable
             hist = group.FindObject(histName)
-            print(hist)
-            print("Integral is", hist.Integral())
             if not hist:
                 logging.warning("Failed to produce hist %s for process %s" % (histName, processName))
                 continue
@@ -306,7 +318,8 @@ class CombineCardTools(object):
 
             if processName in self.perbinVariations:
                 for varName, var, corr in self.perbinVariations[processName]:
-                    map(lambda x: group.Add(x), self.perBinVariationHists(hist, varName, var, corr, chan == self.channels[0]))
+                    for x in self.perBinVariationHists(hist, varName, var, corr, chan == self.channels[0]):
+                        group.Add(x)
 
             scaleHists = []
             if processName in self.theoryVariations:
@@ -376,10 +389,13 @@ class CombineCardTools(object):
                         continue
                     hist.Scale(self.yields[chan][processName]/hist.Integral())
 
-        if self.addOverflow:
-            map(HistTools.addOverflow, filter(lambda x: (x.GetName() not in processedHists), group))
-        if self.removeZeros and "data" not in group.GetName().lower():
-            map(HistTools.removeZeros, filter(lambda x: (x.GetName() not in processedHists), group))
+        unzero = self.removeZeros and "data" not in group.GetName().lower()
+        if self.addOverflow or unzero:
+            for x in filter(lambda x: (x.GetName() not in processedHists), group):
+                if self.addOverflow:
+                    HistTools.addOverflow(x)
+                if unzero:
+                    HistTools.removeZeros(x)
         #TODO: You may want to combine channels before removing zeros
         if self.channelsToCombine.keys():
             self.combineChannels(group, processName)
@@ -413,9 +429,10 @@ class CombineCardTools(object):
             if "scale" not in name.lower():
                 continue
             scaleVars = self.theoryVariations[processName][name]
+            label = "" if self.correlateScaleUnc else processName
             
             hists = HistTools.getScaleHists(weightHist, 
-                    "" if self.correlateScaleUnc else processName, 
+                    label, 
                     self.rebin, 
                     entries=scaleVars['entries'], 
                     exclude=scaleVars['exclude'], 
@@ -423,8 +440,8 @@ class CombineCardTools(object):
                     label="QCDscale" if name == "scale" else name) \
             if not self.isUnrolledFit else \
                 HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], processName,
-                    "" if self.correlateScaleUnc else processName, 
+                        [self.unrolledBinsX, self.unrolledBinsY], 
+                    label, 
                     entries=scaleVars['entries'], 
                     exclude=scaleVars['exclude'])
             #)
@@ -432,14 +449,15 @@ class CombineCardTools(object):
 
             if expandedTheory and name == "scale":
                 expandedScaleHists = HistTools.getExpandedScaleHists(weightHist, 
-                        "" if self.correlateScaleUnc else processName, 
+                        label, 
                         self.rebin, 
                         entries=scaleVars['entries'], 
                         pairs=scaleVars['groups'], 
                     ) if not self.isUnrolledFit else \
                     HistTools.getTransformed3DExpandedScaleHists(weightHist, 
                             HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], name,
+                        [self.unrolledBinsX, self.unrolledBinsY], 
+                        label,
                         entries=scaleVars['entries'], 
                         pairs=scaleVars['groups'], 
                     )
@@ -470,10 +488,10 @@ class CombineCardTools(object):
         for key, value in extraArgs.items():
             if "yield:" in value:
                 chan_dict[key] = chan_dict[value.replace("yield:", "")]
-        chan_dict["nuisances"] = nuisances
+        chan_dict["nuisances"] = nuisances + len(self.extraCardVars.splitlines())
         chan_dict["fit_variable"] = self.fitVariable
         chan_dict["output_file"] = self.outputFile.GetName()
-        chan_dict["card_append"] = self.extraCardVars + "\n\n" + self.cardGroups 
+        chan_dict["card_append"] = "\n".join([self.extraCardVars + "\n"]+self.cardGroups)
         outputCard = self.templateName.split("/")[-1].format(channel=chan, label=label) 
         outputCard = outputCard.replace("template", outlabel)
         outputCard = outputCard.replace("__", "_")

@@ -7,11 +7,11 @@ shapes ${w_sample} * ${output_file} ${w_sample}/${fit_variable}_$$CHANNEL ${w_sa
 shapes nonprompt * ${output_file} nonprompt/${fit_variable}_$$CHANNEL  nonprompt/${fit_variable}_$$SYSTEMATIC_$$CHANNEL
 shapes data_obs * ${output_file} ${data_name}/${fit_variable}_$$CHANNEL 
 
-bin           mn
+bin           m
 observation   -1
 
 ------------
-bin                             mn                
+bin                             m
 process                         ${w_sample}     
 process                         1               
 rate                            ${w_yield}    
@@ -19,5 +19,6 @@ rate                            ${w_yield}
 massShift100MeV   shapeNoConstraint 1
 lumi2016_13TeV          lnN     1.025            
 ${card_append}
+
 
 
