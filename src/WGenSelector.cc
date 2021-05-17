@@ -52,13 +52,15 @@ void WGenSelector::Init(TTree *tree)
     if (doMuonVar_) {
         systematics_[muonScaleUp] = "CMS_scale_mUp";
         systematics_[muonScaleDown] = "CMS_scale_mDown";
+        systematics_[muonResolutionUp] = "CMS_res_mUp";
+        systematics_[muonResolutionDown] = "CMS_res_mDown";
         if (doBareLeptons_) {
             systematics_[BareLeptons_muonScaleUp] = "bare_CMS_scale_mUp";
             systematics_[BareLeptons_muonScaleDown] = "bare_CMS_scale_mDown";
         }
     }
 
-    systHists_ = {"ptl", "yW", "ptW", "mW", "mTrue", "mTmet"};
+    systHists_ = {"ptl", "ptl_smear", "yW", "ptW", "mW", "mTrue", "mTmet"};
     systHists2D_ = hists2D_;
 
     weighthists1D_ = systHists_;
@@ -97,9 +99,14 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
 
     if (leptons.size() >= nLeptons_) {
         auto& l = leptons.at(0);
-        if (variation.first == Central) {
+        if (variation.first == Central || variation.first == muonResolutionUp || variation.first == muonResolutionDown) {
             TRandom3 gauss;
-            ptl_smear = l.pt()*gauss.Gaus(1, 0.01);
+            float w = 0.01;
+            if (variation.first == muonResolutionUp)
+                w += 0.001;
+            else if (variation.first == muonResolutionDown)
+                w -= 0.001;
+            ptl_smear = l.pt()*gauss.Gaus(1, w);
         }
         else if (variation.first == muonScaleUp || variation.first == BareLeptons_muonScaleUp) {
             leptons.at(0).setP4(makeGenParticle(l.pdgId(), l.status(), l.pt()*1.001, l.eta(), l.phi(), l.mass()).polarP4());

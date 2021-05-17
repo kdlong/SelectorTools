@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # Example: python3 ScaleFactors/setupScaleFactorsVGen.py --name scetlibCorr3D_Z --hist_names hist mass_y_pT_3D_prefsr_mm -n DYm50_scetlib -d DYm50_minnlo --smooth 35 45 --npOut test.npz /eos/user/k/kelong/HistFiles/ZGen/Scetlib/inclusive_Z_pT.npz /eos/user/k/kelong/HistFiles/ZGen/DY_MiNNLO_3Dreweight.root -a ZGen
+# Example Wp: python3 ScaleFactors/setupScaleFactorsVGen.py --name scetlibCorr3D_Wp --hist_names hist mass_y_pT_3D_prefsr_mp -n wpmunu_scetlib -d wpmunu_minnlo --smooth 35 45 --npOut testWp.npz /eos/user/k/kelong/HistFiles/WGen/Scetlib/inclusive_Wp_pT.npz /eos/user/k/kelong/HistFiles/WGen/WToMuNu_MiNNLO_N3LLCorr.root -a WGen
+# Example Wm (added to Wp file):  python3 ScaleFactors/setupScaleFactorsVGen.py --name scetlibCorr3D_Wm --hist_names hist mass_y_pT_3D_prefsr_mn -n wmmunu_scetlib -d wmmunu_minnlo --smooth 35 45 --npOut testWm.npz /eos/user/k/kelong/HistFiles/WGen/Scetlib/inclusive_Wm_pT.npz /eos/user/k/kelong/HistFiles/WGen/WToMuNu_MiNNLO_N3LLCorr.root -a WGen --append
 import ROOT
 import argparse
 import os

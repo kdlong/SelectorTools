@@ -198,7 +198,7 @@ for process in plot_groups:
             varName = varName.replace("100", "Inf")
             cardtool.addScaleBasedVar(process, varName) 
     if process in args.central.split(",") and args.addEff:
-        cardtool.addPerBinVariation(process, "CMS_eff_m", 0.005, False)
+        cardtool.addPerBinVariation(process, "CMS_eff_m", 0.0025, False)
 
 
     cardtool.loadHistsForProcess(process, expandedTheory=args.allHessianVars)
@@ -221,13 +221,14 @@ if args.pdfs != "none":
         cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
     else:
         nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
+
+cen = args.central
 if not args.scetlibUnc:
     nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
-    cen = args.central
     cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
 else:
     nnu += cardtool.addCustomizeCard(path+"/Customize/scetlibscale_template.txt")
-    cardtool.addCardGroup("QCDscale group = resumscaleDLambda resumscaleDFO resumscaleDMatch resumscaleDResum")
+    cardtool.addCardGroup(f"QCDscale group = resumscaleDLambda_{cen} resumscaleDFO_{cen} resumscaleDMatch_{cen} resumscaleDResum_{cen}")
 
 cardtool.addCardGroup("massnoi noiGroup = massShift100MeV")
 

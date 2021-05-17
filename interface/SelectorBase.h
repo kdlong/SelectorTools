@@ -36,6 +36,7 @@ enum Systematic {
     jetEnergyResolutionUp,     jetEnergyResolutionDown,
     metUnclusteredEnergyUp,    metUnclusteredEnergyDown,
     muonEfficiencyUp,          muonEfficiencyDown,
+    muonResolutionUp,          muonResolutionDown,
     muonScaleUp,               muonScaleDown,
     electronEfficiencyUp,      electronEfficiencyDown,
     electronScaleUp,           electronScaleDown,

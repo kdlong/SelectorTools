@@ -333,7 +333,7 @@ class CombineCardTools(object):
                     logging.warning(e)
                     continue
 
-                others = [k for k in theoryVars.keys() if theoryVars[k]['combine'] == 'envelope' and k != 'scale']
+                others = [k for k in theoryVars.keys() if theoryVars[k]['combine'] == 'envelope' and 'scale' not in k]
                 for other in others:
                     group.extend(self.lheVarHistsForProcess(group, processName, chan, varName=other))
 
@@ -413,6 +413,9 @@ class CombineCardTools(object):
         else:
             hists,name = HistTools.getTransformed3DLHEHists(weightHist, HistTools.makeUnrolledHist,
                 [self.unrolledBinsX, self.unrolledBinsY], var['entries'], "", varName)
+        # Since it isn't an envelope (otherwise the mass variations wouldn't work properly)
+        if len(hists) > 2:
+            raise ValueError("Currently the LHE vars can only be two variations. Found %i" % len(hists))
         
         hists[0] = HistTools.rebinHist(hists[0], name, self.rebin)
         hists[1] = HistTools.rebinHist(hists[1], name.replace("Up", "Down"), self.rebin)
@@ -442,9 +445,10 @@ class CombineCardTools(object):
                 HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
                         [self.unrolledBinsX, self.unrolledBinsY], 
                     label, 
+                    label="QCDscale" if name == "scale" else name,
                     entries=scaleVars['entries'], 
                     exclude=scaleVars['exclude'])
-            #)
+
             scaleHists.extend(hists)
 
             if expandedTheory and name == "scale":

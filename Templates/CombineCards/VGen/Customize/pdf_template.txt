@@ -1,1 +1,1 @@
-pdfNNPDF31Hes_${w_sample}        shape   1                
+pdfNNPDF31Hes        shape   1                
