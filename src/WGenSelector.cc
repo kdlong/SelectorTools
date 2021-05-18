@@ -97,6 +97,9 @@ void WGenSelector::Init(TTree *tree)
 void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) { 
     NanoGenSelectorBase::LoadBranchesNanoAOD(entry, variation);
 
+    // Make sure the central is used for all variations
+    // A bit lazy here since I don't actually use the smeared pt for composite quantities
+    ptl_smear_fill = ptl_smear;
     if (leptons.size() >= nLeptons_) {
         auto& l = leptons.at(0);
         if (variation.first == Central || variation.first == muonResolutionUp || variation.first == muonResolutionDown) {
@@ -107,14 +110,18 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
             else if (variation.first == muonResolutionDown)
                 w -= 0.001;
             ptl_smear = l.pt()*gauss.Gaus(1, w);
+            if (variation.first == Central)
+                ptl_smear_fill = ptl_smear;
         }
         else if (variation.first == muonScaleUp || variation.first == BareLeptons_muonScaleUp) {
             leptons.at(0).setP4(makeGenParticle(l.pdgId(), l.status(), l.pt()*1.001, l.eta(), l.phi(), l.mass()).polarP4());
             SetComposite();
+            ptl_smear_fill *= 1.001;
         }
         else if (variation.first == muonScaleDown || variation.first == BareLeptons_muonScaleDown) {
             leptons.at(0).setP4(makeGenParticle(l.pdgId(), l.status(), l.pt()*1./1.001, l.eta(), l.phi(), l.mass()).polarP4());
             SetComposite();
+            ptl_smear_fill *= 1./1.001;
         }
     }
      
@@ -244,18 +251,15 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         return;
     SafeHistFill(histMap1D_, concatenateNames("CutFlow", toAppend), channel_, variation.first, step++, weight);
 
+
+    // Fill smear histograms before
+
     if (doFiducial_ && lep.pt() < 25)
         return;
     SafeHistFill(histMap1D_, concatenateNames("CutFlow", toAppend), channel_, variation.first, step++, weight);
 
     if (variation.first == Central)
         mcWeights_->Fill(weight/std::abs(refWeight));
-
-    float ptl_smear_fill = ptl_smear;
-    if (variation.first == muonScaleUp)
-        ptl_smear_fill *= 1.001;
-    else if (variation.first == muonScaleDown)
-        ptl_smear_fill *= 0.999;
 
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;

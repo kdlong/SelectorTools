@@ -89,7 +89,7 @@ cardtool.setChannels(args.channels)
 print("Channels are", args.channels)
 cardtool.setCrosSectionMap(xsecs)
 
-variations = [] if args.theoryOnly else ["CMS_scale_m"] 
+variations = [] if args.theoryOnly else ["CMS_scale_m", "CMS_res_m"] 
 cardtool.setVariations(variations)
 normVariations = [] if args.theoryOnly else ["mWBWShift100MeV", "mWBWShift50MeV"] 
 cardtool.setNormalizedVariations(normVariations)
@@ -213,6 +213,7 @@ if args.splitPtV:
 if not args.theoryOnly:
     nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
     cardtool.addCardGroup("CMS_scale_m group = CMS_scale_m")
+    cardtool.addCardGroup("CMS_res_m group = CMS_res_m")
 
 if args.pdfs != "none":
     if args.allHessianVars:

@@ -29,6 +29,7 @@ public :
     bool doMuonVar_ = false;
     
     float ptl_smear;
+    float ptl_smear_fill;
     
     // Readers to access the data (delete the ones you do not need).
     virtual void    Init(TTree *tree) override;

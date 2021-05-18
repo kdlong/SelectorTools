@@ -1,1 +1,2 @@
 CMS_scale_m             shape   0.2
+CMS_res_m               shape   1
