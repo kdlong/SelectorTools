@@ -348,7 +348,10 @@ class CombineCardTools(object):
 
                     pdfFunction = "get%sPDFVarHists" % pdfType 
                     pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
-                    args = [weightHist, pdfVar['entries'], processName, self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
+                    # Don't bother appending process name to PDF (e.g., correlate, doesn't really matter
+                    # if we use the hessian sets anyway
+                    #args = [weightHist, pdfVar['entries'], processName, self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
+                    args = [weightHist, pdfVar['entries'], "", self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
                     if self.isUnrolledFit:
                         pdfFunction = pdfFunction.replace("get", "getTransformed3D")
                         args = args[0:1] + [HistTools.makeUnrolledHist, [self.unrolledBinsX, self.unrolledBinsY]] + args[1:]

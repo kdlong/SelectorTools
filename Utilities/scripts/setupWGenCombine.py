@@ -78,6 +78,7 @@ if args.rebin and "unrolled" not in args.fitvar:
     else:
         args.rebin = int(args.rebin)
     cardtool.setRebin(args.rebin)
+print(args.rebin)
 
 cardtool.setFitVariable(args.fitvar)
 if "unrolled" in args.fitvar:
@@ -122,7 +123,7 @@ for process in plot_groups:
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
-        isAltTh = True
+        isAltTh = "allth" not in process
         cenMassIdx = 919 if not isAltTh else 18+103+11
         #massVars = lambda i: [1, cenMassIdx, cenMassIdx+i, cenMassIdx-i]
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]

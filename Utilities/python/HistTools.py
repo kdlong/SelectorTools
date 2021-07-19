@@ -183,8 +183,12 @@ def makeAllSymHessianHists(hists, hist_name, name, central=0, scale=1.0):
         upaction = lambda x: x[1] if x[1] > x[0] else (x[0]**2/x[1] if x[1] > 0 else 0)
         #downaction = lambda x: x[1] if x[1] < x[0] else float(x[0])/(x[1] if x[1] > 0 else 1)
         downaction = lambda x: x[1] if x[1] < x[0] else (x[0]**2/x[1] if x[1] > 0 else 0)
+        new_name= hist_name.replace("pdf_%s" % name, "pdf%i" %i) if name and name in hist_name else \
+            hist_name.replace("pdf", "pdf%i" % i)
+        # Too lazy to track down why this happens
+        new_name = new_name.replace("_Up", "Up")
         variationSet.extend(getVariationHists([hists[central], hist], name, 
-            hist_name.replace("pdf_%s" % name, "pdf%i" %i), upaction, downaction, central))
+            new_name, upaction, downaction, central))
     return variationSet
 
 def getAllSymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0):
