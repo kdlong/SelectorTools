@@ -14,6 +14,7 @@ Analysis code for WZ/ZZ analyses. Some scripts using selections to skim Ntuples 
         + [WZ Background estimation](#nonprompt-background-estimate-for-wz)
     + [Statistical analysis](#running-statistical-analysis)
     + [Producing plots](#plotting)
+    + [Detailed example for WGen analysis](#detailed-example-wgen)
     + [FAQ](#faq)
     + [Tips and tricks](#tips-and-tricks)    
 
@@ -185,6 +186,31 @@ Scripts are built for dedicated analyses, that make use of a [common helper clas
 	
 ### Impact plots
 	
+## Detailed Example WGen
+	
+### Produce a historgram file running locally
+		
+```./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection```
+	
+Explanation of arguments:
+	
+* **-a** WGen: run the WGen analysis, defined in [WGenSelector.cc](src/WGenSelector.cc)
+* **-f** wmmunu_minnlo: Process the WminuToMuNu MiNNLO sample, defined in 
+* **--selectorArgs** arguments for the selector, defined in [WGenSelector.cc:Ln33](https://github.com/kdlong/SelectorTools/blob/master/src/WGenSelector.cc#L33-L39) and in [NanoGenSelectorBase.cc:Ln](https://github.com/kdlong/SelectorTools/blob/master/src/NanoGenSelectorBase.cc#L11-L31) Specifically
+	* muOnly=1: only run muon channel, reduces memory usage (no electrons for this file anyway)
+	* theoryUnc=1: Include LHE theory weights
+	* prefsr=1: Include histograms built from pre-fsr lepton kinematics
+	* bare=1: Include histograms built from base lepton kinematics
+	* theoryPrefsr=1: Build theory histograms for pre-fsr kinematics
+	* wSignOnly=1: Only use the sign of the genWeight (useful for MiNNLO, where the weights can be huge)
+	* thwSuppress=10: Cap the theory weight at 10 times the nominal weight (sometimes unphysically large otherwise)
+* **--**maxFiles 24: Process only 24 files (to be faster)
+* **-j** 24: use 24 threads
+* **--maxEntries** 250000: Only process max 250k events per file (to be faster)
+* **-s** Wselection: Apply the Wselection defined in WGenSelector.cc (lepton pt and eta cuts, basically)
+	
+### Produce a histogram file by submitting to condor
+
 ## Plotting
 	
 A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started some scripts using uproot and matplotlib that someone interested could expand instead.
