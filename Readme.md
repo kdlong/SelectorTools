@@ -19,7 +19,9 @@ Analysis code for WZ/ZZ analyses. Some scripts using selections to skim Ntuples 
 
 # Setup
 -----------
-CMSSW version: CMSSW_11_0_0
+In general, the code is not tightly tied to a CMSSW version. It is generally recommended to use a new version, for example CMSSW_12_0_0 pre-releases, which conveniently allow cc8 support.
+
+CMSSW version: CMSSW_12_0_0_pre3
 ```bash
 cmssw_version="11_0_0" # or anything that isn't too old
 username="kdlong" # or your username
@@ -36,7 +38,7 @@ git clone git@github.com:<username>/SelectorTools.git
 scram b -j 8
 ```
 
-You will also want to install a separate package that contains information on the datasets used and histograms and binning. It is not required that you use this file, but it will be convenient for managing larger datasets (e.g., for getting the correct cross sections). It's recommended that you fork this into your github because some files/settings will be user specific.
+You will also want to install a separate package that contains information on the datasets used and histograms and binning. It is possible to decouple analyses from this repository, but most of the existing ones do depend on it. It's recommended that you fork this into your github because some files/settings will be user specific.
 
 install_path = ~username/work/ (or whatever you prefer)
 
@@ -58,14 +60,14 @@ Most of the current development is devoted to analyses based on NaanoAOD, a comm
 A general analysis will proceed in several steps.
 
 1. Produce ntuples. This step is independent of this package. If using NanoAOD, it is generally not necessary to produce your own samples. If using NanoGen, some useful example scripts are [here](https://github.com/kdlong/WMassNanoGen). For UWVV, see [UWVV](https://github.com/uwcms/UWVV). 
-2. Skim ntuples or NanoAOD to create smaller files that can be copied to a "local" storage disk, such as /eos at CERN, /data at uwlogin or /nfs_scratch at Wisconsin. For NanoAOD, there are dedicated modules in the [NanoAODTools package](https://github.com/cms-nanoAOD/nanoAOD-tools).
+2. Optionally, skim ntuples or NanoAOD to create smaller files that can be copied to a "local" storage disk, such as /eos at CERN, /data at uwlogin or /nfs_scratch at Wisconsin. For NanoAOD, there are dedicated modules in the [NanoAODTools package](https://github.com/cms-nanoAOD/nanoAOD-tools).
 3. Run analysis code to produce histograms with final selections.
 4. Plotting code combines histograms by scaling with cross section and luminosity information. Colors and CMS style are implemented. Mostly outside the scope of this package.
-5. Perform fit (using HiggsCombine package)
+5. Perform fit (generally using HiggsCombine package)
 
 # Specifics
 -----------
-Each step deserves some degree of explanation. They are also all driven by independent scripts, and can be run separately. The ntuple skimming is generally run independently. It is not required, but is advantageous to reduce files sizes for convenience in storage and processing. It is absolutely necessary that the tightest condition you use in your skim be looser the selection you implement in a later selector, however. For a fully MC driven analysis, one can often implement the full selection at the skim step and produce plots from here. Note, however, that the statistical tools are designed to run over the output of the histogram files produced by the selector.
+Each step deserves some degree of explanation. They are also all driven by independent scripts, and can be run separately. The ntuple skimming is generally run independently. It is not required, but can be advantageous to reduce files sizes for convenience in storage and processing. It is absolutely necessary that the tightest condition you use in your skim be looser the selection you implement in a later selector, however.
 
 ## NanoAOD
 
@@ -110,23 +112,20 @@ Using this you can also process multiple files from different datasets:
 
 Now you should have two folders in your file, one named ZMGNLO and one named ZMiNNLO. These are meant to be used for comparisons of the same distribution from a different dataset. You can play around in ROOT to overlay plots of the same quanity (e.g., ptZ_mm).
 
-### The Z selector example
-
-See [this commit](https://github.com/kdlong/VVAnalysis/commit/18a1d903e149653fff3985b43f1acc834632a7ac) for an example of how to add histograms to a selector using the configuration setup. [These corresponding changes](https://github.com/kdlong/AnalysisDatasetManager/commit/39909f6e76046b6ab39b293fa3ea209d1cd202a8) to the [AnalysisDatasetManager repository](https://github.com/kdlong/AnalysisDatasetManager) are necessary.
-
-The main program that runs the analysis is the file ```./Utilities/scripts/makeHistFile.py``` . This file is a wrapper for the running the selector defined in your src directory over the files specified in the AnalysisDatasetManager. This code works with a conviention used in most of this code suite, that is a selection, analysis, and input tier are needed for most all functions to run. for completeness, each option for the code will be explained and the user can know how to use the software:
-
+### Driver script 
+	
+The main program that runs the analysis is the file ```./Utilities/scripts/makeHistFile.py``` . This file is a wrapper for the running the selector defined in your src directory over the files specified in the AnalysisDatasetManager. This code works with a conviention used in most of this code suite, that is a selection, analysis, and input tier are needed for most all functions to run. To see the full list of options, run ```./Utilities/scripts/makeHistFile.py --help```. A few important ones are outlined below
+	
 * **-s**: Selection. User defined selection to be implimented in Analyzer. Need to put in flags in cc files for make any difference (ie PlotObjects area)
 * **-v**: Version. Pretty self explanitory
 * **-a**: Analysis. Name used to determine with cc/TSelector will fun over your files. Map defined in ```./Utilities/python/SelectorTools.py``` (Name from AnalysisDatasetManager)
 * **-f**: Filenames. The name of the files to be run over, in quotes seperated by commas. The filenames are those specified in the AnalysisDatasetManager, specifically with the FileInfo folder.
-* **-j**: Number of Cores. Same as with Make, number of cores used to run the jobs
+* **-j**: Number of cores used to run the jobs
 * **-c**: Channels: If you want to only run over a certain number of channels, put those channels in quotes seperated by commas. Default to Inclusive
 * **-o**: Output File: Name of the outfile. One one is made, all the samples are put into folders after the filename
 * **-b**: Hist Names: If you only want specific histograms, put names in quotes seperated by commas
 * **--input_tier**: Name corresponding to the skim used on the files (ie FileInfo area)
 * **--lumi**: Self Explanitory
-* **--test**: Confusing naming (without context at least), but basically doesn't do Data driven backgrounds
 * **--uwvv**: Legacy Ntuple format
 * **--noHistConfig**: Ignore Histogram information from ADM. Generally unsafe, would ignore
 
@@ -146,6 +145,8 @@ So this corresponds to running the ZSelector over the events in the dy and data_
 ## Running parallel local analysis
 
 Parallel mode currently only supports parallelizing by dataset. That is, each dataset will spawn a new process in python. This is activated by using the ```--j <num_cores>``` option to makeHistFile.py. It is not supported to parallelize locally by file, for this, using condor is suggested.
+	
+You can use the optioins ```--maxFiles``` and ```--maxEntries``` in addition to this. Note that maxEntries is per core, so ```-j 64 --maxFiles 64 --maxEntries 10000``` would run 640,000 events.
 
 ## Running anlaysis on condor
 
@@ -169,10 +170,16 @@ An example command for the ZGen analysis is
 The name "DYm50" is specified in the AnalysisDatasetManager in FileInfo/ZGen/NanoAOD.py. The DAS path stored here is used to look up all the files for this dataset and to create a list of files passed to condor. It is expected that the files are readable with xrootd. If you create private files, they should either be published, or be in a director that is accessible with ls, e.g., eos.
 
 ### Implementing your own selector
+	
+See [this commit](https://github.com/kdlong/VVAnalysis/commit/18a1d903e149653fff3985b43f1acc834632a7ac) for an example of how to add histograms to a selector using the configuration setup. [These corresponding changes](https://github.com/kdlong/AnalysisDatasetManager/commit/39909f6e76046b6ab39b293fa3ea209d1cd202a8) to the [AnalysisDatasetManager repository](https://github.com/kdlong/AnalysisDatasetManager) are necessary.
 
 ## Running Statistical Analysis with Higgs combine
+	
+The repository includes scripts that are designed to produce "data cards" that are inputs to the [HiggsCombine](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) or [Combinetf](https://github.com/bendavid/HiggsAnalysis-CombinedLimit/tree/tensorflowfit) programs.
 
 ## Plotting
+	
+A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started some scripts using uproot and matplotlib that someone interested could expand instead.
 
 ## Producing UWVV Ntuples
 
