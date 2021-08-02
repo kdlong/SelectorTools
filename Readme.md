@@ -190,7 +190,7 @@ Scripts are built for dedicated analyses, that make use of a [common helper clas
 	
 ### Produce a historgram file running locally
 		
-```./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection```
+```./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 massVar=1 muonVar=1 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection```
 	
 Explanation of arguments:
 	
@@ -204,13 +204,22 @@ Explanation of arguments:
 	* theoryPrefsr=1: Build theory histograms for pre-fsr kinematics
 	* wSignOnly=1: Only use the sign of the genWeight (useful for MiNNLO, where the weights can be huge)
 	* thwSuppress=10: Cap the theory weight at 10 times the nominal weight (sometimes unphysically large otherwise)
+	* massVar=1: Make W mass Breit-Wigner variation hists
+	* muonVar=1: Make dummy momentum scale variation hists
 * **--**maxFiles 24: Process only 24 files (to be faster)
 * **-j** 24: use 24 threads
 * **--maxEntries** 250000: Only process max 250k events per file (to be faster)
 * **-s** Wselection: Apply the Wselection defined in WGenSelector.cc (lepton pt and eta cuts, basically)
+* **-o** Wmunu.root: Output file name
 	
 ### Produce a histogram file by submitting to condor
 
+### Produce combine cards
+	
+```./Utilities/scripts/setupWGenCombine.py -b etal_ptl_unrolled -c wmmunu_minnlo --files wmmunu_minnlo -d wmmunu_minnlo -f test.root --pdfs nnpdf31 --addEff --allHessianVars```
+
+Will write description shortly
+	
 ## Plotting
 	
 A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started some scripts using uproot and matplotlib that someone interested could expand instead.
