@@ -1,4 +1,4 @@
-#!/bin/usr/env python
+#!/usr/bin/env python3
 from python import ConfigureJobs,CombineCardTools,UserInput
 import sys
 import ROOT
@@ -104,7 +104,7 @@ cardtool.setInputFile(args.input_file)
 cardtool.setOutputFile("WGenCombineInput.root")
 if "mp" in args.channels and "mn" in args.channels:
     cardtool.setCombineChannels({"m" : ["mp", "mn"]})
-    channels = args.channels+["m"]
+    args.channels = args.channels+["m"]
 cardtool.setRemoveZeros(False)
 cardtool.setAddOverflow(False)
 
@@ -123,9 +123,9 @@ for process in plot_groups:
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         #isAltTh = "lhe" in args.fitvar or "prefsr" in args.fitvar
-        isAltTh = "allth" not in process
+        #isAltTh = "allth" not in process
+        isAltTh = False
         cenMassIdx = 919 if not isAltTh else 18+103+11
-        #massVars = lambda i: [1, cenMassIdx, cenMassIdx+i, cenMassIdx-i]
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
         cardtool.addTheoryVar(process, 'other', massVars(1), exclude=[], central=0, specName="massShift10MeV")
@@ -235,7 +235,7 @@ else:
 cardtool.addCardGroup("massnoi noiGroup = massShift100MeV")
 
 nuissance_map = {"mn" : nnu, "mp" : nnu, "m" : nnu}
-for i, chan in enumerate(channels):
+for i, chan in enumerate(args.channels):
     data = args.data if "," not in args.data else args.data.split(",")[i]
     central = args.central if "," not in args.central else args.data.split(",")[i]
     cardtool.setTemplateFileName("%s/WGen_template_{channel}.txt" % path)

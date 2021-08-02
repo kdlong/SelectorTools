@@ -263,7 +263,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
 
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
-        size_t minimalWeights = nLHEScaleWeight+nMEParamWeight;
+        size_t minimalWeights = nScaleWeights+nMEParamWeight;
         size_t allPdfWeights = std::accumulate(nLHEPdfWeights.begin(), nLHEPdfWeights.end(), 0);
 
         size_t nWeights = minimalWeights+allPdfWeights;
