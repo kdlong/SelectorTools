@@ -176,7 +176,15 @@ See [this commit](https://github.com/kdlong/VVAnalysis/commit/18a1d903e149653fff
 ## Running Statistical Analysis with Higgs combine
 	
 The repository includes scripts that are designed to produce "data cards" that are inputs to the [HiggsCombine](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) or [Combinetf](https://github.com/bendavid/HiggsAnalysis-CombinedLimit/tree/tensorflowfit) programs.
+	
+Scripts are built for dedicated analyses, that make use of a [common helper class](Utilities/python/CombineCards.py). Specific examples are [setupWGenCombine.py][Utilties/scripts/setupWGenCombine.py) and [setupZGenCombine.py][Utilties/scripts/setupZGenCombine.py)
+	
+### Example card production for WGen analysis
 
+### Combineft setup and running the fit
+	
+### Impact plots
+	
 ## Plotting
 	
 A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started some scripts using uproot and matplotlib that someone interested could expand instead.
