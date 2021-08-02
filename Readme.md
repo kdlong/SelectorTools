@@ -216,9 +216,19 @@ Explanation of arguments:
 
 ### Produce combine cards
 	
-```./Utilities/scripts/setupWGenCombine.py -b etal_ptl_unrolled -c wmmunu_minnlo --files wmmunu_minnlo -d wmmunu_minnlo -f test.root --pdfs nnpdf31 --addEff --allHessianVars```
+```./Utilities/scripts/setupWGenCombine.py -b etal_ptl_unrolled -c wmmunu_minnlo --files wmmunu_minnlo -d wmmunu_minnlo -f test.root --pdfs nnpdf31 --addEff --allHessianVars --outFolder /data/shared/kelong/```
 
-Will write description shortly
+* **-b** etal_ptl_unrolled: This is the histogram name in the file. etal_ptl_unrolled is a special name to unrolled the histogram etal_ptl_2D. Other options are any histogram in the file (e.g., ptl)
+* **-c** wmmunu_minnlo: This sample will be written as the central MC prediction in the cards
+* **--files** wmmunu_minnlo: A comma-separated list of the data sets you want to process. These are specified in PlotGroups/WGen.py of AnalysisDatasetManager. They main contain multiple samples (e.g., combining histograms of multiple folders in the file)
+* **-d** wmmunu_minnlo: This sample is treated as "data" in the fit. When it is the same as -c, the fit will always be an expected Asimov fit
+* **-f** test.root: output file name
+* **--pdfs** nnpdf31: List of PDF set names, separated by commas, to include in fit
+* **--addEff**: Add dummy efficiency uncertainties (per-bin stat unc)
+* **--allHessianVars: Write PDF uncertainties as one nuisance per hessian variation set
+* **--outFolder** /data/shared/kelong: write output to indicated folder
+	
+The script will create a file /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled/WGenCombineInput.root. The folder /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled also contains text file inputs to the combinetf program. The ROOT file contains normalized distributions and systematic variations needed for the fit. You can open it and browse it, or make plots as usual.
 	
 ## Plotting
 	
