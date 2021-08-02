@@ -225,7 +225,7 @@ Explanation of arguments:
 * **-f** test.root: output file name
 * **--pdfs** nnpdf31: List of PDF set names, separated by commas, to include in fit
 * **--addEff**: Add dummy efficiency uncertainties (per-bin stat unc)
-* **--allHessianVars: Write PDF uncertainties as one nuisance per hessian variation set
+* **--allHessianVars**: Write PDF uncertainties as one nuisance per hessian variation set
 * **--outFolder** /data/shared/kelong: write output to indicated folder
 	
 The script will create a file /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled/WGenCombineInput.root. The folder /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled also contains text file inputs to the combinetf program. The ROOT file contains normalized distributions and systematic variations needed for the fit. You can open it and browse it, or make plots as usual.
