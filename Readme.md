@@ -178,13 +178,9 @@ See [this commit](https://github.com/kdlong/VVAnalysis/commit/18a1d903e149653fff
 	
 The repository includes scripts that are designed to produce "data cards" that are inputs to the [HiggsCombine](https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit) or [Combinetf](https://github.com/bendavid/HiggsAnalysis-CombinedLimit/tree/tensorflowfit) programs.
 	
-Scripts are built for dedicated analyses, that make use of a [common helper class](Utilities/python/CombineCards.py). Specific examples are [setupWGenCombine.py][Utilties/scripts/setupWGenCombine.py) and [setupZGenCombine.py][Utilties/scripts/setupZGenCombine.py)
+Scripts are built for dedicated analyses, that make use of a [common helper class](Utilities/python/CombineCards.py). Specific examples are [setupWGenCombine.py](Utilties/scripts/setupWGenCombine.py) and [setupZGenCombine.py](Utilties/scripts/setupZGenCombine.py)
 	
-### Example card production for WGen analysis
-
-### Combineft setup and running the fit
-	
-### Impact plots
+See the following section for a detailed example of how to setup and run the fit + impact plots using combinetf
 	
 ## Detailed Example WGen
 	
