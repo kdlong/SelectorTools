@@ -206,7 +206,7 @@ Explanation of arguments:
 	* thwSuppress=10: Cap the theory weight at 10 times the nominal weight (sometimes unphysically large otherwise)
 	* massVar=1: Make W mass Breit-Wigner variation hists
 	* muonVar=1: Make dummy momentum scale variation hists
-* **--**maxFiles 24: Process only 24 files (to be faster)
+* **--maxFiles** 24: Process only 24 files (to be faster)
 * **-j** 24: use 24 threads
 * **--maxEntries** 250000: Only process max 250k events per file (to be faster)
 * **-s** Wselection: Apply the Wselection defined in WGenSelector.cc (lepton pt and eta cuts, basically)
@@ -229,10 +229,32 @@ Explanation of arguments:
 * **--outFolder** /data/shared/kelong: write output to indicated folder
 	
 The script will create a file /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled/WGenCombineInput.root. The folder /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled also contains text file inputs to the combinetf program. The ROOT file contains normalized distributions and systematic variations needed for the fit. You can open it and browse it, or make plots as usual.
+
+### Running the fit
+
+First setup [combinetf](https://indico.cern.ch/event/823265/contributions/3449437/attachments/1855551/3047577/tffit-Jun4-2019.pdf)
 	
+```sh
+cmsrel CMSSW_10_6_20
+cd CMSSW_10_6_20/src
+git clone -b tensorflowfit https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+scram b -j12
+```
+
+From the directory you wrote in the command above (e.g.,  /data/shared/kelong//CombineStudies/WGen/etal_ptl_unrolled)
+	
+```sh
+text2hdf5.py --X-allow-no-signal WGen_m.txt
+combinetf.py WGen_m.hdf5 --doImpacts```
+```	
+
+### Plotting the impacts and constraints
+	
+Follow the readme from [this repository](https://github.com/kdlong/PullsAndImpactsCombinetf)
+
 ## Plotting
 	
-A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started some scripts using uproot and matplotlib that someone interested could expand instead.
+A plotting repository that uses ROOT and expects the file format output by the selectors is [here](https://github.com/kdlong/WZConfigPlotting). It is kind of a disaster and I mostly recommend not using it. I've started [some scripts using uproot and matplotlib](https://github.com/kdlong/ScatchMatplotlibPlots/blob/main/plotSystematics.ipynb) that someone interested could expand instead.
 
 ## Producing UWVV Ntuples
 
