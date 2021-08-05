@@ -233,7 +233,7 @@ First setup [combinetf](https://indico.cern.ch/event/823265/contributions/344943
 ```sh
 cmsrel CMSSW_10_6_20
 cd CMSSW_10_6_20/src
-git clone -b tensorflowfit https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
+git clone -b tensorflowfit https://github.com/bendavid/HiggsAnalysis-CombinedLimit.git HiggsAnalysis/CombinedLimit
 scram b -j12
 ```
 
@@ -241,7 +241,7 @@ From the directory you wrote in the command above (e.g.,  /data/shared/kelong//C
 	
 ```sh
 text2hdf5.py --X-allow-no-signal WGen_m.txt
-combinetf.py WGen_m.hdf5 --doImpacts```
+combinetf.py WGen_m.hdf5 --doImpacts
 ```	
 
 ### Plotting the impacts and constraints
