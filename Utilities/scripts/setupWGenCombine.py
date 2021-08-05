@@ -31,8 +31,8 @@ parser.add_argument("--channels", type=lambda x: x.split(','),
 parser.add_argument("-l", "--lumi", type=float, 
     default=35.9*0.7, help="lumi")
 parser.add_argument("--pdfs", type=str, default="NNPDF31", help="List of PDFs to store")
-parser.add_argument("--ssd", action='store_true', 
-    help="Write to /data/kelong, not /eos/user")
+parser.add_argument("--outFolder", type=str, default="/data/shared/{user}",
+    help="Output folder")
 parser.add_argument("--splitPtV", action='store_true', 
     help="Don't split scale uncertainties by pt(V)")
 parser.add_argument("--allHessianVars", action='store_true', 
@@ -96,7 +96,8 @@ normVariations = [] if args.theoryOnly else ["mWBWShift100MeV", "mWBWShift50MeV"
 cardtool.setNormalizedVariations(normVariations)
 
 folder_name = "_".join([args.fitvar,args.append]) if args.append != "" else args.fitvar
-basefolder = "/data/shared/kelong/" if args.ssd else "/eos/user/k/kelong"
+
+basefolder = args.outFolder.format(user=os.getlogin())
 cardtool.setOutputFolder(basefolder+"/CombineStudies/WGen/%s" % folder_name)
 
 cardtool.setLumi(args.lumi)

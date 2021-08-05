@@ -29,11 +29,11 @@ def getComLineArgs():
         help="Use more agressive compression of output")
     ntuple_group = parser.add_mutually_exclusive_group(required=False)
     ntuple_group.add_argument("--uwvv", action='store_true',
-        help="Use UWVV format ntuples in stead of NanoAOD")
+        help="Use UWVV format ntuples instead of NanoAOD")
     ntuple_group.add_argument("--bacon", action='store_true',
-        help="Use Bacon format ntuples in stead of NanoAOD")
+        help="Use Bacon format ntuples instead of NanoAOD")
     parser.add_argument("--noHistConfig", action='store_true',
-        help="Don't rely on config file to specify hist info")
+        help="Don't rely on AnalysisDatasetManager config file to specify hist info (WARNING: OFTEN UNSAFE!)")
     parser.add_argument("-j", "--numCores", type=int, default=1,
         help="Number of cores to use (parallelize by dataset)")
     parser.add_argument("--input_tier", type=str,
