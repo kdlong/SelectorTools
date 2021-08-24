@@ -37,6 +37,8 @@ def getComLineArgs():
         metavar=("mergedFileName", "completeFraction"),
         default=None, help="Merge outputs from all jobs to file (submit as DAG)" \
         "if > completeFraction (in %%) jobs complete")
+    parser.add_argument("--numFiles", default=-1, type=int, help="Number of files to process")
+    parser.add_argument("-j", "--numCores", default=1, type=int, help="Number of cores for each job")
     parser.add_argument("--force", action='store_true',
         help="Force overwrite of existing directories")
     parser.add_argument("--removeUnmerged", action='store_true',
@@ -94,7 +96,6 @@ def copyLibs():
     cmssw_libdir = "/".join([os.environ["CMSSW_BASE"], "lib", os.environ["SCRAM_ARCH"], "*SelectorTools*"])
     for i in glob.glob(cmssw_libdir):
         shutil.copyfile(i, '/'.join([libdir, os.path.basename(i)]))
-        print(i, '/'.join([libdir, os.path.basename(i)]))
 
 # Needed on lxplus and uwlogin, where the afs permissions are set
 # very tight and don't let condor access some dumb file it needs
@@ -163,7 +164,15 @@ def getUWCondorSettings():
         Requirements         = TARGET.Arch == "X86_64" && IsSlowSlot=!=true && (MY.RequiresSharedFS=!=true || TARGET.HasAFS_OSG) && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists  && TARGET.CMS_CVMFS_Exists))
     """
 
-def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist, numfiles, nPerJob, selArgs):
+def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist, numfiles, numCores, nPerJob, selArgs):
+    if nPerJob < numCores:
+        logging.warning("Number of cores is less than number of files per job. Setting instead to %i" % nPerJob)
+        nPerJob
+
+    extraArgs = "--debug --compress %s" % ("" if not selArgs else ("--selectorArgs "+" ".join(selArgs)))
+    if numCores != 1:
+        extraArgs = "-j %i %s" % (numCores, extraArgs)
+
     template_dict = {
         "analysis" : analysis,
         "selection" : selection,
@@ -172,8 +181,9 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, 
         "memory" : memory,
         "filelist" : filelist.split(".txt")[0],
         "nPerJob" : nPerJob,
+        "numCores" : numCores,
         "nJobs" : int(math.ceil(float(numfiles)/nPerJob)),
-        "extraArgs" : "--debug --compress %s" % ("" if not selArgs else ("--selectorArgs "+" ".join(selArgs)))
+        "extraArgs" : extraArgs
     }
 
     template = "Templates/CondorSubmit/submit_template.jdl"
@@ -197,7 +207,7 @@ def writeMetaInfo(submit_dir, filename):
         metafile.write("git diff: " + OutputTools.gitDiff()+"\n")
 
 def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tier, queue, memory,
-        numPerJob, force, das, selArgs, merge, removeUnmerged):
+        numPerJob, force, das, selArgs, merge, removeUnmerged, maxFiles, numCores):
     makeSubmitDir(submit_dir, force)
     copyLibs()
     copyDatasetManagerFiles(analysis)
@@ -208,11 +218,18 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     filelist_name = filelist_name.replace("*", "ALL")
     filelist = '/'.join([submit_dir, filelist_name+'_filelist.txt'])
     numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das)
+    if maxFiles > 0 and maxFiles < numfiles:
+        numfiles = maxFiles
+
     #TODO: I don't think there's any harm in addition the accounting group, but
     # it doesn't do anything if you aren't a member of CMST3 group
+    cernk = "kelong" in os.getlogin() 
     queue = '+JobFlavour = "{0}"\n+AccountingGroup = "group_u_CMST3.all"'.format(queue) \
             if queue != 'uw' else getUWCondorSettings()
-    writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist_name, numfiles, numPerJob, selArgs)
+    if queue == 'mit':
+        queue = ''
+
+    writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
         setupMergeStep(submit_dir, queue, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
 
@@ -226,7 +243,8 @@ def main():
     logging.basicConfig(level=(logging.DEBUG if args['debug'] else logging.INFO))
     submitDASFilesToCondor(args['filenames'], args['submit_dir'], args['analysis'], 
         args['selection'], args['input_tier'], args['queue'], args['memory'], args['files_per_job'], args['force'], 
-        not args['local'], args['selectorArgs'], args['merge'], args['removeUnmerged'])
+        not args['local'], args['selectorArgs'], args['merge'], args['removeUnmerged'],
+        args['numFiles'], args['numCores'])
     if args['submit']:
         command = 'condor_submit' if not args['merge'] else 'condor_submit_dag'
         submitfile = 'submit.jdl' if not args['merge'] else 'submit_and_merge.dag'
