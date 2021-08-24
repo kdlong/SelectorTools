@@ -86,12 +86,12 @@ def setupMergeStep(submit_dir, queue, numjobs, merge, removeUnmerged):
         shutil.copy("Templates/CondorSubmit/%s" % f, "/".join([submit_dir, f]))
 
 def copyLibs():
-    libdir = "lib"
+    libdir = "%s/src/lib" % os.environ["CMSSW_BASE"]
     if os.path.isdir(libdir):
         shutil.rmtree(libdir)
     os.mkdir(libdir)
     
-    cmssw_libdir = "/".join([os.environ["CMSSW_BASE"], libdir, os.environ["SCRAM_ARCH"], "*SelectorTools*"])
+    cmssw_libdir = "/".join([os.environ["CMSSW_BASE"], "lib", os.environ["SCRAM_ARCH"], "*SelectorTools*"])
     for i in glob.glob(cmssw_libdir):
         shutil.copyfile(i, '/'.join([libdir, os.path.basename(i)]))
 
@@ -108,6 +108,8 @@ def copyDatasetManagerFiles(analysis):
     manager_name = "AnalysisDatasetManager"
     manager_path = ConfigureJobs.getManagerPath()
 
+    cwd = os.getcwd()
+    os.chdir("%s/src" % os.environ["CMSSW_BASE"])
     if os.path.isdir(manager_name):
         shutil.rmtree(manager_name)
 
@@ -127,6 +129,8 @@ def copyDatasetManagerFiles(analysis):
             for d in glob.glob(path+'*'):
                 shutil.copy(d, d.replace(manager_path+"/", ""))
 
+    os.chdir(cwd)
+
 # TODO: Check if this is needed at UW. I think it isn't
 def copyGridCertificate():
     proxypath = "/tmp/x509up_u%s" % os.getuid() if not \
@@ -136,11 +140,17 @@ def copyGridCertificate():
 
 def tarAnalysisInfo(condor_dir, tarball_name):
     tarname = condor_dir+"/"+tarball_name
+    currd = os.getcwd()
+    os.chdir("../../")
+    base = "Analysis/SelectorTools"
     with tarfile.open(tarname, "w:gz") as tar:
-        tar.add("Utilities")
-        tar.add("data")
-        tar.add("lib")
-        tar.add("AnalysisDatasetManager")
+        tar.add(f"lib")
+        tar.add(f"AnalysisDatasetManager")
+        tar.add(f"{base}/data")
+        tar.add(f"{base}/Utilities")
+        tar.add(f"{base}/interface")
+        tar.add(f"{base}/src")
+    os.chdir(currd)
     shutil.rmtree("lib")
     shutil.rmtree("AnalysisDatasetManager")
 
