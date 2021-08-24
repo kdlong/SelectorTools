@@ -94,6 +94,7 @@ def copyLibs():
     cmssw_libdir = "/".join([os.environ["CMSSW_BASE"], "lib", os.environ["SCRAM_ARCH"], "*SelectorTools*"])
     for i in glob.glob(cmssw_libdir):
         shutil.copyfile(i, '/'.join([libdir, os.path.basename(i)]))
+        print(i, '/'.join([libdir, os.path.basename(i)]))
 
 # Needed on lxplus and uwlogin, where the afs permissions are set
 # very tight and don't let condor access some dumb file it needs
@@ -150,9 +151,9 @@ def tarAnalysisInfo(condor_dir, tarball_name):
         tar.add(f"{base}/Utilities")
         tar.add(f"{base}/interface")
         tar.add(f"{base}/src")
-    os.chdir(currd)
     shutil.rmtree("lib")
     shutil.rmtree("AnalysisDatasetManager")
+    os.chdir(currd)
 
 def getUWCondorSettings():
     return """# (wisconsin-specific) tell glideins to run job with access to cvmfs (via parrot)

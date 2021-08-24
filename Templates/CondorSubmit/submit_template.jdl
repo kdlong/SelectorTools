@@ -11,6 +11,7 @@ request_disk         = 2048000
 use_x509userproxy = True
 # stop jobs from running if they blow up in size or memory
 periodic_hold        = (DiskUsage/1024 > 10.0*2000 ||  ImageSize/1024 > RequestMemory*2)
+environment = "ROOT_INCLUDE_PATH=$$ENV(ROOT_INCLUDE_PATH)"
 Analysis = ${analysis} 
 Filelist = ${filelist}
 NPerJob = ${nPerJob}
