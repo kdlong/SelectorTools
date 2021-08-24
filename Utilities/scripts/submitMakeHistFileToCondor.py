@@ -201,7 +201,8 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     makeSubmitDir(submit_dir, force)
     copyLibs()
     copyDatasetManagerFiles(analysis)
-    modifyAFSPermissions()
+    if "/afs" in os.getcwd()[:4]:
+        modifyAFSPermissions()
 
     filelist_name = '_'.join(filenames[:max(len(filenames), 4)])
     filelist_name = filelist_name.replace("*", "ALL")
