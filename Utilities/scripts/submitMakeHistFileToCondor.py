@@ -223,11 +223,14 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
 
     #TODO: I don't think there's any harm in addition the accounting group, but
     # it doesn't do anything if you aren't a member of CMST3 group
-    cernk = "kelong" in os.getlogin() 
-    queue = '+JobFlavour = "{0}"\n+AccountingGroup = "group_u_CMST3.all"'.format(queue) \
-            if queue != 'uw' else getUWCondorSettings()
-    if queue == 'mit':
-        queue = ''
+    if queue == 'uw':
+        getUWCondorSettings()
+    elif queue == 'mit':
+        queue = 'requirements = HAS_CVMFS_cms_cern_ch'
+    else:
+        queue = '+JobFlavour = "%s"' % queue
+        iscmg = "kelong" in os.getlogin()
+        queue += '\n+AccountingGroup = "group_u_CMST3.all"'
 
     writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
