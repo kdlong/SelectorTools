@@ -391,20 +391,18 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
         if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
             size_t pos = variation.first == Central ? name.size() : (name.size() + variation.second.size()+1);
             std::string weighthistName = histName.insert(pos, "_lheWeights");
-            //int nweights = variation.first == Central ? 1000 : 50;
-            int nweights = 1000;
             if (is1D && std::find(weighthists1D_.begin(), weighthists1D_.end(), name) != weighthists1D_.end()) {
                 weighthistMap1D_[histlabel] = {};
                 AddObject<TH2D>(weighthistMap1D_[histlabel], 
                     weighthistName.c_str(), histData[0].c_str(),
-                    nbins, xmin, xmax, nweights, 0, nweights);
+                    nbins, xmin, xmax, nTheoryWeights_, 0, nTheoryWeights_);
             }
             // 3D weight hists must be subset of 2D hists!
             else if (std::find(weighthists2D_.begin(), weighthists2D_.end(), name) != weighthists2D_.end()) {
                 weighthistMap2D_[histlabel] = {};
                 AddObject<TH3D>(weighthistMap2D_[histlabel], 
                     weighthistName.c_str(), histData[0].c_str(),
-                    nbins, xmin, xmax, nbinsy, ymin, ymax, nweights, 0, nweights);
+                    nbins, xmin, xmax, nbinsy, ymin, ymax, nTheoryWeights_, 0, nTheoryWeights_);
 
             }
         }

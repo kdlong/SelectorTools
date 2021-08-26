@@ -60,6 +60,10 @@ def getComLineArgs():
                         "by commas")
     return vars(parser.parse_args())
 
+def buildInputs(inputArgs):
+    divided = [x.split("=") for x in inputArgs]
+    return [ROOT.TParameter(int)(x[0], int(x[1])) if x[1].isnumeric() else ROOT.TNamed(*x) for x in divided]
+
 def makeHistFile(args):
     ROOT.gROOT.SetBatch(True)
 
@@ -87,7 +91,6 @@ def makeHistFile(args):
     fScales = ROOT.TFile(sf_file) if addScaleFactors else None
     if fScales:
         [x for x in map(lambda x: sf_inputs.append(fScales.Get(x.GetName())), fScales.GetListOfKeys())]
-        for f in sf_inputs: print(f.GetName())
 
     if args['input_tier'] == '':
         args['input_tier'] = args['selection']
@@ -95,8 +98,7 @@ def makeHistFile(args):
     analysis = "/".join([args['analysis'], selection])
     hists, hist_inputs = UserInput.getHistInfo(analysis, args['hist_names'], args['noHistConfig'])
 
-    extra_inputs = [] if not args['selectorArgs'] else \
-            [ROOT.TParameter(int)(x.split("=")[0], int(x.split("=")[1])) for x in args['selectorArgs']]
+    extra_inputs = [] if not args['selectorArgs'] else buildInputs(args['selectorArgs'])
 
     selector = SelectorTools.SelectorDriver(args['analysis'], args['selection'], args['input_tier'], args['year'])
     if args['compress']:
