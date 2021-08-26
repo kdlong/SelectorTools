@@ -26,6 +26,8 @@ class NanoGenSelectorBase : public SelectorBase {
 public :
     bool isZ_ = false;
     bool altPdf_ = false;
+    bool storeCenPdfs_ = false;
+    std::vector<int> cenPdfWeightsToStore_ = {};
     bool isMinnlo_ = false;
     int pdfMaxStore_ = 150;
     int pdfCenWeight_ = 0;

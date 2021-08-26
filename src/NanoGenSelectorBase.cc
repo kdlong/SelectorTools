@@ -9,6 +9,10 @@
 void NanoGenSelectorBase::Init(TTree *tree)
 {
     refWeight = 1;
+    // Otherwise name isn't read until the base class is called
+    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
+    bool isMinnlo_ = std::string(name->GetTitle()).find("minnlo") != std::string::npos;
+
     TParameter<bool>* doTheory = (TParameter<bool>*) GetInputList()->FindObject("theoryUnc");
     doTheoryVars_ = doTheory != nullptr && doTheory->GetVal();
     TParameter<bool>* theoryPrefsr = (TParameter<bool>*) GetInputList()->FindObject("theoryPrefsr");
@@ -31,14 +35,18 @@ void NanoGenSelectorBase::Init(TTree *tree)
     TParameter<int>* thwSuppress = (TParameter<int>*) GetInputList()->FindObject("thwSuppress");
     thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 0;
 
+    TParameter<int>* storeCenPdfs = (TParameter<int>*) GetInputList()->FindObject("storeCenPdfs");
+    storeCenPdfs_ = storeCenPdfs != nullptr ? storeCenPdfs->GetVal() : 0;
+    // Only valid for isMinnlo
+    storeCenPdfs_ = storeCenPdfs_ && isMinnlo_;
+    if (storeCenPdfs_)
+        std::cout << "INFO: Also storing central values of main PDF sets\n";
+
     TNamed* pdfSet = (TNamed*) GetInputList()->FindObject("pdfSet");
     pdfSet_ = pdfSet != nullptr ? pdfSet->GetTitle() : "";
 
     std::cout << "INFO: doLHE = " << doLHE_ << " doPrefsr " << doPreFSR_ << std::endl;
     std::cout << "INFO: doBareLeptons = "<<doBareLeptons_<<"\n";
-    // Otherwise name isn't read until the base class is called
-    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
-    bool isMinnlo_ = std::string(name->GetTitle()).find("minnlo") != std::string::npos;
 
     if (isMinnlo_ && !weightSuppress_ && !weightSignOnly_) {
         std::cout << "WARNING: You should use wSuppress != 0 or wSignOnly to suppress huge weights in MiNNLO\n";
@@ -129,7 +137,18 @@ void NanoGenSelectorBase::Init(TTree *tree)
             pdfWeights_.at(i) = true;
         }
     }
-    nTheoryWeights_ = pdfSet_ == "all" ? 1000 : 150;
+    // Trigger storing all relevant
+    if (storeCenPdfs_) {
+        for (auto& entry : minnloPdfMap) {
+            // Just store the first entry, most of the authors are alphas vars
+            int i = entry.second.front();
+            pdfWeights_.at(i) = true;
+            if (entry.first != pdfSet_)
+                cenPdfWeightsToStore_.push_back(i);
+        }
+    }
+
+    nTheoryWeights_ = pdfSet_ == "all" ? 1000 : 200;
 
     SelectorBase::Init(tree);
 
@@ -216,7 +235,12 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
             if (i > 0)
                 name += "AltSet" + std::to_string(i);
             b.SetSpecificEntry(entry, name);
-            b.SetSpecificEntry(entry, "n"+name);
+            
+            if (storeCenPdfs_ && (std::find(std::begin(cenPdfWeightsToStore_), std::end(cenPdfWeightsToStore_), i)
+                    != std::end(cenPdfWeightsToStore_)))
+                nLHEPdfWeights[i] = 1;
+            else
+                b.SetSpecificEntry(entry, "n"+name);
         }
     }
     if (unknownWeights_) {
