@@ -39,7 +39,6 @@ void NanoGenSelectorBase::Init(TTree *tree)
     // Otherwise name isn't read until the base class is called
     TNamed* name = (TNamed *) GetInputList()->FindObject("name");
     bool isMinnlo_ = std::string(name->GetTitle()).find("minnlo") != std::string::npos;
-    altPdf_ = pdfSet_ != "all" && (isMinnlo_ && pdfSet_ != "nnpdf31");
 
     if (isMinnlo_ && !weightSuppress_ && !weightSignOnly_) {
         std::cout << "WARNING: You should use wSuppress != 0 or wSignOnly to suppress huge weights in MiNNLO\n";
@@ -124,6 +123,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
             name += "AltSet" + std::to_string(i);
         if (!readPdf)
             continue;
+        altPdf_ = true;
         if(tree->GetListOfBranches()->FindObject(name.c_str()) != nullptr) {
             std::cout << "INFO: Storing pdf set read from " << name << std::endl;
             pdfWeights_.at(i) = true;
