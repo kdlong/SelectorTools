@@ -18,7 +18,7 @@ Filelist = ${filelist}
 NPerJob = ${nPerJob}
 NProcesses = ${nJobs}
 
-${queue}
+${extraSubmit}
 
 Arguments            = -a $$(Analysis) -s ${selection} --output_file $$(Analysis)_$$(Filelist)_$$(Process).root --input_tier ${input_tier} --inputs_from_file $$(Filelist)_filelist.txt $$(NPerJob) $$(Process) ${extraArgs}
 Transfer_Input_Files = $$(Analysis)_AnalysisCode.tgz,$$(Filelist)_filelist.txt

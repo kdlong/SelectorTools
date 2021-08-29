@@ -164,7 +164,7 @@ def getUWCondorSettings():
         Requirements         = TARGET.Arch == "X86_64" && IsSlowSlot=!=true && (MY.RequiresSharedFS=!=true || TARGET.HasAFS_OSG) && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists  && TARGET.CMS_CVMFS_Exists))
     """
 
-def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist, numfiles, numCores, nPerJob, selArgs):
+def writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist, numfiles, numCores, nPerJob, selArgs):
     if nPerJob < numCores:
         logging.warning("Number of cores is less than number of files per job. Setting instead to %i" % nPerJob)
         nPerJob
@@ -177,7 +177,7 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, 
         "analysis" : analysis,
         "selection" : selection,
         "input_tier" : input_tier,
-        "queue" : queue,
+        "extraSubmit" : extraSubmit,
         "memory" : memory,
         "filelist" : filelist.split(".txt")[0],
         "nPerJob" : nPerJob,
@@ -221,18 +221,20 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     if maxFiles > 0 and maxFiles < numfiles:
         numfiles = maxFiles
 
-    #TODO: I don't think there's any harm in addition the accounting group, but
-    # it doesn't do anything if you aren't a member of CMST3 group
-    if queue == 'uw':
-        getUWCondorSettings()
-    elif queue == 'mit':
-        queue = 'requirements = HAS_CVMFS_cms_cern_ch'
-    else:
-        queue = '+JobFlavour = "%s"' % queue
-        iscmg = "kelong" in os.getlogin()
-        queue += '\n+AccountingGroup = "group_u_CMST3.all"'
 
-    writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
+    isMit = "mit" in os.environ["HOSTNAME"]
+    extraSubmit = ''
+    if queue == 'uw':
+        extraSubmit = getUWCondorSettings()
+    elif isMit:
+        extraSubmit = 'requirements = regexp("T3BTCH*", MACHINE)\n'
+        extraSubmit += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el7:latest"'
+    else:
+        extraSubmit = '+JobFlavour = "%s"' % queue
+        iscmg = "kelong" in os.getlogin()
+        extraSubmit += '\n+AccountingGroup = "group_u_CMST3.all"'
+
+    writeSubmitFile(submit_dir, analysis, selection, input_tier, extrasubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
         setupMergeStep(submit_dir, queue, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
 
