@@ -241,6 +241,8 @@ def getXrdRedirector(filepath=None):
         return "eoscms.cern.ch"
     elif "eos/user" in filepath:
         return "eosuser.cern.ch"
+    if "mit" in socket.gethostname().lower():
+        return 'xrootd.cmsaf.mit.edu'
 
     usbased = ["wisc.edu"]
     usredir = 'cmsxrootd.fnal.gov'

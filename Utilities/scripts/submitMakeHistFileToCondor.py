@@ -217,7 +217,7 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     filelist_name = '_'.join(filenames[:max(len(filenames), 4)])
     filelist_name = filelist_name.replace("*", "ALL")
     filelist = '/'.join([submit_dir, filelist_name+'_filelist.txt'])
-    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das)
+    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das, "eoscms.cern.ch")
     if maxFiles > 0 and maxFiles < numfiles:
         numfiles = maxFiles
 

@@ -18,12 +18,15 @@ def getComLineArgs():
                         help="Read files from DAS (default local, e.g., from file_path")
     return vars(parser.parse_args())
 
-def getFilesWithName(name, path, das=True):
+def getFilesWithName(name, path, das=True, xrd=''):
     if das:
         files = subprocess.check_output(["dasgoclient", "--query=file dataset=%s" % path])
         if files:
-            files = files.split("\n")
-            files = filter(lambda x: "/store" in x[:7], files)
+            files = filter(lambda x: "/store" in x[:7], files.split())
+    elif xrd and '/store' in path:
+        xrdpath = path[path.find('/store')]
+        files = subprocess.check_output(['xrdfs', f'root://{xrd}', 'ls', xrdpath])
+        files = filter(lambda x: "root" in x[-4:], files.split())
     else:
         files = glob.glob(path)
 
