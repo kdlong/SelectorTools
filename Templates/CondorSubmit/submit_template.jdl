@@ -17,7 +17,7 @@ Analysis = ${analysis}
 Filelist = ${filelist}
 NPerJob = ${nPerJob}
 NProcesses = ${nJobs}
-
+environment = "ROOT_INCLUDE_PATH=$$ENV(ROOT_INCLUDE_PATH) PATH=$$ENV(PATH) PYTHONPATH=$$ENV(PYTHONPATH) LD_LIBRARY_PATH=$$ENV(LD_LIBRARY_PATH)"
 ${queue}
 
 Arguments            = -a $$(Analysis) -s ${selection} --output_file $$(Analysis)_$$(Filelist)_$$(Process).root --input_tier ${input_tier} --inputs_from_file $$(Filelist)_filelist.txt $$(NPerJob) $$(Process) ${extraArgs}

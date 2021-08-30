@@ -227,7 +227,12 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     if queue == 'uw':
         getUWCondorSettings()
     elif queue == 'mit':
-        queue = 'requirements = HAS_CVMFS_cms_cern_ch'
+        #queue = 'requirements = HAS_CVMFS_cms_cern_ch'
+        #queue = '+SingularityImage = "/cvmfs/cernvm-prod.cern.ch/cvm3"'
+        queue = ('Requirements = regexp("T3BTCH*", MACHINE) \n'
+                 '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el7:latest"'
+                )
+        #queue = '+REQUIRED_OS = "rhel7"'
     else:
         queue = '+JobFlavour = "{0}"\n+AccountingGroup = "group_u_CMST3.all"'.format(queue) \
 
