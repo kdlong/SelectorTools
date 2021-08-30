@@ -9,6 +9,8 @@ import os
 import random
 import glob
 import logging
+import sys
+import itertools
 
 def getComLineArgs():
     parser = UserInput.getDefaultParser(False)
@@ -20,28 +22,34 @@ def getComLineArgs():
 
 def getFilesWithName(name, path, das=True, xrd=''):
     if das:
-        files = subprocess.check_output(["dasgoclient", "--query=file dataset=%s" % path])
+        files = subprocess.check_output(["dasgoclient", "--query=file dataset=%s" % path]).decode(sys.stdout.encoding)
         if files:
             files = filter(lambda x: "/store" in x[:7], files.split())
-    elif xrd and '/store' in path:
-        xrdpath = path[path.find('/store')]
-        files = subprocess.check_output(['xrdfs', f'root://{xrd}', 'ls', xrdpath])
-        files = filter(lambda x: "root" in x[-4:], files.split())
     else:
-        files = glob.glob(path)
+        if type(path) == str:
+            path = [path]
+        if xrd:
+            files = [] 
+            for p in path:
+                xrdpath = p[p.find('/store'):]
+                logging.debug(f"Looking for path {xrdpath}")
+                f = subprocess.check_output(['xrdfs', f'root://{xrd}', 'ls', xrdpath]).decode(sys.stdout.encoding)
+                files.extend(list(filter(lambda x: "root" in x[-4:], f.split())))
+        else:
+            files = itertools.chain(*[glob.glob(p) for p in path])
 
     if files:
         files = ["@".join([name, f.strip()+'\n']) for f in files]
     return files
 
-def makeFileList(filenames, output_file, analysis, selection, das):
+def makeFileList(filenames, output_file, analysis, selection, das, xrd):
     name_path_map = ConfigureJobs.getListOfFilesWithPath(filenames, analysis, selection, das)
 
     files = []
     for name, path in name_path_map.items():
         logging.debug("Trying to add name %s with path %s" % (name, path))
         try:
-            files.extend(getFilesWithName(name, path, das))
+            files.extend(getFilesWithName(name, path, das, xrd))
         except subprocess.CalledProcessError:
             logging.warning("Failed to find files for dataset %s with DAS path %s. Skipping!" % (name, path))
     

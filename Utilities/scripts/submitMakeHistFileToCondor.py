@@ -14,6 +14,7 @@ import math
 import re
 import subprocess
 import logging
+import socket
 
 def getComLineArgs():
     parser = UserInput.getDefaultParser(False)
@@ -214,15 +215,17 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     if "/afs" in os.getcwd()[:4]:
         modifyAFSPermissions()
 
+    isMit = "mit" in socket.gethostname().lower()
+    xrdredir = "xrootd.cmsaf.mit.edu" if isMit else "eoscms.cern.ch"
+
     filelist_name = '_'.join(filenames[:max(len(filenames), 4)])
     filelist_name = filelist_name.replace("*", "ALL")
     filelist = '/'.join([submit_dir, filelist_name+'_filelist.txt'])
-    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das, "eoscms.cern.ch")
+    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das, xrdredir)
     if maxFiles > 0 and maxFiles < numfiles:
         numfiles = maxFiles
 
 
-    isMit = "mit" in os.environ["HOSTNAME"]
     extraSubmit = ''
     if queue == 'uw':
         extraSubmit = getUWCondorSettings()
@@ -234,7 +237,7 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
         iscmg = "kelong" in os.getlogin()
         extraSubmit += '\n+AccountingGroup = "group_u_CMST3.all"'
 
-    writeSubmitFile(submit_dir, analysis, selection, input_tier, extrasubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
+    writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
         setupMergeStep(submit_dir, queue, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
 
