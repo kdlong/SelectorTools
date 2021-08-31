@@ -195,20 +195,24 @@ class SelectorDriver(object):
                     logging.warning(e)
                     continue
 
-            self.datasets[dataset] = [file_path]
+            self.datasets[dataset] = [file_path] if type(file_path) != list else file_path
 
     def expandDatasetFilePaths(self, nsplits):
         nFiles = 0 
         for dataset, file_path in self.datasets.items():
-            print(dataset, file_path)
             maxPerSet = self.maxFiles/len(self.datasets) 
             if dataset == list(self.datasets.keys())[-1]:
                 maxPerSet = self.maxFiles-nFiles
-            files = []
-            for f in file_path:
-                files.extend([f] if os.path.isfile(f) or f[:6] == "/store" else glob.glob(f))
+            files = self.getAllFileNames(file_path) 
             self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, nsplits)
             nFiles += len(self.datasets[dataset])
+
+    def getAllFileNames(self, file_path):
+        filenames = []
+        toprocess = [file_path] if type(file_path) == str else file_path
+        for f in toprocess:
+            filenames.extend(self.getFileNames(f))
+        return filenames
 
     def applySelector(self):
         for chan in self.channels:
@@ -300,21 +304,22 @@ class SelectorDriver(object):
         del output_list
 
     def getFileNames(self, file_path):
-        xrootd = "store" in file_path[0].split("/")[0:4]
-        xrootd_user = "/store/user" in file_path[0].replace("/eos/cms", "")[:7]
-        for f in file_path:
-            if not (xrootd or os.path.isfile(f) or len(glob.glob(f.rsplit("/", 1)[0]))):
-                raise ValueError("Invalid path! Skipping dataset. Path was %s" 
-                    % file_path)
+        xrootd = "/store/" in file_path
+        xrootd_user = "/store/user" in file_path.replace("/eos/cms", "")[:7]
+        if not (xrootd or os.path.isfile(f) or len(glob.glob(f.rsplit("/", 1)[0]))):
+            raise ValueError("Invalid path! Skipping dataset. Path was %s" 
+                % file_path)
+
+        # It's an xrootd path but you've already expanded it
+        if xrootd and ".root" in file_path[-5:]:
+            return [file_path]
 
         if (xrootd and not xrootd_user):
-            xrd = 'root://%s/' % ConfigureJobs.getXrdRedirector(file_path[0])
+            xrd = 'root://%s/' % ConfigureJobs.getXrdRedirector(file_path)
             allfiles = []
-            for fs in file_path:
-                if os.path.isdir(fs):
-                    fs = fs + "/*.root"
-                allfiles.extend(glob.glob(fs))
-            if not allfiles:
+            fs = file_path if not os.path.isdir(file_path) else (file_path + "/*.root")
+            allfiles = glob.glob(fs)
+            if not len(allfiles):
                 allfiles = ConfigureJobs.buildXrdFileList(file_path, xrd)
                 if not allfiles:
                     return [xrd + file_path] 
@@ -364,9 +369,7 @@ class SelectorDriver(object):
         self.processDataset(*args)
 
     def processLocalFiles(self, file_path, addSumweights, chan,):
-        filenames = []
-        for entry in file_path:
-            filenames.extend(self.getFileNames([entry] if type(entry) != list else entry))
+        filenames = self.getAllFileNames(file_path)
 
         for i, filename in enumerate(filenames):
             self.nProcessed += self.processFile(filename, addSumweights, chan, i+1)
@@ -444,7 +447,6 @@ class SelectorDriver(object):
                 draw_weight += "*%i/%s" % (self.maxEntries, nevents_branch)
 
             meta_tree.Draw("%i>>%s" % (filenum, tmplabel), draw_weight)
-            print(draw_weight)
             sumweights_hist.Add(tmpweights_hist)
         elif sumWeightsType == "fromHist":
             new_sumweights_hist = rtfile.Get(weightshist_name)
