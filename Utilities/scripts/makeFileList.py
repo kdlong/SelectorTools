@@ -26,16 +26,11 @@ def getFilesWithName(name, path, das=True, xrd=''):
         if files:
             files = filter(lambda x: "/store" in x[:7], files.split())
     else:
-        if type(path) == str:
-            path = [path]
         if xrd:
-            files = [] 
-            for p in path:
-                xrdpath = p[p.find('/store'):]
-                logging.debug(f"Looking for path {xrdpath}")
-                f = subprocess.check_output(['xrdfs', f'root://{xrd}', 'ls', xrdpath]).decode(sys.stdout.encoding)
-                files.extend(list(filter(lambda x: "root" in x[-4:], f.split())))
+            files = ConfigureJobs.buildXrdFileList(path, xrd)
         else:
+            if type(path) == str:
+                path = [path]
             files = itertools.chain(*[glob.glob(p) for p in path])
 
     if files:
