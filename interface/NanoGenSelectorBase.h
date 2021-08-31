@@ -35,14 +35,14 @@ public :
     std::vector<ScaleFactor*> scetlibCorrs_;
     std::unordered_map<std::string, std::vector<int>> minnloPdfMap = {
         {"nnpdf31", {0,1,2,3,4,5,6,7,8}},
-        {"nnpdf30", {13,14,15,16,17}},
-        {"ct18", {18}},
-        {"ct18z", {18}},
-        {"mmht", {19, 20, 21}},
         {"nnpdf31cmsw1", {9}},
         {"nnpdf31cmsw2", {10}},
         {"nnpdf31cmsw3", {11}},
         {"nnpdf31cmsw4", {12}},
+        {"nnpdf30", {13,14,15,16,17}},
+        {"ct18", {18}},
+        {"ct18z", {18}},
+        {"mmht", {19, 20, 21}},
         {"hera", {23,24,25,26,28,29,30}},
     };
     const int nScetlibWeights_ = 45;
