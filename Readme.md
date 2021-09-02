@@ -224,7 +224,7 @@ Explanation of arguments:
 * **-c** wmmunu_minnlo: This sample will be written as the central MC prediction in the cards
 * **--files** wmmunu_minnlo: A comma-separated list of the data sets you want to process. These are specified in PlotGroups/WGen.py of AnalysisDatasetManager. They main contain multiple samples (e.g., combining histograms of multiple folders in the file)
 * **-d** wmmunu_minnlo: This sample is treated as "data" in the fit. When it is the same as -c, the fit will always be an expected Asimov fit
-* **-f** test.root: output file name
+* **-f** test.root: input file name
 * **--pdfs** nnpdf31: List of PDF set names, separated by commas, to include in fit
 * **--addEff**: Add dummy efficiency uncertainties (per-bin stat unc)
 * **--allHessianVars**: Write PDF uncertainties as one nuisance per hessian variation set
