@@ -186,7 +186,9 @@ See the following section for a detailed example of how to setup and run the fit
 	
 ### Produce a historgram file running locally
 		
-```./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 massVar=1 muonVar=1 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection```
+`
+./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 massVar=1 muonVar=1 pdfSet=nnpdf31 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection -o wmmunu-nnpdf31.root
+`
 	
 Explanation of arguments:
 	
