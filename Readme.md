@@ -209,9 +209,9 @@ Explanation of arguments:
 * **-o** Wmunu.root: Output file name
 	
 ### Produce a histogram file by submitting to condor
-```
+`
 ./Utilities/scripts/submitMakeHistFileToCondor.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 muonVar=1 massVar=1 pdfSet=nnpdf31 -d /home/kdlong/Submit_Wp_Fiducial --input_tier NanoAOD --force --local -s Wselection --numFiles 1000 -n 20
-```
+`
 * add `--submit` for automatic submission to condor
 
 ### Produce combine cards
