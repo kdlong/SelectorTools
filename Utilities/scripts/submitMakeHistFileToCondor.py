@@ -14,6 +14,7 @@ import math
 import re
 import subprocess
 import logging
+import socket
 
 def getComLineArgs():
     parser = UserInput.getDefaultParser(False)
@@ -164,7 +165,7 @@ def getUWCondorSettings():
         Requirements         = TARGET.Arch == "X86_64" && IsSlowSlot=!=true && (MY.RequiresSharedFS=!=true || TARGET.HasAFS_OSG) && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists  && TARGET.CMS_CVMFS_Exists))
     """
 
-def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist, numfiles, numCores, nPerJob, selArgs):
+def writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist, numfiles, numCores, nPerJob, selArgs):
     if nPerJob < numCores:
         logging.warning("Number of cores is less than number of files per job. Setting instead to %i" % nPerJob)
         nPerJob
@@ -177,7 +178,7 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, 
         "analysis" : analysis,
         "selection" : selection,
         "input_tier" : input_tier,
-        "queue" : queue,
+        "extraSubmit" : extraSubmit,
         "memory" : memory,
         "filelist" : filelist.split(".txt")[0],
         "nPerJob" : nPerJob,
@@ -214,29 +215,29 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     if "/afs" in os.getcwd()[:4]:
         modifyAFSPermissions()
 
+    isMit = "mit" in socket.gethostname().lower()
+    xrdredir = "xrootd.cmsaf.mit.edu" if isMit else "eoscms.cern.ch"
+
     filelist_name = '_'.join(filenames[:max(len(filenames), 4)])
     filelist_name = filelist_name.replace("*", "ALL")
     filelist = '/'.join([submit_dir, filelist_name+'_filelist.txt'])
-    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das)
+    numfiles = makeFileList.makeFileList(filenames, filelist, analysis, input_tier, das, xrdredir)
     if maxFiles > 0 and maxFiles < numfiles:
         numfiles = maxFiles
 
-    #TODO: I don't think there's any harm in addition the accounting group, but
-    # it doesn't do anything if you aren't a member of CMST3 group
-    cernk = "kelong" in os.getlogin()
-    if queue == 'uw':
-        getUWCondorSettings()
-    elif queue == 'mit':
-        #queue = 'requirements = HAS_CVMFS_cms_cern_ch'
-        #queue = '+SingularityImage = "/cvmfs/cernvm-prod.cern.ch/cvm3"'
-        queue = ('Requirements = regexp("T3BTCH*", MACHINE) \n'
-                 '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el7:latest"'
-                )
-        #queue = '+REQUIRED_OS = "rhel7"'
-    else:
-        queue = '+JobFlavour = "{0}"\n+AccountingGroup = "group_u_CMST3.all"'.format(queue) \
 
-    writeSubmitFile(submit_dir, analysis, selection, input_tier, queue, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
+    extraSubmit = ''
+    if queue == 'uw':
+        extraSubmit = getUWCondorSettings()
+    elif isMit:
+        extraSubmit = 'requirements = regexp("T3BTCH*", MACHINE)\n'
+        extraSubmit += '+SingularityImage = "/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osgvo-el7:latest"'
+    else:
+        extraSubmit = '+JobFlavour = "%s"' % queue
+        iscmg = "kelong" in os.getlogin()
+        extraSubmit += '\n+AccountingGroup = "group_u_CMST3.all"'
+
+    writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
         setupMergeStep(submit_dir, queue, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
 

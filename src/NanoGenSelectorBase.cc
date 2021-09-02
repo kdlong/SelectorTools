@@ -4,10 +4,15 @@
 #include "TParameter.h"
 #include <TStyle.h>
 #include <regex>
+#include <numeric>
 
 void NanoGenSelectorBase::Init(TTree *tree)
 {
     refWeight = 1;
+    // Otherwise name isn't read until the base class is called
+    TNamed* name = (TNamed *) GetInputList()->FindObject("name");
+    bool isMinnlo_ = std::string(name->GetTitle()).find("minnlo") != std::string::npos;
+
     TParameter<bool>* doTheory = (TParameter<bool>*) GetInputList()->FindObject("theoryUnc");
     doTheoryVars_ = doTheory != nullptr && doTheory->GetVal();
     TParameter<bool>* theoryPrefsr = (TParameter<bool>*) GetInputList()->FindObject("theoryPrefsr");
@@ -30,11 +35,25 @@ void NanoGenSelectorBase::Init(TTree *tree)
     TParameter<int>* thwSuppress = (TParameter<int>*) GetInputList()->FindObject("thwSuppress");
     thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 0;
 
+    TParameter<int>* storeCenPdfs = (TParameter<int>*) GetInputList()->FindObject("storeCenPdfs");
+    storeCenPdfs_ = storeCenPdfs != nullptr ? storeCenPdfs->GetVal() : 0;
+    // Only valid for isMinnlo
+    storeCenPdfs_ = storeCenPdfs_ && isMinnlo_;
+    if (storeCenPdfs_)
+        std::cout << "INFO: Also storing central values of main PDF sets\n";
+
+    TNamed* pdfSet = (TNamed*) GetInputList()->FindObject("pdfSet");
+    pdfSet_ = pdfSet != nullptr ? pdfSet->GetTitle() : "";
+
     std::cout << "INFO: doLHE = " << doLHE_ << " doPrefsr " << doPreFSR_ << std::endl;
     std::cout << "INFO: doBareLeptons = "<<doBareLeptons_<<"\n";
-    if (name_.find("minnlo") != std::string::npos && !weightSuppress_ && !weightSignOnly_)
+
+    if (isMinnlo_ && !weightSuppress_ && !weightSignOnly_) {
         std::cout << "WARNING: You should use wSuppress != 0 or wSignOnly to suppress huge weights in MiNNLO\n";
-    else if (weightSuppress_)
+        std::cout << "Automatically setting wSignOnly = 1\n";
+        weightSignOnly_ = true;
+    }
+    if (weightSuppress_ && !weightSignOnly_)
         std::cout << "INFO: wSuppress = " << weightSuppress_ << std::endl;
 
     if (doBorn_)
@@ -91,14 +110,45 @@ void NanoGenSelectorBase::Init(TTree *tree)
     unknownWeights_ = (tree->GetListOfBranches()->FindObject("nLHEUnknownWeight") != nullptr);
     unknownWeightsAlt_ = (tree->GetListOfBranches()->FindObject("nLHEUnknownWeightAltSet1") != nullptr);
     
+    bool readAllPdfs = pdfSet_ == "all";
+    if (!readAllPdfs && !isMinnlo_)
+        std::cerr << "WARNING! Specific pdf selection is only supported in MiNNLO. No PDF weights will be stored\n";
+    else if (isMinnlo_ && pdfSet_ != "all") {
+        if (pdfSet_ == "ct18")
+            pdfMaxStore_ = 61;
+        else if (pdfSet_ == "ct18z")
+            pdfCenWeight_ = 61;
+    }
+    // Should always be the first entry, but CT18 is accidentally 
+    // In the same set as CT18Z
     for (size_t i = 0; i < pdfWeights_.size(); i++) {
+        if (!readAllPdfs && minnloPdfMap.find(pdfSet_) == std::end(minnloPdfMap))
+            std::cerr << "WARNING! PDF set " << pdfSet_ << " is invalid! It will be skipped.\n";
+        auto& toRead = minnloPdfMap[pdfSet_];
+        bool readPdf = readAllPdfs || (isMinnlo_ && std::find(std::begin(toRead), std::end(toRead), i) != std::end(toRead));
         std::string name = "LHEPdfWeight";
         if (i > 0)
             name += "AltSet" + std::to_string(i);
-        if(tree->GetListOfBranches()->FindObject(name.c_str()) == nullptr)
-            break;
-        pdfWeights_.at(i) = true;
+        if (!readPdf)
+            continue;
+        altPdf_ = true;
+        if(tree->GetListOfBranches()->FindObject(name.c_str()) != nullptr) {
+            std::cout << "INFO: Storing pdf set read from " << name << std::endl;
+            pdfWeights_.at(i) = true;
+        }
     }
+    // Trigger storing all relevant
+    if (storeCenPdfs_) {
+        for (auto& entry : minnloPdfMap) {
+            // Just store the first entry, most of the authors are alphas vars
+            int i = entry.second.front();
+            pdfWeights_.at(i) = true;
+            if (entry.first != pdfSet_)
+                cenPdfWeightsToStore_.push_back(i);
+        }
+    }
+
+    nTheoryWeights_ = pdfSet_ == "all" ? 1000 : 200;
 
     SelectorBase::Init(tree);
 
@@ -185,7 +235,12 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
             if (i > 0)
                 name += "AltSet" + std::to_string(i);
             b.SetSpecificEntry(entry, name);
-            b.SetSpecificEntry(entry, "n"+name);
+            
+            if (storeCenPdfs_ && (std::find(std::begin(cenPdfWeightsToStore_), std::end(cenPdfWeightsToStore_), i)
+                    != std::end(cenPdfWeightsToStore_)))
+                nLHEPdfWeights[i] = 1;
+            else
+                b.SetSpecificEntry(entry, "n"+name);
         }
     }
     if (unknownWeights_) {
@@ -403,11 +458,22 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
         *genWeight = 0;
     }
 
+    pdfMaxStore_ = std::min(pdfMaxStore_, std::accumulate(nLHEPdfWeights.begin(), nLHEPdfWeights.end(), 0));
+
     if (refWeight == 1)
         refWeight = weight;
 
     if (centralWeightIndex_ != -1 && scaleWeights_) {
+        rescaleWeight = LHEScaleWeight[centralWeightIndex_];
         weight *= LHEScaleWeight[centralWeightIndex_];
+    }
+    else if (altPdf_) {
+        // Assuming the first set will always have the central values,
+        // in general additional sets will be alpha_s variations
+        int index = minnloPdfMap[pdfSet_].front();
+        float pdfWeight = LHEPdfWeights[index][pdfCenWeight_];
+        rescaleWeight = pdfWeight;
+        weight *= pdfWeight;
     }
     if (doMC2H_)
         buildHessian2MCSet();

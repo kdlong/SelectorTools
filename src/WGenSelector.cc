@@ -4,7 +4,6 @@
 #include <regex>
 #include <cmath>
 #include <TRandom3.h>
-#include <numeric>
 #include "TParameter.h"
 
 void WGenSelector::Init(TTree *tree)
@@ -264,9 +263,9 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
         size_t minimalWeights = nScaleWeights+nMEParamWeight;
-        size_t allPdfWeights = std::accumulate(nLHEPdfWeights.begin(), nLHEPdfWeights.end(), 0);
 
-        size_t nWeights = minimalWeights+allPdfWeights;
+        // In the case of CT18, don't store all the CT18Z sets which are mixed in
+        size_t nWeights = minimalWeights+pdfMaxStore_;
         if (n3llcorr_)
             nWeights += nScetlibWeights_;
         size_t pdfOffset = nScaleWeights;
@@ -277,25 +276,24 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 thweight = LHEScaleWeight[i];
             else if (i < nScaleWeights)
                 thweight = LHEScaleWeightAltSet1[i-nLHEScaleWeight];
-            else if (i < nScaleWeights+allPdfWeights) {
+            else if (i < nScaleWeights+pdfMaxStore_) {
                 thweight = LHEPdfWeights[pdfIdx][i-pdfOffset];
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
             }
-            else if (i < minimalWeights+allPdfWeights) {
-                size_t offset = nLHEScaleWeight+allPdfWeights;
+            else if (i < minimalWeights+pdfMaxStore_) {
+                size_t offset = nLHEScaleWeight+pdfMaxStore_;
                 thweight = MEParamWeight[i-offset];
             }
             else {
-                int idx = i-minimalWeights-allPdfWeights;
+                int idx = i-minimalWeights-pdfMaxStore_;
                 auto* sf = scetlibCorrs_.at(idx);
                 float refW = scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
             }
 
-            if (centralWeightIndex_ != -1 && scaleWeights_)
-                thweight /= LHEScaleWeight[centralWeightIndex_];
+            thweight /= rescaleWeight;
 
             if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
                     ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||

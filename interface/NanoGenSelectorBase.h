@@ -25,7 +25,26 @@
 class NanoGenSelectorBase : public SelectorBase {
 public :
     bool isZ_ = false;
+    bool altPdf_ = false;
+    bool storeCenPdfs_ = false;
+    std::vector<int> cenPdfWeightsToStore_ = {};
+    bool isMinnlo_ = false;
+    int pdfMaxStore_ = 150;
+    int pdfCenWeight_ = 0;
+    std::string pdfSet_ = "all";
     std::vector<ScaleFactor*> scetlibCorrs_;
+    std::unordered_map<std::string, std::vector<int>> minnloPdfMap = {
+        {"nnpdf31", {0,1,2,3,4,5,6,7,8}},
+        {"nnpdf31cmsw1", {9}},
+        {"nnpdf31cmsw2", {10}},
+        {"nnpdf31cmsw3", {11}},
+        {"nnpdf31cmsw4", {12}},
+        {"nnpdf30", {13,14,15,16,17}},
+        {"ct18", {18}},
+        {"ct18z", {18}},
+        {"mmht", {19, 20, 21}},
+        {"hera", {23,24,25,26,28,29,30}},
+    };
     const int nScetlibWeights_ = 45;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
@@ -73,6 +92,7 @@ public :
     bool doBareLeptons_ = false;
     float ratio_mass;
     float refWeight = 1;
+    float rescaleWeight = 1.; //If central weight is modified
 
     TH1D* mcWeights_;
     TH1D* mcPdfWeights_;

@@ -268,8 +268,7 @@ class SelectorBase : public TSelector {
     void addSubprocesses(std::vector<std::string> processes);
     void makeOutputDirs();
     void setSubprocesses(std::string process);
-
-
+    int nTheoryWeights_ = 100;
 
     template<typename T, typename... Args>
 	void AddObject(T* &ptr, Args... args) {

@@ -236,11 +236,24 @@ def getListOfFiles(filelist, selection, manager_path="", analysis=""):
         raise RuntimeError("No processes found matching pattern '%s'" % filelist)
     return [str(i) for i in names]
 
+def buildXrdFileList(path, xrd):
+    if type(path) == str:
+        path = [path]
+    files = [] 
+    for p in path:
+        xrdpath = p[p.find('/store'):]
+        logging.debug(f"Looking for path {xrdpath}")
+        f = subprocess.check_output(['xrdfs', f'root://{xrd}', 'ls', xrdpath]).decode(sys.stdout.encoding)
+        files.extend(list(filter(lambda x: "root" in x[-4:], f.split())))
+    return files
+
 def getXrdRedirector(filepath=None):
     if "eos/cms" in filepath:
         return "eoscms.cern.ch"
     elif "eos/user" in filepath:
         return "eosuser.cern.ch"
+    if "mit" in socket.gethostname().lower():
+        return 'xrootd.cmsaf.mit.edu'
 
     usbased = ["wisc.edu"]
     usredir = 'cmsxrootd.fnal.gov'

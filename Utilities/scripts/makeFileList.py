@@ -9,6 +9,8 @@ import os
 import random
 import glob
 import logging
+import sys
+import itertools
 
 def getComLineArgs():
     parser = UserInput.getDefaultParser(False)
@@ -18,27 +20,31 @@ def getComLineArgs():
                         help="Read files from DAS (default local, e.g., from file_path")
     return vars(parser.parse_args())
 
-def getFilesWithName(name, path, das=True):
+def getFilesWithName(name, path, das=True, xrd=''):
     if das:
-        files = subprocess.check_output(["dasgoclient", "--query=file dataset=%s" % path])
+        files = subprocess.check_output(["dasgoclient", "--query=file dataset=%s" % path]).decode(sys.stdout.encoding)
         if files:
-            files = files.split("\n")
-            files = filter(lambda x: "/store" in x[:7], files)
+            files = filter(lambda x: "/store" in x[:7], files.split())
     else:
-        files = glob.glob(path)
+        if xrd:
+            files = ConfigureJobs.buildXrdFileList(path, xrd)
+        else:
+            if type(path) == str:
+                path = [path]
+            files = itertools.chain(*[glob.glob(p) for p in path])
 
     if files:
         files = ["@".join([name, f.strip()+'\n']) for f in files]
     return files
 
-def makeFileList(filenames, output_file, analysis, selection, das):
+def makeFileList(filenames, output_file, analysis, selection, das, xrd):
     name_path_map = ConfigureJobs.getListOfFilesWithPath(filenames, analysis, selection, das)
 
     files = []
     for name, path in name_path_map.items():
         logging.debug("Trying to add name %s with path %s" % (name, path))
         try:
-            files.extend(getFilesWithName(name, path, das))
+            files.extend(getFilesWithName(name, path, das, xrd))
         except subprocess.CalledProcessError:
             logging.warning("Failed to find files for dataset %s with DAS path %s. Skipping!" % (name, path))
     
