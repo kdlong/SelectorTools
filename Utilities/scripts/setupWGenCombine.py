@@ -166,7 +166,7 @@ for process in plot_groups:
                 # CT18Z, LHAPDF ID = 14000
             if "ct18z" in args.pdfs.lower():
                 nsets=61
-                cenidx += 6
+                cenidx = 6+61
                 cardtool.addTheoryVar(process, 'pdf_assymhessian', range(cenidx, cenidx+nsets-2), central=0, specName="CT18Z")
                 cardtool.addTheoryVar(process, 'other', range(cenidx+nsets-2, cenidx+nsets), central=0, specName="CT18Z")
                 # MMHT

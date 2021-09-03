@@ -205,6 +205,7 @@ class SelectorDriver(object):
                 maxPerSet = self.maxFiles-nFiles
             files = self.getAllFileNames(file_path) 
             self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, nsplits)
+            print(self.datasets[dataset])
             nFiles += len(self.datasets[dataset])
 
     def getAllFileNames(self, file_path):
@@ -372,10 +373,14 @@ class SelectorDriver(object):
         filenames = self.getAllFileNames(file_path)
 
         for i, filename in enumerate(filenames):
-            self.nProcessed += self.processFile(filename, addSumweights, chan, i+1)
+            processed = self.processFile(filename, addSumweights, chan, i+1)
+            self.nProcessed += processed
             logging.info("Processed %i events after %i files" % (self.nProcessed, i+1))
-            if (self.maxEntries > 0 and self.nProcessed >= self.maxEntries) or (self.maxFiles > 0 and i > self.maxFiles):
+            # In multicore mode, make maxEntries per file, not per thread
+            if (self.maxEntries > 0 and self.nProcessed >= self.maxEntries and self.numCores <= 1) \
+                    or (self.maxFiles > 0 and i > self.maxFiles):
                 break
+
                 
     def processFile(self, filename, addSumweights, chan, filenum=1):
         rtfile = ROOT.TFile.Open(filename)
@@ -389,7 +394,7 @@ class SelectorDriver(object):
                 % (tree_name, filename, self.ntupleType)
             )
         logging.debug("Processing tree %s for file %s." % (tree.GetName(), rtfile.GetName()))
-        toprocess = self.maxEntries-self.nProcessed
+        toprocess = self.maxEntries if self.numCores > 1 else (self.maxEntries-self.nProcessed)
         if toprocess > 0:
             tree.Process(self.select, "", toprocess)
         else:

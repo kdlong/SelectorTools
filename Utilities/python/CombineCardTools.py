@@ -358,7 +358,7 @@ class CombineCardTools(object):
                     updatePdfs = getattr(HistTools, pdfFunction)(*args)
                     pdfHists += updatePdfs
 
-                    if expandedTheory and pdfVar['name'] == 'NNPDF31':
+                    if expandedTheory and pdfVar['name']:
                         args.pop(len(args)-1)
                         pdfFunction = HistTools.getAllSymHessianHists if not self.isUnrolledFit else HistTools.getTransformed3DAllSymHessianHists
                         allPdfHists = pdfFunction(*args)

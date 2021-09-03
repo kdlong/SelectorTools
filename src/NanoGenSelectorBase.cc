@@ -129,8 +129,9 @@ void NanoGenSelectorBase::Init(TTree *tree)
         std::string name = "LHEPdfWeight";
         if (i > 0)
             name += "AltSet" + std::to_string(i);
-        if (!readPdf)
+        if (!readPdf) {
             continue;
+        }
         altPdf_ = true;
         if(tree->GetListOfBranches()->FindObject(name.c_str()) != nullptr) {
             std::cout << "INFO: Storing pdf set read from " << name << std::endl;
