@@ -285,7 +285,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 }
             }
             else if (i < minimalWeights+pdfMaxStore_) {
-                size_t offset = nLHEScaleWeight+pdfMaxStore_;
+                size_t offset = nScaleWeights+pdfMaxStore_;
                 thweight = MEParamWeight[i-offset];
             }
             else {
