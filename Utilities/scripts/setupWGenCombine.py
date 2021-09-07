@@ -166,7 +166,7 @@ for process in plot_groups:
                 # CT18Z, LHAPDF ID = 14000
             if "ct18z" in args.pdfs.lower():
                 nsets=61
-                cenidx += 6
+                cenidx = cenidx+6+61
                 cardtool.addTheoryVar(process, 'pdf_assymhessian', range(cenidx, cenidx+nsets-2), central=0, specName="CT18Z")
                 cardtool.addTheoryVar(process, 'other', range(cenidx+nsets-2, cenidx+nsets), central=0, specName="CT18Z")
                 # MMHT
@@ -236,7 +236,9 @@ if not args.theoryOnly:
 
 if args.pdfs != "none":
     if args.allHessianVars:
-        npdfs = cardtool.addCustomizeCard(path+"/Customize/pdfHessian_template.txt")
+        # TODO: More sets of course
+        pdflabel = "NNPDF" if "nnpdf" in args.pdfs else "CT18"
+        npdfs = cardtool.addCustomizeCard(f"{path}/Customize/pdf{pdflabel}_template.txt")
         nnu += npdfs
         cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
     else:
