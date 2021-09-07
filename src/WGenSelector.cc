@@ -283,6 +283,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
+                thweight /= rescaleWeight_;
             }
             else if (i < minimalWeights+pdfMaxStore_) {
                 size_t offset = nScaleWeights+pdfMaxStore_;
@@ -295,7 +296,6 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
             }
 
-            thweight /= rescaleWeight;
 
             if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
                     ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||

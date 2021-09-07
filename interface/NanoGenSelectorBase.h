@@ -92,7 +92,7 @@ public :
     bool doBareLeptons_ = false;
     float ratio_mass;
     float refWeight = 1;
-    float rescaleWeight = 1.; //If central weight is modified
+    float rescaleWeight_ = 1.; //If central weight is modified
 
     TH1D* mcWeights_;
     TH1D* mcPdfWeights_;
