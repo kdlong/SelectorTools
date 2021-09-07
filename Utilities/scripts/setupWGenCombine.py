@@ -116,7 +116,7 @@ cardtool.setAddOverflow(False)
 ptbins = [0,3,5,7,9,12,15,20,27,40,100]
 ptbinPairs = [(x,y) for x,y in zip(ptbins[:-1], ptbins[1:])]
 
-firstPdfIdx = 19
+firstPdfIdx = 10
 pdfIdxMap = {
         "nnpdf31" : {
             "name" : "NNPDF31",
@@ -201,7 +201,8 @@ for process in plot_groups:
             for label, pdfInfo in pdfIdxMap.items():
                 cardtool.addTheoryVar(process, 'other', [pdfInfo["cenidx"]], central=0, specName=pdfInfo["name"]+"Cen")
 
-        cenMassIdx = 18+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11
+        cenMassIdx = firstPdfIdx+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11-1
+        print("central is", cenMassIdx)
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
         cardtool.addTheoryVar(process, 'other', massVars(1), exclude=[], central=0, specName="massShift10MeV")

@@ -261,7 +261,9 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         mcWeights_->Fill(weight/std::abs(refWeight));
 
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
-        size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
+        //size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
+        // Turn this off for now
+        size_t nScaleWeights = nLHEScaleWeight;
         size_t minimalWeights = nScaleWeights+nMEParamWeight;
 
         // In the case of CT18, don't store all the CT18Z sets which are mixed in
