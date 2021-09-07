@@ -1,1 +1,2 @@
 pdf${pdfName} shape   1  
+${pdfName}_alphas shape   1  

@@ -194,7 +194,6 @@ for process in plot_groups:
             info = pdfIdxMap[args.pdf]
             firstAlphaIdx = info["cenidx"]+info["nsets"]-2
             indices = range(info["cenidx"], firstAlphaIdx)
-            print("Number of entries", len(indices), "cenIdx", info["cenidx"], info["nsets"])
             alphaIndices = range(firstAlphaIdx, firstAlphaIdx+2)
             cardtool.addTheoryVar(process, info["unc"], indices, central=0, specName=info["name"])
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
@@ -209,9 +208,7 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'other', massVars(2), exclude=[], central=0, specName="massShift20MeV")
         cardtool.addTheoryVar(process, 'other', massVars(3), exclude=[], central=0, specName="massShift30MeV")
         cardtool.addTheoryVar(process, 'other', massVars(5), exclude=[], central=0, specName="massShift50MeV")
-        for i in range(100):
-            cardtool.addTheoryVar(process, 'other', [i+1], exclude=[], central=0, specName="Index%i" %i)
-        # This is broken for now
+        # Width weights are broken for now
         # width = (18+890+21+3) if not isAltTh else (18+nsets+21+3)
         # cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
         if "N3LLCorr" in process:
@@ -233,7 +230,6 @@ for process in plot_groups:
             cardtool.addScaleBasedVar(process, varName) 
     if process in args.central.split(",") and args.addEff:
         cardtool.addPerBinVariation(process, "CMS_eff_m", 0.0025, False)
-
 
     cardtool.loadHistsForProcess(process, expandedTheory=args.allHessianVars)
     cardtool.writeProcessHistsToOutput(process)
