@@ -418,7 +418,6 @@ class CombineCardTools(object):
                 [self.unrolledBinsX, self.unrolledBinsY], var['entries'], "", varName)
 
 
-        print("For var", varName, "Len of hists is", len(hists))
         # Since it isn't an envelope (otherwise the mass variations wouldn't work properly)
         if len(hists) > 2:
             raise ValueError("Currently the LHE vars can only be two variations. Found %i" % len(hists))

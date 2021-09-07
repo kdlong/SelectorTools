@@ -207,7 +207,7 @@ void ZGenSelector::FillHistograms(Long64_t entry, std::pair<Systematic, std::str
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
             }
 
-            thweight /= rescaleWeight;
+            thweight /= rescaleWeight_;
 
             if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
                     ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||

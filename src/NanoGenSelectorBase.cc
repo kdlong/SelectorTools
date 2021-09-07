@@ -135,7 +135,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
         altPdf_ = true;
         if(tree->GetListOfBranches()->FindObject(name.c_str()) != nullptr) {
             std::cout << "INFO: Storing pdf set read from " << name << std::endl;
-            pdfWeights_.at(i) = true;
+            pdfWeights_[i] = true;
         }
     }
     // Trigger storing all relevant
@@ -143,7 +143,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
         for (auto& entry : minnloPdfMap) {
             // Just store the first entry, most of the authors are alphas vars
             int i = entry.second.front();
-            pdfWeights_.at(i) = true;
+            pdfWeights_[i] = true;
             if (entry.first != pdfSet_)
                 cenPdfWeightsToStore_.push_back(i);
         }
@@ -465,7 +465,7 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
         refWeight = weight;
 
     if (centralWeightIndex_ != -1 && scaleWeights_) {
-        rescaleWeight = LHEScaleWeight[centralWeightIndex_];
+        rescaleWeight_ = LHEScaleWeight[centralWeightIndex_];
         weight *= LHEScaleWeight[centralWeightIndex_];
     }
     else if (altPdf_) {
@@ -473,7 +473,7 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
         // in general additional sets will be alpha_s variations
         int index = minnloPdfMap[pdfSet_].front();
         float pdfWeight = LHEPdfWeights[index][pdfCenWeight_];
-        rescaleWeight = pdfWeight;
+        rescaleWeight_ = pdfWeight;
         weight *= pdfWeight;
     }
     if (doMC2H_)

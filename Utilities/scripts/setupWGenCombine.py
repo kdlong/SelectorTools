@@ -97,7 +97,7 @@ cardtool.setVariations(variations)
 normVariations = [] if args.theoryOnly else ["mWBWShift100MeV", "mWBWShift50MeV"] 
 cardtool.setNormalizedVariations(normVariations)
 
-folder_name = "_".join([args.fitvar,"pdf"+args.pdf]) 
+folder_name = "_".join([args.fitvar,args.pdf]) 
 if args.append != "":
     folder_name += "_%s" % args.append
 
@@ -127,54 +127,54 @@ pdfIdxMap = {
         "cmsw1" : {
             "name" : "NNPDF31CMSW1",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+1,
+            "cenidx" : firstPdfIdx+1*args.storePdfCenValues,
             "nsets" : 103,
         },
         "cmsw2" : {
             "name" : "NNPDF31CMSW2",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+2,
+            "cenidx" : firstPdfIdx+2*args.storePdfCenValues,
             "nsets" : 103,
         },
         "cmsw3" : {
             "name" : "NNPDF31CMSW3",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+3,
+            "cenidx" : firstPdfIdx+3*args.storePdfCenValues,
             "nsets" : 103,
         },
         "cmsw4" : {
             "name" : "NNPDF31CMSW4",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+4,
+            "cenidx" : firstPdfIdx+4*args.storePdfCenValues,
             "nsets" : 103,
         },
         "cmsw4" : {
             "name" : "NNPDF30",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+5,
+            "cenidx" : firstPdfIdx+5*args.storePdfCenValues,
             "nsets" : 103,
         },
         "ct18" : {
             "name" : "CT18",
-            "cenidx" : firstPdfIdx+6,
+            "cenidx" : firstPdfIdx+6*args.storePdfCenValues,
             "unc" : "pdf_assymhessian",
             "nsets" : 61,
         },
         "ct18z" : {
             "name" : "CT18Z",
-            "cenidx" : firstPdfIdx+6+61,
+            "cenidx" : firstPdfIdx+6*args.storePdfCenValues+61,
             "unc" : "pdf_assymhessian",
             "nsets" : 61,
         },
         "mmht" : {
             "name" : "MMHT",
-            "cenidx" : firstPdfIdx+7,
+            "cenidx" : firstPdfIdx+7*args.storePdfCenValues,
             "unc" : "pdf_assymhessian",
             "nsets" : 51,
         },
         "hera" : {
             "name" : "HERA",
-            "cenidx" : firstPdfIdx+8,
+            "cenidx" : firstPdfIdx+8*args.storePdfCenValues,
             "unc" : "pdf_assymhessian",
             "nsets" : 51,
         },
@@ -193,7 +193,8 @@ for process in plot_groups:
         if args.pdf != "none" and "all" not in args.pdf:
             info = pdfIdxMap[args.pdf]
             firstAlphaIdx = info["cenidx"]+info["nsets"]-2
-            indices = range(info["cenidx"], info["cenidx"]+firstAlphaIdx)
+            indices = range(info["cenidx"], firstAlphaIdx)
+            print("Number of entries", len(indices), "cenIdx", info["cenidx"], info["nsets"])
             alphaIndices = range(firstAlphaIdx, firstAlphaIdx+2)
             cardtool.addTheoryVar(process, info["unc"], indices, central=0, specName=info["name"])
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
@@ -201,14 +202,15 @@ for process in plot_groups:
             for label, pdfInfo in pdfIdxMap.items():
                 cardtool.addTheoryVar(process, 'other', [pdfInfo["cenidx"]], central=0, specName=pdfInfo["name"]+"Cen")
 
-        cenMassIdx = 18+8+pdfIdxMap[args.pdf]["nsets"]+11
+        cenMassIdx = 18+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
         cardtool.addTheoryVar(process, 'other', massVars(1), exclude=[], central=0, specName="massShift10MeV")
         cardtool.addTheoryVar(process, 'other', massVars(2), exclude=[], central=0, specName="massShift20MeV")
         cardtool.addTheoryVar(process, 'other', massVars(3), exclude=[], central=0, specName="massShift30MeV")
         cardtool.addTheoryVar(process, 'other', massVars(5), exclude=[], central=0, specName="massShift50MeV")
-        cardtool.addTheoryVar(process, 'other', massVars(10), exclude=[], central=0, specName="massShift100MeV")
+        for i in range(100):
+            cardtool.addTheoryVar(process, 'other', [i+1], exclude=[], central=0, specName="Index%i" %i)
         # This is broken for now
         # width = (18+890+21+3) if not isAltTh else (18+nsets+21+3)
         # cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
