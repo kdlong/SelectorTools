@@ -416,9 +416,14 @@ class CombineCardTools(object):
         else:
             hists,name = HistTools.getTransformed3DLHEHists(weightHist, HistTools.makeUnrolledHist,
                 [self.unrolledBinsX, self.unrolledBinsY], var['entries'], "", varName)
+
+
+        print("For var", varName, "Len of hists is", len(hists))
         # Since it isn't an envelope (otherwise the mass variations wouldn't work properly)
         if len(hists) > 2:
             raise ValueError("Currently the LHE vars can only be two variations. Found %i" % len(hists))
+        if len(hists) == 1:
+            return [HistTools.rebinHist(hists[0], name.replace("Up", ""), self.rebin)]
         
         hists[0] = HistTools.rebinHist(hists[0], name, self.rebin)
         hists[1] = HistTools.rebinHist(hists[1], name.replace("Up", "Down"), self.rebin)
