@@ -179,7 +179,7 @@ def getSymMCPDFVarHists(init2D_hist, entries, name, rebin=None, central=0, pdfNa
 
 def makeAllSymHessianHists(hists, hist_name, name, central=0, scale=1.0):
     variationSet = []
-    for i, hist in enumerate(hists[0:central]+hists[central:]):
+    for i, hist in enumerate(hists[0:central]+hists[central+1:]):
         upaction = lambda x: x[1] if x[1] > x[0] else (x[0]**2/x[1] if x[1] > 0 else 0)
         #downaction = lambda x: x[1] if x[1] < x[0] else float(x[0])/(x[1] if x[1] > 0 else 1)
         downaction = lambda x: x[1] if x[1] < x[0] else (x[0]**2/x[1] if x[1] > 0 else 0)
@@ -191,9 +191,26 @@ def makeAllSymHessianHists(hists, hist_name, name, central=0, scale=1.0):
             new_name, upaction, downaction, central))
     return variationSet
 
+def makeAllAssymHessianHists(hists, hist_name, name, central=0, scale=1.0):
+    variationSet = []
+    allhists = hists[0:central]+hists[central+1:]
+    for i, hists in enumerate(zip(allhists[::2], allhists[1::2])):
+        new_name= hist_name.replace("pdf_%s" % name, "pdf%i" %i) if name and name in hist_name else \
+            hist_name.replace("pdf", "pdf%i" % i)
+        # Too lazy to track down why this happens
+        new_name = new_name.replace("_Up", "Up")
+        hists[0].SetName(new_name)
+        hists[1].SetName(new_name.replace("Up", "Down"))
+        variationSet.extend(hists)
+    return variationSet
+
 def getAllSymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0):
     hists, hist_name = getLHEWeightHists(init2D_hist, entries, name, "pdf", rebin)
     return makeAllSymHessianHists(hists, hist_name, name, central)
+
+def getAllAssymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0):
+    hists, hist_name = getLHEWeightHists(init2D_hist, entries, name, "pdf", rebin)
+    return makeAllAssymHessianHists(hists, hist_name, name, central)
 
 def getTransformed3DAllSymHessianHists(hist3D, transformation, transform_args, entries, name, rebin=None, central=0, scale=1.0):
     hists = getAllTransformed3DHists(hist3D, transformation, transform_args, name, entries)

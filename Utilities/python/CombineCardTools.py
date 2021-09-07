@@ -360,8 +360,12 @@ class CombineCardTools(object):
 
                     if expandedTheory and pdfVar['name']:
                         args.pop(len(args)-1)
-                        pdfFunction = HistTools.getAllSymHessianHists if not self.isUnrolledFit else HistTools.getTransformed3DAllSymHessianHists
+                        pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAssymHessianHists"
+                        if self.isUnrolledFit:
+                            pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
+                        pdfFunction = getattr(HistTools, pdfFunctionName)
                         allPdfHists = pdfFunction(*args)
+                        print("Number of pdf hists is", len(allPdfHists))
                         pdfHists.extend(allPdfHists)
 
                         if not self.isUnrolledFit:
@@ -416,7 +420,6 @@ class CombineCardTools(object):
         else:
             hists,name = HistTools.getTransformed3DLHEHists(weightHist, HistTools.makeUnrolledHist,
                 [self.unrolledBinsX, self.unrolledBinsY], var['entries'], "", varName)
-
 
         # Since it isn't an envelope (otherwise the mass variations wouldn't work properly)
         if len(hists) > 2:

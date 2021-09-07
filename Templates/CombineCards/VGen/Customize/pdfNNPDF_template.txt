@@ -98,4 +98,5 @@ pdf97       shape   1
 pdf98       shape   1                
 pdf99       shape   1                
 pdf100      shape   1                
+${pdfName}_alphas shape   1  
 
