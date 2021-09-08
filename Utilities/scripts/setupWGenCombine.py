@@ -184,9 +184,9 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        # If using the NanoGen
-        #cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[6, 8], central=0)
-        cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
+        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[2, 6], central=0)
+        # If using the "central" nano
+        #cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
         cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
