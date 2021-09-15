@@ -24,6 +24,9 @@ parser.add_argument("-a", "--append", type=str, default="",
     help="Append to output folder name")
 parser.add_argument("-b", "--fitvar", type=str, default="ptWmet",
     help="Variable to use in the fit")
+parser.add_argument("--dataHist", type=str, default="",
+    help="Variable to use for the data histgram in the fit. " \
+        "Allows to fit a toy Asimov. (default same as MC)")
 parser.add_argument("-f", "--input_file", type=str, required=True,
     help="Input hist file")
 parser.add_argument("--channels", type=lambda x: x.split(','), 
@@ -184,7 +187,7 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[2, 6], central=0)
+        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[2, 6], central=4)
         # If using the "central" nano
         #cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
         cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
@@ -199,7 +202,10 @@ for process in plot_groups:
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
         if args.storePdfCenValues:
             for label, pdfInfo in pdfIdxMap.items():
-                cardtool.addTheoryVar(process, 'other', [pdfInfo["cenidx"]], central=0, specName=pdfInfo["name"]+"Cen")
+                index = pdfInfo["cenidx"]
+                if index > pdfIdxMap[args.pdf]["cenidx"]:
+                    index += pdfIdxMap[args.pdf]["nsets"]
+                cardtool.addTheoryVar(process, 'other', [index], central=0, specName=pdfInfo["name"]+"Cen")
 
         cenMassIdx = firstPdfIdx+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11-1
         print("central is", cenMassIdx)
@@ -209,6 +215,7 @@ for process in plot_groups:
         cardtool.addTheoryVar(process, 'other', massVars(2), exclude=[], central=0, specName="massShift20MeV")
         cardtool.addTheoryVar(process, 'other', massVars(3), exclude=[], central=0, specName="massShift30MeV")
         cardtool.addTheoryVar(process, 'other', massVars(5), exclude=[], central=0, specName="massShift50MeV")
+        cardtool.addTheoryVar(process, 'other', massVars(10), exclude=[], central=0, specName="massShift100MeV")
         # Width weights are broken for now
         # width = (18+890+21+3) if not isAltTh else (18+nsets+21+3)
         # cardtool.addTheoryVar(process, 'other', [width, width], exclude=[], central=0, specName="width2043")
@@ -252,7 +259,7 @@ if args.pdf != "none":
         pdflabel = "NNPDF" if "nnpdf" in args.pdf else "CT18"
         npdfs = cardtool.addCustomizeCard(f"{path}/Customize/pdf{pdflabel}_template.txt")
         nnu += npdfs
-        cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
+        #cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
     else:
         nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
 
@@ -275,6 +282,7 @@ for i, chan in enumerate(args.channels):
     cardtool.writeCards(chan, nuissance_map[chan], 
         extraArgs={"data_name" : data, 
             "w_sample" : central, "w_yield" : "yield:%s" % central, 
-            "pdfName" : pdfIdxMap[args.pdf]["name"]+"Hes"
+            "pdfName" : pdfIdxMap[args.pdf]["name"],
+            "data_fit_variable" : args.dataHist if args.dataHist else args.fitvar,
         }
     )
