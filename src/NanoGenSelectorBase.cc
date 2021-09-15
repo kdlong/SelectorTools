@@ -115,7 +115,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
         std::cerr << "WARNING! Specific pdf selection is only supported in MiNNLO. No PDF weights will be stored\n";
     else if (isMinnlo_ && pdfSet_ != "all") {
         if (pdfSet_ == "ct18")
-            pdfMaxStore_ = 61;
+            pdfMaxStore_ = 61+storeCenPdfs_*minnloPdfMap.size();
         else if (pdfSet_ == "ct18z")
             pdfCenWeight_ = 61;
     }
@@ -141,6 +141,9 @@ void NanoGenSelectorBase::Init(TTree *tree)
     // Trigger storing all relevant
     if (storeCenPdfs_) {
         for (auto& entry : minnloPdfMap) {
+            // Need to skip it since its central value isn't at index 0 (merged with CT18)
+            if (entry.first == "ct18z")
+                continue;
             // Just store the first entry, most of the authors are alphas vars
             int i = entry.second.front();
             pdfWeights_[i] = true;
