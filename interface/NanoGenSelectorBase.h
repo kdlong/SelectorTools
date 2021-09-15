@@ -39,7 +39,7 @@ public :
         {"nnpdf31cmsw2", {10}},
         {"nnpdf31cmsw3", {11}},
         {"nnpdf31cmsw4", {12}},
-        {"nnpdf30", {13,14,15,16,17}},
+        {"nnpdf30", {13,15,16,}}, // 14 and 17 are bigger alpha_s vars
         {"ct18", {18}},
         {"ct18z", {18}},
         {"mmht", {19, 20, 21}},

@@ -205,7 +205,6 @@ class SelectorDriver(object):
                 maxPerSet = self.maxFiles-nFiles
             files = self.getAllFileNames(file_path) 
             self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, nsplits)
-            print(self.datasets[dataset])
             nFiles += len(self.datasets[dataset])
 
     def getAllFileNames(self, file_path):
@@ -305,6 +304,7 @@ class SelectorDriver(object):
         del output_list
 
     def getFileNames(self, file_path):
+        xrd = 'root://%s/' % ConfigureJobs.getXrdRedirector(file_path)
         xrootd = "/store/" in file_path
         xrootd_user = "/store/user" in file_path.replace("/eos/cms", "")[:7]
         if not (xrootd or os.path.isfile(f) or len(glob.glob(f.rsplit("/", 1)[0]))):
@@ -313,10 +313,12 @@ class SelectorDriver(object):
 
         # It's an xrootd path but you've already expanded it
         if xrootd and ".root" in file_path[-5:]:
-            return [file_path]
+            if "root:" in file_path[:5]:
+                return [file_path]
+            else:
+                return [xrd + file_path] 
 
         if (xrootd and not xrootd_user):
-            xrd = 'root://%s/' % ConfigureJobs.getXrdRedirector(file_path)
             allfiles = []
             fs = file_path if not os.path.isdir(file_path) else (file_path + "/*.root")
             allfiles = glob.glob(fs)

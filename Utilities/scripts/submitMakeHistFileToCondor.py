@@ -179,7 +179,7 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, me
         "selection" : selection,
         "input_tier" : input_tier,
         "extraSubmit" : extraSubmit,
-        "memory" : memory,
+        "memory" : memory if memory/numCores > 1000 else numCores*1000,
         "filelist" : filelist.split(".txt")[0],
         "nPerJob" : nPerJob,
         "numCores" : numCores,
