@@ -79,8 +79,16 @@ numfile = args.inputFiles[0]
 denomfile = args.inputFiles[0] if len(args.inputFiles) == 1 else args.inputFiles[1]
 
 histnum, binsn = getHist(numfile, args.numerator, args.hist_names[0], xsecs[args.numerator])
-histdenom, binsd = getHist(denomfile, args.denominator, args.hist_names[1], xsecs[args.denominator])
-print(binsn)
+denom_hists = args.hist_names[1].split("+")
+histdenom, binsd = getHist(denomfile, args.denominator, denom_hists[0], xsecs[args.denominator])
+
+if len(denom_hists) > 1:
+    for h in denom_hists:
+        print(denomfile, args.denominator, h)
+        adddenom,_ = getHist(denomfile, args.denominator, h, xsecs[args.denominator])
+        histdenom = np.add(histdenom, adddenom)
+    # Assuming these are from the same channel
+    histdenom /= len(denom_hists)
 
 if len(histnum.shape) == len(histdenom.shape):
     corr = histnum/histdenom
@@ -97,7 +105,9 @@ if args.npOut:
     labels = {args.name : corr,
                 "bins" : binsn,
                 "numerator" : histnum,
-                "denominator" : histdenom}
+                "denominator" : histdenom,
+                "metaData" : np.array([OutputTools.getScriptCall(), OutputTools.gitHash(), OutputTools.gitHash(),])
+            }
     np.savez(args.npOut, **labels)
 
 for var in range(histnum.shape[0]):
