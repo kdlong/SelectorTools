@@ -200,10 +200,14 @@ def makeAllAsymHessianHists(hists, hist_name, name, central=0, scale=1.0/1.67):
         # Too lazy to track down why this happens
         new_name = new_name.replace("_Up", "Up")
         hists[0].SetName(new_name)
-        print("scale is", scale)
-        #hists[0].Scale(scale)
         hists[1].SetName(new_name.replace("Up", "Down"))
-        #hists[1].Scale(1./scale)
+        if scale != 1.0:
+            for i in range(hists[0].GetNbinsX()+1):
+                cen = hists[central].GetBinContent(i)
+                up = cen + scale*(hists[0].GetBinContent(i) - cen)
+                down = cen - scale*(cen - hists[1].GetBinContent(i))
+                hists[0].SetBinContent(i, up)
+                hists[1].SetBinContent(i, down)
         variationSet.extend(hists)
     return variationSet
 
@@ -212,7 +216,6 @@ def getAllSymHessianHists(init2D_hist, entries, name, rebin=None, central=0, sca
     return makeAllSymHessianHists(hists, hist_name, name, central)
 
 def getAllAsymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0/1.67):
-    print("Now scale is", scale)
     hists, hist_name = getLHEWeightHists(init2D_hist, entries, name, "pdf", rebin)
     return makeAllAsymHessianHists(hists, hist_name, name, central, scale)
 
@@ -222,7 +225,6 @@ def getTransformed3DAllSymHessianHists(hist3D, transformation, transform_args, e
     return makeAllSymHessianHists(hists, hist_name, name, central, scale)
 
 def getTransformed3DAllAsymHessianHists(hist3D, transformation, transform_args, entries, name, rebin=None, central=0, scale=1.0/1.67):
-    print("Now scale is", scale)
     hists = getAllTransformed3DHists(hist3D, transformation, transform_args, name, entries)
     hist_name = hist3D.GetName().replace("2D_lheWeights", "_".join(["unrolled", "pdf", name+"Up"]))
     return makeAllAsymHessianHists(hists, hist_name, name, central, scale)
@@ -243,11 +245,11 @@ def getTransformed3DHessianPDFVarHists(hist3D, transformation, transform_args, e
     hist_name = hist3D.GetName().replace("2D_lheWeights", "_".join(["unrolled", "pdf%sHesUp" % pdfName]))
     return makeAsymHessianPDFVarHists(hists, hist_name, name, central, scale)
 
-def getAsymHessianShift(vals, varType):
+def getAsymHessianShift(vals, varType, scale=1.0):
     pairs = zip(vals[1::2], vals[2::2])
     central = vals[0]
-    diffs = [max(0, central - x[0], central - x[1]) for x in pairs] if varType == "down" else \
-            [max(0, x[0] - central, x[1] - central) for x in pairs] 
+    diffs = [max(0, central - x[0], central - x[1])*scale for x in pairs] if varType == "down" else \
+            [max(0, x[0] - central, x[1] - central)*scale for x in pairs] 
     return math.sqrt(sum([x**2 for x in diffs]))
 
 # Scale = 1/1.645 for 90% --> 68%
@@ -256,8 +258,8 @@ def makeAsymHessianPDFVarHists(hists, hist_name, name, central=0, scale=1.0):
     # From Eq. 3 https://arxiv.org/pdf/1101.0536.pdf
     #sumsqup = lambda x: math.sqrt(sum([max(0, i - x[central], j - x[central])**2 for i,j in zip(x[1::2], x[2::2])]))
     #sumsqdown = lambda x: math.sqrt(sum([max(0, x[central] - i, x[central] - j)**2 for i,j in zip(x[1::2], x[2::2])]))
-    upaction = lambda x: x[central] + scale*getAsymHessianShift(x, "up") 
-    downaction = lambda x: x[central] - scale*getAsymHessianShift(x, "down") 
+    upaction = lambda x: x[central] + scale*getAsymHessianShift(x, "up", scale) 
+    downaction = lambda x: x[central] - scale*getAsymHessianShift(x, "down", scale) 
     return getVariationHists(hists, name, hist_name, 
             upaction, downaction, central
     )

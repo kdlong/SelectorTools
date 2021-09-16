@@ -208,7 +208,6 @@ for process in plot_groups:
                 cardtool.addTheoryVar(process, 'other', [index], central=0, specName=pdfInfo["name"]+"Cen")
 
         cenMassIdx = firstPdfIdx+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11-1
-        print("central is", cenMassIdx)
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
         cardtool.addTheoryVar(process, 'other', massVars(1), exclude=[], central=0, specName="massShift10MeV")

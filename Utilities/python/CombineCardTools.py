@@ -350,22 +350,23 @@ class CombineCardTools(object):
                     pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
                     # Don't bother appending process name to PDF (e.g., correlate, doesn't really matter
                     # if we use the hessian sets anyway
-                    #args = [weightHist, pdfVar['entries'], processName, self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
-                    args = [weightHist, pdfVar['entries'], "", self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
-                    print("Entries are", pdfVar['entries'])
+                    args = dict(entries=pdfVar['entries'], name="", rebin=self.rebin, 
+                           central= pdfVar['central'], pdfName=pdfVar['name'], scale=pdfUncScale)
+                    logging.debug("Producing pdf uncertainties for set %s. Entries are %s" % (pdfVar['name'], pdfVar['entries']))
                     if self.isUnrolledFit:
                         pdfFunction = pdfFunction.replace("get", "getTransformed3D")
-                        args = args[0:1] + [HistTools.makeUnrolledHist, [self.unrolledBinsX, self.unrolledBinsY]] + args[1:]
-                    updatePdfs = getattr(HistTools, pdfFunction)(*args)
+                        args["transformation"] = HistTools.makeUnrolledHist
+                        args["transform_args"] = [self.unrolledBinsX, self.unrolledBinsY]
+                    updatePdfs = getattr(HistTools, pdfFunction)(weightHist, **args)
                     pdfHists += updatePdfs
 
                     if expandedTheory and pdfVar['name']:
-                        args.pop(len(args)-1)
+                        args.pop("pdfName")
                         pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAsymHessianHists"
                         if self.isUnrolledFit:
                             pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
                         pdfFunction = getattr(HistTools, pdfFunctionName)
-                        allPdfHists = pdfFunction(*args)
+                        allPdfHists = pdfFunction(weightHist, **args)
                         print("Number of pdf hists is", len(allPdfHists))
                         pdfHists.extend(allPdfHists)
 
