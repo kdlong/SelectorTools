@@ -5,7 +5,7 @@ kmax ${nuisances} number of nuisance parameters (sources of systematical uncerta
 
 shapes ${w_sample} * ${output_file} ${w_sample}/${fit_variable}_$$CHANNEL ${w_sample}/${fit_variable}_$$SYSTEMATIC_$$CHANNEL
 shapes nonprompt * ${output_file} nonprompt/${fit_variable}_$$CHANNEL  nonprompt/${fit_variable}_$$SYSTEMATIC_$$CHANNEL
-shapes data_obs * ${output_file} ${data_name}/${fit_variable}_$$CHANNEL 
+shapes data_obs * ${output_file} ${data_name}/${data_fit_variable}_$$CHANNEL 
 
 bin           mn
 observation   -1

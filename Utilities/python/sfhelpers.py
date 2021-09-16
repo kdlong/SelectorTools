@@ -40,7 +40,11 @@ def setScaleFactorObj(infoVector, scaleFactorsObj, fScales):
     fScales.cd()
     scaleFactorsObj.Write()
     
-def smoothingWeights(histlow, histhigh, binsl, turnon, turnoff, k=0.2, axishigh=2, axislow=3):
+def smoothingWeights(histlow: np.array, histhigh: np.array, 
+        binsl: np.array, turnon: float, turnoff: float, k: float=0.2, 
+        axishigh: int=2, axislow: int=3):
+    axislow = int(axislow)
+    axishigh = int(axishigh)
     low = np.digitize(turnon, binsl[axislow], right=True)
     high = np.digitize(turnoff, binsl[axislow], right=True)
     if histlow.shape[axislow] < histhigh.shape[axishigh]:

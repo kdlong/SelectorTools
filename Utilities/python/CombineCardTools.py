@@ -61,7 +61,7 @@ class CombineCardTools(object):
         if not os.path.isfile(customize):
             raise ValueError("Did not find customize cards %s" % customize)
         self.customizeCards.append(customize)
-        return len(open(customize).readlines())
+        return len(list(filter(lambda x: "shape" in x or "lnN" in x, open(customize).readlines())))
 
     def setUnrolled(self, binsx, binsy):
         self.isUnrolledFit = True
@@ -344,27 +344,29 @@ class CombineCardTools(object):
                     pdfVar = theoryVars[var]
                     pdfType = "MC"
                     if "hessian" in pdfVar['combine']:
-                        pdfType = "Hessian" if "assym" not in pdfVar['combine'] else "AssymHessian"
+                        pdfType = "Hessian" if "assym" not in pdfVar['combine'] else "AsymHessian"
 
                     pdfFunction = "get%sPDFVarHists" % pdfType 
                     pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
                     # Don't bother appending process name to PDF (e.g., correlate, doesn't really matter
                     # if we use the hessian sets anyway
-                    #args = [weightHist, pdfVar['entries'], processName, self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
-                    args = [weightHist, pdfVar['entries'], "", self.rebin, pdfVar['central'], pdfVar['name'], pdfUncScale]
+                    args = dict(entries=pdfVar['entries'], name="", rebin=self.rebin, 
+                           central= pdfVar['central'], pdfName=pdfVar['name'], scale=pdfUncScale)
+                    logging.debug("Producing pdf uncertainties for set %s. Entries are %s" % (pdfVar['name'], pdfVar['entries']))
                     if self.isUnrolledFit:
                         pdfFunction = pdfFunction.replace("get", "getTransformed3D")
-                        args = args[0:1] + [HistTools.makeUnrolledHist, [self.unrolledBinsX, self.unrolledBinsY]] + args[1:]
-                    updatePdfs = getattr(HistTools, pdfFunction)(*args)
+                        args["transformation"] = HistTools.makeUnrolledHist
+                        args["transform_args"] = [self.unrolledBinsX, self.unrolledBinsY]
+                    updatePdfs = getattr(HistTools, pdfFunction)(weightHist, **args)
                     pdfHists += updatePdfs
 
                     if expandedTheory and pdfVar['name']:
-                        args.pop(len(args)-1)
-                        pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAssymHessianHists"
+                        args.pop("pdfName")
+                        pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAsymHessianHists"
                         if self.isUnrolledFit:
                             pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
                         pdfFunction = getattr(HistTools, pdfFunctionName)
-                        allPdfHists = pdfFunction(*args)
+                        allPdfHists = pdfFunction(weightHist, **args)
                         print("Number of pdf hists is", len(allPdfHists))
                         pdfHists.extend(allPdfHists)
 
