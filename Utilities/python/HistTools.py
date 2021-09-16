@@ -191,7 +191,7 @@ def makeAllSymHessianHists(hists, hist_name, name, central=0, scale=1.0):
             new_name, upaction, downaction, central))
     return variationSet
 
-def makeAllAsymHessianHists(hists, hist_name, name, central=0, scale=1.0/1.67):
+def makeAllAsymHessianHists(hists, hist_name, name, central=0, scale=1.0):
     variationSet = []
     allhists = hists[0:central]+hists[central+1:]
     for i, hists in enumerate(zip(allhists[::2], allhists[1::2])):
@@ -215,7 +215,7 @@ def getAllSymHessianHists(init2D_hist, entries, name, rebin=None, central=0, sca
     hists, hist_name = getLHEWeightHists(init2D_hist, entries, name, "pdf", rebin)
     return makeAllSymHessianHists(hists, hist_name, name, central)
 
-def getAllAsymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0/1.67):
+def getAllAsymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0):
     hists, hist_name = getLHEWeightHists(init2D_hist, entries, name, "pdf", rebin)
     return makeAllAsymHessianHists(hists, hist_name, name, central, scale)
 
@@ -224,7 +224,7 @@ def getTransformed3DAllSymHessianHists(hist3D, transformation, transform_args, e
     hist_name = hist3D.GetName().replace("2D_lheWeights", "_".join(["unrolled", "pdf", name+"Up"]))
     return makeAllSymHessianHists(hists, hist_name, name, central, scale)
 
-def getTransformed3DAllAsymHessianHists(hist3D, transformation, transform_args, entries, name, rebin=None, central=0, scale=1.0/1.67):
+def getTransformed3DAllAsymHessianHists(hist3D, transformation, transform_args, entries, name, rebin=None, central=0, scale=1.0):
     hists = getAllTransformed3DHists(hist3D, transformation, transform_args, name, entries)
     hist_name = hist3D.GetName().replace("2D_lheWeights", "_".join(["unrolled", "pdf", name+"Up"]))
     return makeAllAsymHessianHists(hists, hist_name, name, central, scale)
