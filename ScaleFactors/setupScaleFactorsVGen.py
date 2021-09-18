@@ -18,9 +18,9 @@ def getRootHist(rtfile, dataset, histname, xsec, rebin):
     hist = rtfile.Get("/".join([dataset, histname]))
     sumw = rtfile.Get("/".join([dataset, "sumweights"]))
     if sumw:
+        logging.debug("xsec is %0.2f sumw is %0.2f" % (xsec, sumw.Integral()))
         hist.Scale(xsec/sumw.Integral())
 
-    print("Dataset", dataset, "Integral is", hist.Integral())
     return hist
 
 def getHistUproot(rtfile, dataset, histname, xsec):
@@ -28,9 +28,10 @@ def getHistUproot(rtfile, dataset, histname, xsec):
     h = f["/".join([dataset, histname])]
     hist, bins = h.numpy()
     bins = bins[0]
-    print(bins)
     sumw = np.sum(f["/".join([dataset, "sumweights"])])
     hist = hist*xsec/sumw
+    logging.debug("xsec is %0.2f sumw is %0.2f" % (xsec, sumw))
+    logging.debug("Dataset is %s, integral is %0.2f" % (dataset, np.sum(hist)))
     return hist,bins
 
 def getHistNpz(npzfile, dataset, histname, binsname):
@@ -39,7 +40,6 @@ def getHistNpz(npzfile, dataset, histname, binsname):
     f = np.load(npzfile, allow_pickle=True)
     hist = f[histname]
     bins = f[binsname]
-    print(bins)
     if "scetlib" in dataset and bins[3][0] == 0.25:
         # Assuming these are points
         hist = hist*0.5
@@ -54,6 +54,16 @@ def getHist(filename, dataset, histname, xsec=1, binsname=""):
         return getHistNpz(filename, dataset, histname, binsname)
     else:
         raise ValueError("Invalid file type! Must be either .npz or .root. Found %s" % filename)
+
+def getHists(filename, dataset, histnames, xsec=1, binsname=""):
+    hist, bins = getHist(filename, dataset, histnames[0], xsec, binsname)
+    if len(histnames) > 1:
+        for h in histnames[1:]:
+            add,_ = getHist(filename, dataset, h, xsec, binsname)
+            hist = np.add(hist, add)
+        # Assuming these are from the same channel
+        hist /= len(histnames)
+    return hist, bins
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--name", type=str, required=True, help="Name of output scale factor")
@@ -78,17 +88,8 @@ xsecs  = ConfigureJobs.getListOfFilesWithXSec([args.numerator, args.denominator]
 numfile = args.inputFiles[0]
 denomfile = args.inputFiles[0] if len(args.inputFiles) == 1 else args.inputFiles[1]
 
-histnum, binsn = getHist(numfile, args.numerator, args.hist_names[0], xsecs[args.numerator])
-denom_hists = args.hist_names[1].split("+")
-histdenom, binsd = getHist(denomfile, args.denominator, denom_hists[0], xsecs[args.denominator])
-
-if len(denom_hists) > 1:
-    for h in denom_hists:
-        print(denomfile, args.denominator, h)
-        adddenom,_ = getHist(denomfile, args.denominator, h, xsecs[args.denominator])
-        histdenom = np.add(histdenom, adddenom)
-    # Assuming these are from the same channel
-    histdenom /= len(denom_hists)
+histnum, binsn = getHists(numfile, args.numerator, args.hist_names[0].split("+"), xsecs[args.numerator])
+histdenom, binsd = getHists(denomfile, args.denominator, args.hist_names[1].split("+"), xsecs[args.denominator])
 
 if len(histnum.shape) == len(histdenom.shape):
     corr = histnum/histdenom
