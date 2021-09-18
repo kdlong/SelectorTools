@@ -41,6 +41,9 @@ def writeOutputListItem(item, directory):
         for subItem in item:
             writeOutputListItem(subItem, d)
     elif hasattr(item, 'Write'):
+        old = directory.Get(item.GetName())
+        if old and hasattr(item, "Add"):
+            item.Add(old)
         directory.cd()
         item.Write()
     else:

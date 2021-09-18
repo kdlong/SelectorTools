@@ -45,7 +45,7 @@ public :
         {"mmht", {19, 20, 21}},
         {"hera", {23,24,25,26,28,29,30}},
     };
-    const int nScetlibWeights_ = 45;
+    int nScetlibWeights_ = 45;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
     reco::GenParticleCollection leptons;

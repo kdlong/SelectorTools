@@ -60,8 +60,11 @@ class SelectorDriver(object):
         self.select = getattr(ROOT, self.selector_name)()
         self.processDatasetHelper(args)
 
-    def tempfileName(self):
-        return "temp_%s_%s" % (multiprocessing.current_process().name, self.outfile_name.split("/")[-1])
+    def tempfileName(self, dataset=""):
+        tmpfile = "temp_%s_%s" % (multiprocessing.current_process().name, self.outfile_name.split("/")[-1])
+        if dataset:
+            tmpfile = tmpfile.replace("temp_", "temp_%s" % dataset)
+        return tmpfile
 
     def setChannels(self, channels):
         self.channels = channels
@@ -204,8 +207,11 @@ class SelectorDriver(object):
             if dataset == list(self.datasets.keys())[-1]:
                 maxPerSet = self.maxFiles-nFiles
             files = self.getAllFileNames(file_path) 
-            self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, nsplits)
-            nFiles += len(self.datasets[dataset])
+            nFiles += len(files)
+            # Basically puts a max on the number of cores being the max number of files in a given dataset
+            splits = min(nsplits, len(files))
+            self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, splits)
+        logging.debug("Number of files to process is %i" % nFiles)
 
     def getAllFileNames(self, file_path):
         filenames = []
@@ -274,13 +280,16 @@ class SelectorDriver(object):
     def writeOutput(self, output_list, chan, processes, dataset, addSumweights):
         sumweights_hist = ROOT.gROOT.FindObject("sumweights")
 
+
         # The file closing messes up the sumweights when its taken directly from the file
         if self.numCores > 1:
             self.outfile.Close()
             chanNum = self.channels.index(chan)
-            self.updateCurrentFile(self.tempfileName())
+            self.updateCurrentFile(self.tempfileName(dataset))
         if not self.current_file:
             self.current_file = ROOT.TFile.Open(self.outfile_name)
+        
+        logging.debug("Writing output for dataset %s to %s" % (dataset, self.current_file))
 
         for process in processes:
             dataset_list = output_list.FindObject(process)
@@ -343,6 +352,7 @@ class SelectorDriver(object):
 
     def combineParallelFiles(self, tempfiles, chan):
         tempfiles = list(filter(os.path.isfile, tempfiles))
+        print("Trying to hadd together", tempfiles, "files")
         outfile = self.outfile_name
         if chan != "Inclusive":
             outfile = self.outfile_name.replace(".root", "_%s.root" % chan)
@@ -356,14 +366,17 @@ class SelectorDriver(object):
     def processParallelByDataset(self, datasets, chan):
         self.expandDatasetFilePaths(self.numCores)
         expanded_datasets = [[d, f, chan] for d, files in datasets.items() for f in files]
+        print("Length of datasets is", len(datasets.keys()))
+        print("Number of sets", len(expanded_datasets))
         logging.debug(expanded_datasets)
         p = multiprocessing.Pool(processes=self.numCores)
-        tempfiles = glob.glob(self.tempfileName().replace("MainProcess", "*PoolWorker*"))
+        tmpexpr = self.tempfileName().replace("MainProcess", "*PoolWorker*").replace("temp_", "temp*")
+        tempfiles = glob.glob(tmpexpr)
         for f in tempfiles:
             os.remove(f)
         p.map(self, expanded_datasets)
         # Store arrays in temp files, since it can get way too big to keep around in memory
-        tempfiles = glob.glob(self.tempfileName().replace("MainProcess", "*PoolWorker*"))
+        tempfiles = glob.glob(tmpexpr)
         p.close()
         self.combineParallelFiles(tempfiles, chan)
 
@@ -373,7 +386,7 @@ class SelectorDriver(object):
 
     def processLocalFiles(self, file_path, addSumweights, chan,):
         filenames = self.getAllFileNames(file_path)
-
+        logging.debug("Beginning to process %i files" % len(filenames))
         for i, filename in enumerate(filenames):
             processed = self.processFile(filename, addSumweights, chan, i+1)
             self.nProcessed += processed

@@ -85,11 +85,13 @@ void WGenSelector::Init(TTree *tree)
 
     NanoGenSelectorBase::Init(tree);
 
-    if (name_.find("N3LLCorr") != std::string::npos) {
+    if (name_.find("Corr") != std::string::npos) {
         n3llcorr_ = true;
+        std::cout << "Now here\n\n\n";
         SetScaleFactors();
-        if (scetlibCorrs_.at(0) == nullptr)
-            throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
+        std::cout << "And now here\n\n\n";
+        if (scetlibCorrs_[0] == nullptr)
+            throw std::invalid_argument("Must pass a scalefactor for sample with corrections!");
     }
 }
 
@@ -194,7 +196,7 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
 
     if (n3llcorr_) {
         //auto* sf = channel_ == mp ? n3llWpSF_ : n3llWmSF_;
-        weight *= scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+        weight *= scetlibCorrs_[0]->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 

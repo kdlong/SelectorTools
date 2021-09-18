@@ -33,7 +33,8 @@ void NanoGenSelectorBase::Init(TTree *tree)
     TParameter<int>* wSuppress = (TParameter<int>*) GetInputList()->FindObject("wSuppress");
     weightSuppress_ = wSuppress != nullptr ? wSuppress->GetVal() : 0;
     TParameter<int>* thwSuppress = (TParameter<int>*) GetInputList()->FindObject("thwSuppress");
-    thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 0;
+    // Default true
+    thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 1;
 
     TParameter<int>* storeCenPdfs = (TParameter<int>*) GetInputList()->FindObject("storeCenPdfs");
     storeCenPdfs_ = storeCenPdfs != nullptr ? storeCenPdfs->GetVal() : 0;
@@ -43,15 +44,13 @@ void NanoGenSelectorBase::Init(TTree *tree)
         std::cout << "INFO: Also storing central values of main PDF sets\n";
 
     TNamed* pdfSet = (TNamed*) GetInputList()->FindObject("pdfSet");
-    pdfSet_ = pdfSet != nullptr ? pdfSet->GetTitle() : "";
+    pdfSet_ = pdfSet != nullptr ? pdfSet->GetTitle() : pdfSet_;
 
     std::cout << "INFO: doLHE = " << doLHE_ << " doPrefsr " << doPreFSR_ << std::endl;
     std::cout << "INFO: doBareLeptons = "<<doBareLeptons_<<"\n";
 
     if (isMinnlo_ && !weightSuppress_ && !weightSignOnly_) {
         std::cout << "WARNING: You should use wSuppress != 0 or wSignOnly to suppress huge weights in MiNNLO\n";
-        std::cout << "Automatically setting wSignOnly = 1\n";
-        weightSignOnly_ = true;
     }
     if (weightSuppress_ && !weightSignOnly_)
         std::cout << "INFO: wSuppress = " << weightSuppress_ << std::endl;
@@ -112,7 +111,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
     
     bool readAllPdfs = pdfSet_ == "all";
     if (!readAllPdfs && !isMinnlo_)
-        std::cerr << "WARNING! Specific pdf selection is only supported in MiNNLO. No PDF weights will be stored\n";
+        std::cerr << "WARNING! Specific pdf selection '" << pdfSet_ << "' is only supported in MiNNLO. No PDF weights will be stored\n";
     else if (isMinnlo_ && pdfSet_ != "all") {
         if (pdfSet_ == "ct18")
             pdfMaxStore_ = 61+storeCenPdfs_*minnloPdfMap.size();
@@ -125,7 +124,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
         if (!readAllPdfs && minnloPdfMap.find(pdfSet_) == std::end(minnloPdfMap))
             std::cerr << "WARNING! PDF set " << pdfSet_ << " is invalid! It will be skipped.\n";
         auto& toRead = minnloPdfMap[pdfSet_];
-        bool readPdf = readAllPdfs || (isMinnlo_ && std::find(std::begin(toRead), std::end(toRead), i) != std::end(toRead));
+        bool readPdf = doTheoryVars_ && (readAllPdfs || (isMinnlo_ && std::find(std::begin(toRead), std::end(toRead), i) != std::end(toRead)));
         std::string name = "LHEPdfWeight";
         if (i > 0)
             name += "AltSet" + std::to_string(i);
@@ -500,16 +499,27 @@ reco::GenParticle NanoGenSelectorBase::makeGenParticle(int pdgid, int status, fl
 }
 
 void NanoGenSelectorBase::SetScaleFactors() {
-    if (name_.find("N3LLCorr") == std::string::npos) 
+    std::string corrName;
+    if (name_.find("minnlo__N3LLCorr") != std::string::npos)
+        corrName = "scetlibCorr3D_";
+    else if (name_.find("lowpu__N3LLCorr") != std::string::npos)
+        corrName = "scetlibCorr3D_MG_";
+    else if (name_.find("__MiNNLOCorr") != std::string::npos) {
+        corrName = "MGtoMiNNLOCorr3D_";
+        nScetlibWeights_ = 1;
+    }
+    else 
         return;
 
-    std::cout << "Setting scale factors \n";
-    // Need to check Wm or Wp
-    std::string corrName = "scetlibCorr3D_";
     corrName += isZ_ ? "Z" : (name_.find("wm") != std::string::npos ? "Wm" : "Wp");
+
+    // Need to check Wm or Wp
     for (int i = 0; i < nScetlibWeights_; i ++) {
         auto objName = corrName+"_var"+std::to_string(i);
-        scetlibCorrs_.push_back(static_cast<ScaleFactor*>(GetInputList()->FindObject(objName.c_str())));
+        auto* sf = GetInputList()->FindObject(objName.c_str());
+        if (sf == nullptr)
+            std::invalid_argument("Failed to read ScaleFactor " + objName);
+        scetlibCorrs_.push_back(static_cast<ScaleFactor*>(sf));
     }
 
     if (scetlibCorrs_.at(0) == nullptr && name_.find("N3LLCorr") != std::string::npos) 
