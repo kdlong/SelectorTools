@@ -60,11 +60,8 @@ class SelectorDriver(object):
         self.select = getattr(ROOT, self.selector_name)()
         self.processDatasetHelper(args)
 
-    def tempfileName(self, dataset=""):
-        tmpfile = "temp_%s_%s" % (multiprocessing.current_process().name, self.outfile_name.split("/")[-1])
-        if dataset:
-            tmpfile = tmpfile.replace("temp_", "temp_%s" % dataset)
-        return tmpfile
+    def tempfileName(self):
+        return "temp_%s_%s" % (multiprocessing.current_process().name, self.outfile_name.split("/")[-1])
 
     def setChannels(self, channels):
         self.channels = channels
@@ -285,7 +282,7 @@ class SelectorDriver(object):
         if self.numCores > 1:
             self.outfile.Close()
             chanNum = self.channels.index(chan)
-            self.updateCurrentFile(self.tempfileName(dataset))
+            self.updateCurrentFile(self.tempfileName())
         if not self.current_file:
             self.current_file = ROOT.TFile.Open(self.outfile_name)
         
@@ -352,7 +349,6 @@ class SelectorDriver(object):
 
     def combineParallelFiles(self, tempfiles, chan):
         tempfiles = list(filter(os.path.isfile, tempfiles))
-        print("Trying to hadd together", tempfiles, "files")
         outfile = self.outfile_name
         if chan != "Inclusive":
             outfile = self.outfile_name.replace(".root", "_%s.root" % chan)
@@ -366,11 +362,9 @@ class SelectorDriver(object):
     def processParallelByDataset(self, datasets, chan):
         self.expandDatasetFilePaths(self.numCores)
         expanded_datasets = [[d, f, chan] for d, files in datasets.items() for f in files]
-        print("Length of datasets is", len(datasets.keys()))
-        print("Number of sets", len(expanded_datasets))
         logging.debug(expanded_datasets)
         p = multiprocessing.Pool(processes=self.numCores)
-        tmpexpr = self.tempfileName().replace("MainProcess", "*PoolWorker*").replace("temp_", "temp*")
+        tmpexpr = self.tempfileName().replace("MainProcess", "*PoolWorker*")
         tempfiles = glob.glob(tmpexpr)
         for f in tempfiles:
             os.remove(f)
