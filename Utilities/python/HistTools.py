@@ -292,19 +292,19 @@ def getScaleHists(scale_hist2D, name, rebin=None, entries=[i for i in range(1,10
     return getVariationHists(hists, name, hist_name, lambda x: x[-1], lambda x: x[1], central)
 
 # Pairs should correspond to muR, muF in (0.5, 2) ordered muR, muF, muR+muF
-def makeExpandedScaleHists(hists, hist_name, name, pairs):
+def makeExpandedScaleHists(hists, hist_name, name, pairs, label="QCDscale"):
     variationSet = []
-    for label, indices in zip(["muR", "muF", "muRmuF"], pairs):
+    for var, indices in zip(["muR", "muF", "muRmuF"], pairs):
         varhists = getVariationHists([hists[i] for i in indices], name,
-            hist_name.replace("QCDscale","QCDscale_"+label), lambda x: x[-1], lambda x: x[1], -1)
+            hist_name.replace(label,f"{label}_{var}"), lambda x: x[-1], lambda x: x[1], -1)
         variationSet.extend(varhists)
     return variationSet
 
 # nano ordering is [0] is mur=0.5 muf=0.5 ; [1] is mur=0.5 muf=1 ; [2] is mur=0.5 muf=2 ; [3] is mur=1 muf=0.5 ; 
 # [4] is mur=1 muf=1 ; [5] is mur=1 muf=2 ; [6] is mur=2 muf=0.5 ; [7] is mur=2 muf=1 ; [8] is mur=2 muf=2 *
 # pairs expects muRmuF simultaneous, muR, and muF variation up/down indices
-def getExpandedScaleHists(scale_hist2D, name, rebin=None, entries=range(1,10), pairs=[(1,7), (3,5), (0,8)]):
-    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, "QCDscale", rebin)
+def getExpandedScaleHists(scale_hist2D, name, label="QCDscale", rebin=None, entries=range(1,10), pairs=[(1,7), (3,5), (0,8)]):
+    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, label, rebin)
     return makeExpandedScaleHists(hists, hist_name, name, pairs)
 
 def getVariationHists(hists, process_name, histUp_name, up_action, down_action, central=0):
@@ -372,7 +372,7 @@ def getTransformed3DLHEHists(hist3D, transformation, transform_args, entries, na
     hist_name = hist_name.replace("lheWeights", varName+("_" if name != "" else "")+name+"Up")
     return hists, hist_name
 
-def getTransformed3DScaleHists(scale_hist3D, transformation, transform_args, name, label, entries=range(1,10), exclude=[7,9]):
+def getTransformed3DScaleHists(scale_hist3D, transformation, transform_args, name, label="QCDscale", entries=range(1,10), exclude=[7,9]):
     scale_hists = getAllTransformed3DHists(scale_hist3D, transformation, transform_args, name, entries, exclude)
     hist_name = scale_hist3D.GetName().replace("2D", "unrolled")
     var = (label+"_"+name) if name != "" else label 

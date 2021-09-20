@@ -276,7 +276,6 @@ class CombineCardTools(object):
             theoryVars = self.theoryVariations[processName]
             if 'scale' in theoryVars and 'theoryBasedVars' in theoryVars['scale']:
                 thVars = theoryVars['scale']['theoryBasedVars']
-                print("The theory vars are", thVars)
                 plots += [self.weightHistName(c, processName, a.replace("QCDscale_", "")) for c in self.channels for a in thVars]
         return plots
 
@@ -438,7 +437,7 @@ class CombineCardTools(object):
         return hists
 
     def scaleHistsForProcess(self, group, processName, chan, expandedTheory, append=""):
-        weighthist_name = self.weightHistName(chan, processName)
+        weighthist_name = self.weightHistName(chan, processName, append)
         weightHist = group.FindObject(weighthist_name)
         if not weightHist:
             raise ValueError("Failed to find %s. Skipping" % weighthist_name)
@@ -448,9 +447,10 @@ class CombineCardTools(object):
             scaleVars = self.theoryVariations[processName][varTye]
             procName = "" if self.correlateScaleUnc else processName
 
-            args = dict(name=procName, rebin=self.rebin, entries=scaleVars['entries'],
+            args = dict(name=procName,
+                    rebin=self.rebin, entries=scaleVars['entries'],
                     exclude=scaleVars['exclude'],
-                    label="QCDscale"+("_" if append else "")+append)
+                    label="QCDscale")
             if self.isUnrolledFit:
                 args["transformation"] = HistTools.makeUnrolledHist
                 args["transform_args"] = [self.unrolledBinsX, self.unrolledBinsY]
@@ -464,6 +464,7 @@ class CombineCardTools(object):
                 scaleFunc = HistTools.getExpandedScaleHists if not self.isUnrolledFit \
                         else HistTools.getTransformed3DExpandedScaleHists
                 args.pop("exclude")
+                args.pop("label")
                 args["pairs"] = scaleVars['groups']
                 expandedScaleHists = scaleFunc(weightHist, **args)
                 scaleHists.extend(expandedScaleHists)

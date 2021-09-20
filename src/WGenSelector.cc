@@ -289,16 +289,16 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         size_t minimalWeights = isPtVvar ? nScaleWeights : nScaleWeights+nMEParamWeight;
 
         // In the case of CT18, don't store all the CT18Z sets which are mixed in
-        size_t nWeights = minimalWeights+pdfMaxStore_;
+        size_t nWeights = isPtVvar ? minimalWeights : minimalWeights+pdfMaxStore_ ;
         if (n3llcorr_)
             nWeights += nScetlibWeights_;
         size_t pdfOffset = minimalWeights;
         size_t pdfIdx = 0;
 
         for (size_t i = 0; i < nWeights; i++) {
-            float thweight = 1;
+            float thweight = 1.;
             if (ptVOutsideRange)
-                thweight = 1;
+                thweight = 1.;
             else if (i < nLHEScaleWeight)
                 thweight = LHEScaleWeight[i];
             else if (i < nScaleWeights)
@@ -323,7 +323,6 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
             }
 
-
             thweight = (!thweightSuppress_ || std::abs(thweight) < thweightSuppress_) ? thweight : (thweight > 0 ? thweightSuppress_ : -1*thweightSuppress_);
             thweight *= weight;
             SafeHistFill(weighthistMap1D_, concatenateNames("mW", toAppend), channel_, variation.first, wCand.mass(), i, thweight);
@@ -344,18 +343,8 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         }
     }
 
-    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
-            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
-            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
-            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
-            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
-            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
-            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
-            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
-            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
-            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
+    if (ptVOutsideRange)
         return;
-    }
 
     SafeHistFill(histMap1D_, concatenateNames("mW", toAppend), channel_, variation.first, wCand.mass(), weight);
     SafeHistFill(histMap1D_, concatenateNames("yW", toAppend), channel_, variation.first, wCand.Rapidity(), weight);
