@@ -286,7 +286,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
 
         size_t nScaleWeights = nLHEScaleWeight;
         // Would like to work in the SCETlib weights for ptV vars
-        size_t minimalWeights = isPtVvar ? nScaleWeights+nMEParamWeight : nScaleWeights;
+        size_t minimalWeights = isPtVvar ? nScaleWeights : nScaleWeights+nMEParamWeight;
 
         // In the case of CT18, don't store all the CT18Z sets which are mixed in
         size_t nWeights = minimalWeights+pdfMaxStore_;
