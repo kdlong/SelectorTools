@@ -379,10 +379,11 @@ def getTransformed3DScaleHists(scale_hist3D, transformation, transform_args, nam
     hist_name = hist_name.replace("lheWeights", var+"Up")
     return getVariationHists(scale_hists, name, hist_name, lambda x: x[-1], lambda x: x[1])
 
-def getTransformed3DExpandedScaleHists(scale_hist3D, transformation, transform_args, name, entries, pairs=[(1,7), (3,5), (0,8)]):
+def getTransformed3DExpandedScaleHists(scale_hist3D, transformation, transform_args, name, label, entries, pairs=[(1,7), (3,5), (0,8)]):
     hists = getAllTransformed3DHists(scale_hist3D, transformation, transform_args, name, entries, exclude=[])
     hist_name = scale_hist3D.GetName().replace("2D", "unrolled")
-    hist_name = hist_name.replace("lheWeights", "QCDscale"+("_" if name != "" else "")+name+"Up")
+    var = (label+"_"+name) if name != "" else label 
+    hist_name = hist_name.replace("lheWeights", var+"Up")
     return makeExpandedScaleHists(hists, hist_name, name, pairs)
 
 def getTransformed3DSymMCPDFVarHists(hist3D, transformation, transform_args, entries, name):

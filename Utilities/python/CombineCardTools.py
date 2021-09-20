@@ -276,7 +276,8 @@ class CombineCardTools(object):
             theoryVars = self.theoryVariations[processName]
             if 'scale' in theoryVars and 'theoryBasedVars' in theoryVars['scale']:
                 thVars = theoryVars['scale']['theoryBasedVars']
-                plots += [self.weightHistName(c, processName, a) for c in self.channels for a in thVars]
+                print("The theory vars are", thVars)
+                plots += [self.weightHistName(c, processName, a.replace("QCDscale_", "")) for c in self.channels for a in thVars]
         return plots
 
     # processName needs to match a PlotGroup 
@@ -371,7 +372,6 @@ class CombineCardTools(object):
                             pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
                         pdfFunction = getattr(HistTools, pdfFunctionName)
                         allPdfHists = pdfFunction(weightHist, **args)
-                        print("Number of pdf hists is", len(allPdfHists))
                         pdfHists.extend(allPdfHists)
 
                         if not self.isUnrolledFit:
@@ -444,44 +444,28 @@ class CombineCardTools(object):
             raise ValueError("Failed to find %s. Skipping" % weighthist_name)
 
         scaleHists = []
-        for name in self.theoryVariations[processName]:
-            if "scale" not in name.lower():
-                continue
-            scaleVars = self.theoryVariations[processName][name]
-            label = "" if self.correlateScaleUnc else processName
-            
-            hists = HistTools.getScaleHists(weightHist, 
-                    label, 
-                    self.rebin, 
-                    entries=scaleVars['entries'], 
-                    exclude=scaleVars['exclude'], 
-                    central=scaleVars['central'],
-                    label="QCDscale" if name == "scale" else name) \
-            if not self.isUnrolledFit else \
-                HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], 
-                    label, 
-                    label="QCDscale" if name == "scale" else name,
-                    entries=scaleVars['entries'], 
-                    exclude=scaleVars['exclude'])
+        for varTye in filter(lambda x: "scale" in x, self.theoryVariations[processName]):
+            scaleVars = self.theoryVariations[processName][varTye]
+            procName = "" if self.correlateScaleUnc else processName
 
+            args = dict(name=procName, rebin=self.rebin, entries=scaleVars['entries'],
+                    exclude=scaleVars['exclude'],
+                    label="QCDscale"+("_" if append else "")+append)
+            if self.isUnrolledFit:
+                args["transformation"] = HistTools.makeUnrolledHist
+                args["transform_args"] = [self.unrolledBinsX, self.unrolledBinsY]
+                args.pop("rebin")
+            
+            scaleFunc = HistTools.getScaleHists if not self.isUnrolledFit else HistTools.getTransformed3DScaleHists
+            hists = scaleFunc(weightHist, **args)
             scaleHists.extend(hists)
 
-            if expandedTheory and name == "scale":
-                expandedScaleHists = HistTools.getExpandedScaleHists(weightHist, 
-                        label, 
-                        self.rebin, 
-                        entries=scaleVars['entries'], 
-                        pairs=scaleVars['groups'], 
-                    ) if not self.isUnrolledFit else \
-                    HistTools.getTransformed3DExpandedScaleHists(weightHist, 
-                            HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], 
-                        label,
-                        entries=scaleVars['entries'], 
-                        pairs=scaleVars['groups'], 
-                    )
-                
+            if expandedTheory and "scale" in varTye:
+                scaleFunc = HistTools.getExpandedScaleHists if not self.isUnrolledFit \
+                        else HistTools.getTransformed3DExpandedScaleHists
+                args.pop("exclude")
+                args["pairs"] = scaleVars['groups']
+                expandedScaleHists = scaleFunc(weightHist, **args)
                 scaleHists.extend(expandedScaleHists)
         return scaleHists
 

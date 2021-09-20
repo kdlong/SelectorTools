@@ -249,8 +249,6 @@ scriptdir = os.path.dirname(os.path.realpath(__file__))
 path = "/".join(scriptdir.split("/")[:-2]+["Templates", "CombineCards", "VGen"])
 
 nnu = 2
-if args.splitPtV:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
 if not args.theoryOnly:
     nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
     cardtool.addCardGroup("CMS_scale_m group = CMS_scale_m")
@@ -271,12 +269,14 @@ if args.pdf != "none":
         nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
 
 cen = args.central
-if not args.scetlibUnc:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
-    cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
-else:
+if args.splitPtV:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
+elif args.scetlibUnc:
     nnu += cardtool.addCustomizeCard(path+"/Customize/scetlibscale_template.txt")
     cardtool.addCardGroup(f"QCDscale group = resumscaleDLambda_{cen} resumscaleDFO_{cen} resumscaleDMatch_{cen} resumscaleDResum_{cen}")
+else:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
+    cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
 
 cardtool.addCardGroup("massnoi noiGroup = massShift100MeV")
 
