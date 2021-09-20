@@ -200,13 +200,10 @@ class SelectorDriver(object):
     def expandDatasetFilePaths(self, nsplits):
         nFiles = 0 
         for dataset, file_path in self.datasets.items():
-            maxPerSet = self.maxFiles/len(self.datasets) 
-            if dataset == list(self.datasets.keys())[-1]:
-                maxPerSet = self.maxFiles-nFiles
             files = self.getAllFileNames(file_path) 
-            nFiles += len(files)
+            nFiles += min(self.maxFiles, len(files))
             # Basically puts a max on the number of cores being the max number of files in a given dataset
-            splits = min(nsplits, len(files))
+            splits = min(nsplits, len(files), self.maxFiles)
             self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, splits)
         logging.debug("Number of files to process is %i" % nFiles)
 

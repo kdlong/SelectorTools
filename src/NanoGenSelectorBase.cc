@@ -33,8 +33,8 @@ void NanoGenSelectorBase::Init(TTree *tree)
     TParameter<int>* wSuppress = (TParameter<int>*) GetInputList()->FindObject("wSuppress");
     weightSuppress_ = wSuppress != nullptr ? wSuppress->GetVal() : 0;
     TParameter<int>* thwSuppress = (TParameter<int>*) GetInputList()->FindObject("thwSuppress");
-    // Default true
-    thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 1;
+    // Default to 10x the nominal
+    thweightSuppress_ = thwSuppress != nullptr ? thwSuppress->GetVal() : 10;
 
     TParameter<int>* storeCenPdfs = (TParameter<int>*) GetInputList()->FindObject("storeCenPdfs");
     storeCenPdfs_ = storeCenPdfs != nullptr ? storeCenPdfs->GetVal() : 0;
@@ -114,7 +114,8 @@ void NanoGenSelectorBase::Init(TTree *tree)
         std::cerr << "WARNING! Specific pdf selection '" << pdfSet_ << "' is only supported in MiNNLO. No PDF weights will be stored\n";
     else if (isMinnlo_ && pdfSet_ != "all") {
         if (pdfSet_ == "ct18")
-            pdfMaxStore_ = 61+storeCenPdfs_*minnloPdfMap.size();
+            // Don't store CT18Z central value, or central value for your own set
+            pdfMaxStore_ = 61+storeCenPdfs_*minnloPdfMap.size()-2;
         else if (pdfSet_ == "ct18z")
             pdfCenWeight_ = 61;
     }

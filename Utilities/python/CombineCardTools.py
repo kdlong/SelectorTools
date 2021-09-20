@@ -174,7 +174,7 @@ class CombineCardTools(object):
         return varHists
 
     def addTheoryVar(self, processName, varName, entries, central=0, exclude=[], specName=""):
-        validVars = ["scale", "resumscale", "pdf_hessian", "pdf_mc", "pdf_assymhessian", "other"]
+        validVars = ["scale", "resumscale", "pdf_hessian", "pdf_mc", "pdf_asymhessian", "other"]
         if not any([x in varName.lower() for x in validVars]):
             raise ValueError("Invalid theory uncertainty %s. Must be type %s" % (varName, " ".join(validVars)))
         name = varName if "scale" in varName.lower() else ("pdf"+specName if "pdf" in varName.lower() else specName)
@@ -344,10 +344,13 @@ class CombineCardTools(object):
                     pdfVar = theoryVars[var]
                     pdfType = "MC"
                     if "hessian" in pdfVar['combine']:
-                        pdfType = "Hessian" if "assym" not in pdfVar['combine'] else "AsymHessian"
+                        pdfType = "Hessian" if "asym" not in pdfVar['combine'] else "AsymHessian"
 
                     pdfFunction = "get%sPDFVarHists" % pdfType 
-                    pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
+                    logging.debug("pdf function is %s" % pdfFunction)
+                    # It's easier to do just do this in the combine cards
+                    #pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
+                    pdfUncScale = 1.0
                     # Don't bother appending process name to PDF (e.g., correlate, doesn't really matter
                     # if we use the hessian sets anyway
                     args = dict(entries=pdfVar['entries'], name="", rebin=self.rebin, 
@@ -363,6 +366,7 @@ class CombineCardTools(object):
                     if expandedTheory and pdfVar['name']:
                         args.pop("pdfName")
                         pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAsymHessianHists"
+                        logging.debug("pdf function for all variations is %s" % pdfFunction)
                         if self.isUnrolledFit:
                             pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
                         pdfFunction = getattr(HistTools, pdfFunctionName)

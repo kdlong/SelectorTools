@@ -87,9 +87,7 @@ void WGenSelector::Init(TTree *tree)
 
     if (name_.find("Corr") != std::string::npos) {
         n3llcorr_ = true;
-        std::cout << "Now here\n\n\n";
         SetScaleFactors();
-        std::cout << "And now here\n\n\n";
         if (scetlibCorrs_[0] == nullptr)
             throw std::invalid_argument("Must pass a scalefactor for sample with corrections!");
     }
@@ -272,7 +270,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         size_t nWeights = minimalWeights+pdfMaxStore_;
         if (n3llcorr_)
             nWeights += nScetlibWeights_;
-        size_t pdfOffset = nScaleWeights;
+        size_t pdfOffset = minimalWeights;
         size_t pdfIdx = 0;
         for (size_t i = 0; i < nWeights; i++) {
             float thweight = 1;
@@ -280,19 +278,18 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
                 thweight = LHEScaleWeight[i];
             else if (i < nScaleWeights)
                 thweight = LHEScaleWeightAltSet1[i-nLHEScaleWeight];
-            else if (i < nScaleWeights+pdfMaxStore_) {
+            else if (i < minimalWeights) {
+                size_t offset = nScaleWeights;
+                thweight = MEParamWeight[i-offset];
+            }
+            else if (i < minimalWeights+pdfMaxStore_) {
                 while (!pdfWeights_.at(pdfIdx))
                     pdfIdx++;
-                std::cout << "Storing weight " << i << " from Set number " << pdfIdx << std::endl;
                 thweight = LHEPdfWeights[pdfIdx][i-pdfOffset];
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
                 thweight /= rescaleWeight_;
-            }
-            else if (i < minimalWeights+pdfMaxStore_) {
-                size_t offset = nScaleWeights+pdfMaxStore_;
-                thweight = MEParamWeight[i-offset];
             }
             else {
                 int idx = i-minimalWeights-pdfMaxStore_;
