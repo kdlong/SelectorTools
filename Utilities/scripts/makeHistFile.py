@@ -61,7 +61,7 @@ def getComLineArgs():
     return vars(parser.parse_args())
 
 def buildInputs(inputArgs, datasets=[]):
-    if not any(["wSignOnly" in x or "wSuppress" in x for x in inputArgs]) \
+    if datasets and not any(["wSignOnly" in x or "wSuppress" in x for x in inputArgs]) \
             and all(["minnlo" in x for x in datasets]):
         logging.warning("Setting wSignOnly=1 for MiNNLO sample to avoid large weights")
         inputArgs.append("wSignOnly=1")

@@ -203,8 +203,11 @@ class SelectorDriver(object):
             files = self.getAllFileNames(file_path) 
             nFiles += min(self.maxFiles, len(files))
             # Basically puts a max on the number of cores being the max number of files in a given dataset
-            splits = min(nsplits, len(files), self.maxFiles)
-            self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] if self.maxFiles > 0 else files, splits)
+            splits = min(nsplits, len(files))
+            if self.maxFiles > 0:
+                splits = min(splits, self.maxFiles)
+            self.datasets[dataset] = numpy.array_split(files[:self.maxFiles] \
+                    if self.maxFiles > 0 and self.maxFiles < len(files) else files, splits)
         logging.debug("Number of files to process is %i" % nFiles)
 
     def getAllFileNames(self, file_path):
