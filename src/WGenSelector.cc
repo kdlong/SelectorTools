@@ -85,11 +85,11 @@ void WGenSelector::Init(TTree *tree)
 
     NanoGenSelectorBase::Init(tree);
 
-    if (name_.find("N3LLCorr") != std::string::npos) {
+    if (name_.find("Corr") != std::string::npos) {
         n3llcorr_ = true;
         SetScaleFactors();
-        if (scetlibCorrs_.at(0) == nullptr)
-            throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
+        if (scetlibCorrs_[0] == nullptr)
+            throw std::invalid_argument("Must pass a scalefactor for sample with corrections!");
     }
 }
 
@@ -194,7 +194,7 @@ void WGenSelector::LoadBranchesNanoAOD(Long64_t entry, SystPair variation) {
 
     if (n3llcorr_) {
         //auto* sf = channel_ == mp ? n3llWpSF_ : n3llWmSF_;
-        weight *= scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+        weight *= scetlibCorrs_[0]->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 
@@ -260,57 +260,72 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
     if (variation.first == Central)
         mcWeights_->Fill(weight/std::abs(refWeight));
 
+    bool ptVOutsideRange = (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+                ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+                ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+                ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+                ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+                ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+                ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+                ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+                ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+                ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. ));
+    bool isPtVvar = (variation.first == ptV0to3 || variation.first == ptV0to3_lhe ||
+                variation.first == ptV3to5 || variation.first == ptV3to5_lhe ||
+                variation.first == ptV5to7 || variation.first == ptV5to7_lhe ||
+                variation.first == ptV7to9 || variation.first == ptV7to9_lhe ||
+                variation.first == ptV9to12 || variation.first == ptV9to12_lhe ||
+                variation.first == ptV12to15 || variation.first == ptV12to15_lhe ||
+                variation.first == ptV15to20 || variation.first == ptV15to20_lhe ||
+                variation.first == ptV20to27 || variation.first == ptV20to27_lhe ||
+                variation.first == ptV27to40 || variation.first == ptV27to40_lhe ||
+                variation.first == ptV40toInf || variation.first == ptV40toInf_lhe);
+
+
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         //size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
         // Turn this off for now
         size_t nScaleWeights = nLHEScaleWeight;
-        size_t minimalWeights = nScaleWeights+nMEParamWeight;
+        // Would like to work in the SCETlib weights for ptV vars
+        size_t minimalWeights = isPtVvar ? nScaleWeights : nScaleWeights+nMEParamWeight;
 
         // In the case of CT18, don't store all the CT18Z sets which are mixed in
-        size_t nWeights = minimalWeights+pdfMaxStore_;
+        size_t nWeights = isPtVvar ? minimalWeights : minimalWeights+pdfMaxStore_ ;
         if (n3llcorr_)
             nWeights += nScetlibWeights_;
-        size_t pdfOffset = nScaleWeights;
+        size_t pdfOffset = minimalWeights;
         size_t pdfIdx = 0;
+
         for (size_t i = 0; i < nWeights; i++) {
-            float thweight = 1;
-            if (i < nLHEScaleWeight)
+            float thweight = 1.;
+            if (ptVOutsideRange)
+                thweight = 1.;
+            else if (i < nLHEScaleWeight)
                 thweight = LHEScaleWeight[i];
             else if (i < nScaleWeights)
                 thweight = LHEScaleWeightAltSet1[i-nLHEScaleWeight];
-            else if (i < nScaleWeights+pdfMaxStore_) {
+            else if (i < minimalWeights) {
+                size_t offset = nScaleWeights;
+                thweight = MEParamWeight[i-offset];
+            }
+            else if (i < minimalWeights+pdfMaxStore_) {
                 while (!pdfWeights_.at(pdfIdx))
                     pdfIdx++;
+<<<<<<< HEAD
                 //std::cout << "Storing weight " << i << " from Set number " << pdfIdx << std::endl;
+=======
+>>>>>>> 98a9e9c8896171584b7f0a9c1c38dcf405b0f64f
                 thweight = LHEPdfWeights[pdfIdx][i-pdfOffset];
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);
                 }
                 thweight /= rescaleWeight_;
             }
-            else if (i < minimalWeights+pdfMaxStore_) {
-                size_t offset = nScaleWeights+pdfMaxStore_;
-                thweight = MEParamWeight[i-offset];
-            }
             else {
-                int idx = i-minimalWeights-pdfMaxStore_;
+                int idx = i-minimalWeights-pdfMaxStore_*isPtVvar;
                 auto* sf = scetlibCorrs_.at(idx);
                 float refW = scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
-            }
-
-
-            if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
-                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
-                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
-                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
-                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
-                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
-                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
-                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
-                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
-                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
-                thweight = 1;
             }
 
             thweight = (!thweightSuppress_ || std::abs(thweight) < thweightSuppress_) ? thweight : (thweight > 0 ? thweightSuppress_ : -1*thweightSuppress_);
@@ -333,18 +348,8 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
         }
     }
 
-    if (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
-            ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
-            ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
-            ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
-            ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
-            ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
-            ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
-            ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
-            ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
-            ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. )) {
+    if (ptVOutsideRange)
         return;
-    }
 
     SafeHistFill(histMap1D_, concatenateNames("mW", toAppend), channel_, variation.first, wCand.mass(), weight);
     SafeHistFill(histMap1D_, concatenateNames("yW", toAppend), channel_, variation.first, wCand.Rapidity(), weight);

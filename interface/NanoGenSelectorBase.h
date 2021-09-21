@@ -42,10 +42,10 @@ public :
         {"nnpdf30", {13,15,16,}}, // 14 and 17 are bigger alpha_s vars
         {"ct18", {18}},
         {"ct18z", {18}},
-        {"mmht", {19, 20, 21}},
+        {"mmht", {19, 20}},
         {"hera", {23,24,25,26,28,29,30}},
     };
-    const int nScetlibWeights_ = 45;
+    int nScetlibWeights_ = 45;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
     reco::GenParticleCollection leptons;

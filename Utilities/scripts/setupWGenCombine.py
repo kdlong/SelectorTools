@@ -34,9 +34,11 @@ parser.add_argument("--channels", type=lambda x: x.split(','),
 parser.add_argument("-l", "--lumi", type=float, 
     default=35.9*0.7, help="lumi")
 parser.add_argument("--pdf", type=str, default="nnpdf31", help="PDF to store",
-    choices=["nnpdf31", "cmsw1", "cmsw2", "cmsw3", "cms4", "ct18", "ct18z", "mmht", "all"])
-parser.add_argument("--outFolder", type=str, default="/data/shared/{user}",
+    choices=["nnpdf31", "nnpdf30", "nnpdf31cmsw1", "nnpdf31cmsw2", "nnpdf31cmsw3", "nnpdf31cmsw4", "ct18", "ct18z", "mmht", "all"])
+parser.add_argument("-o", "--outFolder", type=str, default="/data/shared/{user}/CombineStudies/WGen",
     help="Output folder")
+parser.add_argument("-s", "--subFolder", type=str, default="",
+    help="Output subfolder")
 parser.add_argument("--storePdfCenValues", action='store_true', 
     help="Store all central PDF variations")
 parser.add_argument("--splitPtV", action='store_true', 
@@ -87,9 +89,8 @@ if args.rebin and "unrolled" not in args.fitvar:
 
 cardtool.setFitVariable(args.fitvar)
 if "unrolled" in args.fitvar:
-    #cardtool.setUnrolled([-2.5+0.2*i for i in range(0,26)], range(26, 56, 1))
-    cardtool.setUnrolled([-2.4+0.2*i for i in range(0,25)], range(26, 57, 1))
-    #cardtool.setUnrolled([-2.5+0.5*i for i in range(0,11)], range(26, 56, 3))
+    # Skip a little bit away from 25 due to the lazy smearing cut for ptlsmear
+    cardtool.setUnrolled([-2.4+0.2*i for i in range(0,25)], range(28, 57, 1))
 cardtool.setProcesses(plotGroupsMap)
 cardtool.setChannels(args.channels)
 print("Channels are", args.channels)
@@ -103,9 +104,11 @@ cardtool.setNormalizedVariations(normVariations)
 folder_name = "_".join([args.fitvar,args.pdf]) 
 if args.append != "":
     folder_name += "_%s" % args.append
+if args.subFolder:
+    folder_name = "/".join([args.subFolder, folder_name])
 
 basefolder = args.outFolder.format(user=os.getlogin())
-cardtool.setOutputFolder(basefolder+"/CombineStudies/WGen/%s" % folder_name)
+cardtool.setOutputFolder("/".join([basefolder, folder_name]))
 
 cardtool.setLumi(args.lumi)
 cardtool.setInputFile(args.input_file)
@@ -119,7 +122,8 @@ cardtool.setAddOverflow(False)
 ptbins = [0,3,5,7,9,12,15,20,27,40,100]
 ptbinPairs = [(x,y) for x,y in zip(ptbins[:-1], ptbins[1:])]
 
-firstPdfIdx = 10
+# Offset for scale + mass weights
+firstPdfIdx = 31
 pdfIdxMap = {
         "nnpdf31" : {
             "name" : "NNPDF31",
@@ -127,31 +131,31 @@ pdfIdxMap = {
             "cenidx" : firstPdfIdx,
             "nsets" : 103,
         },
-        "cmsw1" : {
+        "nnpdf31cmsw1" : {
             "name" : "NNPDF31CMSW1",
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx+1*args.storePdfCenValues,
             "nsets" : 103,
         },
-        "cmsw2" : {
+        "nnpdf31cmsw2" : {
             "name" : "NNPDF31CMSW2",
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx+2*args.storePdfCenValues,
             "nsets" : 103,
         },
-        "cmsw3" : {
+        "nnpdf31cmsw3" : {
             "name" : "NNPDF31CMSW3",
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx+3*args.storePdfCenValues,
             "nsets" : 103,
         },
-        "cmsw4" : {
+        "nnpdf31cmsw4" : {
             "name" : "NNPDF31CMSW4",
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx+4*args.storePdfCenValues,
             "nsets" : 103,
         },
-        "cmsw4" : {
+        "nnpdf30" : {
             "name" : "NNPDF30",
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx+5*args.storePdfCenValues,
@@ -160,25 +164,25 @@ pdfIdxMap = {
         "ct18" : {
             "name" : "CT18",
             "cenidx" : firstPdfIdx+6*args.storePdfCenValues,
-            "unc" : "pdf_assymhessian",
+            "unc" : "pdf_asymhessian",
             "nsets" : 61,
         },
         "ct18z" : {
             "name" : "CT18Z",
             "cenidx" : firstPdfIdx+6*args.storePdfCenValues+61,
-            "unc" : "pdf_assymhessian",
+            "unc" : "pdf_asymhessian",
             "nsets" : 61,
         },
         "mmht" : {
             "name" : "MMHT",
             "cenidx" : firstPdfIdx+7*args.storePdfCenValues,
-            "unc" : "pdf_assymhessian",
-            "nsets" : 51,
+            "unc" : "pdf_asymhessian",
+            "nsets" : 51+3,
         },
         "hera" : {
             "name" : "HERA",
             "cenidx" : firstPdfIdx+8*args.storePdfCenValues,
-            "unc" : "pdf_assymhessian",
+            "unc" : "pdf_asymhessian",
             "nsets" : 51,
         },
 }
@@ -187,16 +191,16 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[2, 6], central=4)
+        # It's confusing, but entries and range are 1-indexed and central is zero-indexed...
+        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[3, 7], central=4)
         # If using the "central" nano
-        #cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
         cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
         if args.pdf != "none" and "all" not in args.pdf:
             info = pdfIdxMap[args.pdf]
             firstAlphaIdx = info["cenidx"]+info["nsets"]-2
-            indices = range(info["cenidx"], firstAlphaIdx)
+            indices = range(info["cenidx"], firstAlphaIdx-1*("mmht" in args.pdf))
             alphaIndices = range(firstAlphaIdx, firstAlphaIdx+2)
             cardtool.addTheoryVar(process, info["unc"], indices, central=0, specName=info["name"])
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
@@ -207,7 +211,7 @@ for process in plot_groups:
                     index += pdfIdxMap[args.pdf]["nsets"]
                 cardtool.addTheoryVar(process, 'other', [index], central=0, specName=pdfInfo["name"]+"Cen")
 
-        cenMassIdx = firstPdfIdx+8*args.storePdfCenValues+pdfIdxMap[args.pdf]["nsets"]+11-1
+        cenMassIdx = 9+11
         massVars = lambda i: [cenMassIdx+i, cenMassIdx-i]
         cardtool.addTheoryVar(process, 'other', massVars(0), exclude=[], central=0, specName="massShift0MeV")
         cardtool.addTheoryVar(process, 'other', massVars(1), exclude=[], central=0, specName="massShift10MeV")
@@ -245,8 +249,6 @@ scriptdir = os.path.dirname(os.path.realpath(__file__))
 path = "/".join(scriptdir.split("/")[:-2]+["Templates", "CombineCards", "VGen"])
 
 nnu = 2
-if args.splitPtV:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
 if not args.theoryOnly:
     nnu += cardtool.addCustomizeCard(path+"/Customize/muscale_template.txt")
     cardtool.addCardGroup("CMS_scale_m group = CMS_scale_m")
@@ -255,7 +257,11 @@ if not args.theoryOnly:
 if args.pdf != "none":
     if args.allHessianVars:
         # TODO: More sets of course
-        pdflabel = "NNPDF" if "nnpdf" in args.pdf else "CT18"
+        pdflabel = pdfIdxMap[args.pdf]["name"]
+        if "NNPDF" in pdflabel:
+            pdflabel = "NNPDF"
+        elif "CT18" in pdflabel:
+            pdflabel = "CT18"
         npdfs = cardtool.addCustomizeCard(f"{path}/Customize/pdf{pdflabel}_template.txt")
         nnu += npdfs
         #cardtool.addCardGroup("pdf group = %s" % " ".join(["pdf%i" % i for i in range(1,npdfs+1)]))
@@ -263,12 +269,14 @@ if args.pdf != "none":
         nnu += cardtool.addCustomizeCard(path+"/Customize/pdf_template.txt")
 
 cen = args.central
-if not args.scetlibUnc:
-    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
-    cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
-else:
+if args.splitPtV:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/PtV_template.txt")
+elif args.scetlibUnc:
     nnu += cardtool.addCustomizeCard(path+"/Customize/scetlibscale_template.txt")
     cardtool.addCardGroup(f"QCDscale group = resumscaleDLambda_{cen} resumscaleDFO_{cen} resumscaleDMatch_{cen} resumscaleDResum_{cen}")
+else:
+    nnu += cardtool.addCustomizeCard(path+"/Customize/scale_template.txt")
+    cardtool.addCardGroup(f"QCDscale group = QCDscale_muR_{cen} QCDscale_muF_{cen} QCDscale_muRmuF_{cen}")
 
 cardtool.addCardGroup("massnoi noiGroup = massShift100MeV")
 
@@ -285,3 +293,4 @@ for i, chan in enumerate(args.channels):
             "data_fit_variable" : args.dataHist if args.dataHist else args.fitvar,
         }
     )
+cardtool.writeMetaInfo()

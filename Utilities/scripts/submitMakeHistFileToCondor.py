@@ -60,7 +60,7 @@ def makeSubmitDir(submit_dir, force):
        raise IOError("Submit directory %s already exists! Use --force to overrite." % submit_dir) 
     os.makedirs(log_dir)
 
-def setupMergeStep(submit_dir, queue, numjobs, merge, removeUnmerged):
+def setupMergeStep(submit_dir, extraSubmit, memory, numjobs, merge, removeUnmerged):
 
     merge_file = merge[0]
     completeFraction = float(merge[1])
@@ -68,8 +68,9 @@ def setupMergeStep(submit_dir, queue, numjobs, merge, removeUnmerged):
         raise InvalidArgument("completeFraction must be between 0 and 1, found %f" % completeFraction)
 
     template_dict = {
-        "queue" : queue,
-        "merge_file" : merge_file
+        "extraSubmit" : extraSubmit,
+        "merge_file" : merge_file,
+        "memory" : memory,
     }
     template = "Templates/CondorSubmit/merge_template.jdl"
     outfile = "/".join([submit_dir, "merge.jdl"])
@@ -179,7 +180,7 @@ def writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, me
         "selection" : selection,
         "input_tier" : input_tier,
         "extraSubmit" : extraSubmit,
-        "memory" : memory if memory/numCores > 1000 else numCores*1000,
+        "memory" : memory,
         "filelist" : filelist.split(".txt")[0],
         "nPerJob" : nPerJob,
         "numCores" : numCores,
@@ -225,6 +226,8 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     if maxFiles > 0 and maxFiles < numfiles:
         numfiles = maxFiles
 
+    if memory/numCores < 2000:
+        memory = numCores*2000
 
     extraSubmit = ''
     if queue == 'uw':
@@ -239,7 +242,7 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
 
     writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:
-        setupMergeStep(submit_dir, queue, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
+        setupMergeStep(submit_dir, extraSubmit, memory, math.ceil(numfiles/numPerJob), merge, removeUnmerged)
 
     tarball_name = '_'.join([analysis, "AnalysisCode.tgz"])
     writeWrapperFile(submit_dir, tarball_name)

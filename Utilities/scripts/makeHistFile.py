@@ -60,7 +60,13 @@ def getComLineArgs():
                         "by commas")
     return vars(parser.parse_args())
 
-def buildInputs(inputArgs):
+def buildInputs(inputArgs, datasets=[]):
+    if datasets and not any(["wSignOnly" in x or "wSuppress" in x for x in inputArgs]) \
+            and all(["minnlo" in x for x in datasets]):
+        logging.warning("Setting wSignOnly=1 for MiNNLO sample to avoid large weights")
+        inputArgs.append("wSignOnly=1")
+    if not inputArgs:
+        return []
     divided = [x.split("=") for x in inputArgs]
     return [ROOT.TParameter(int)(x[0], int(x[1])) if x[1].isnumeric() else ROOT.TNamed(*x) for x in divided]
 
@@ -86,11 +92,14 @@ def makeHistFile(args):
 
     sf_file = 'data/%s_scaleFactors.root' % args['analysis']
     addScaleFactors = os.path.isfile(sf_file) and not args['noScaleFactors']
+    if addScaleFactors:
+        logging.info("Adding scale factors from file %s" % sf_file)
     sf_inputs = [ROOT.TParameter(bool)("applyScaleFacs", addScaleFactors)]
 
     fScales = ROOT.TFile(sf_file) if addScaleFactors else None
     if fScales:
         [x for x in map(lambda x: sf_inputs.append(fScales.Get(x.GetName())), fScales.GetListOfKeys())]
+    logging.debug("scale factors are %s" % [i.GetName() for i in sf_inputs])
 
     if args['input_tier'] == '':
         args['input_tier'] = args['selection']
@@ -98,7 +107,7 @@ def makeHistFile(args):
     analysis = "/".join([args['analysis'], selection])
     hists, hist_inputs = UserInput.getHistInfo(analysis, args['hist_names'], args['noHistConfig'])
 
-    extra_inputs = [] if not args['selectorArgs'] else buildInputs(args['selectorArgs'])
+    extra_inputs = buildInputs(args['selectorArgs'], args['filenames'])
 
     selector = SelectorTools.SelectorDriver(args['analysis'], args['selection'], args['input_tier'], args['year'])
     if args['compress']:

@@ -1,0 +1,28 @@
+pdf1        shape   1                
+pdf2        shape   1                
+pdf3        shape   1                
+pdf4        shape   1                
+pdf5        shape   1                
+pdf6        shape   1                
+pdf7        shape   1                
+pdf8        shape   1                
+pdf9        shape   1                
+pdf10       shape   1                
+pdf11       shape   1                
+pdf12       shape   1                
+pdf13       shape   1                
+pdf14       shape   1                
+pdf15       shape   1                
+pdf16       shape   1                
+pdf17       shape   1                
+pdf18       shape   1                
+pdf19       shape   1                
+pdf20       shape   1                
+pdf21       shape   1                
+pdf22       shape   1                
+pdf23       shape   1                
+pdf24       shape   1                
+pdf25       shape   1                
+${pdfName}_alphas shape   1.5
+
+pdf group = pdf1 pdf2 pdf3 pdf4 pdf5 pdf6 pdf7 pdf8 pdf9 pdf10 pdf11 pdf12 pdf13 pdf14 pdf15 pdf16 pdf17 pdf18 pdf19 pdf20 pdf21 pdf22 pdf23 pdf24 pdf25 ${pdfName}_alphas 

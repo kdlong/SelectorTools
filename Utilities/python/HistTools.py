@@ -188,27 +188,31 @@ def makeAllSymHessianHists(hists, hist_name, name, central=0, scale=1.0):
         # Too lazy to track down why this happens
         new_name = new_name.replace("_Up", "Up")
         variationSet.extend(getVariationHists([hists[central], hist], name, 
-            new_name, upaction, downaction, central))
+            new_name, upaction, downaction, 0))
     return variationSet
 
 def makeAllAsymHessianHists(hists, hist_name, name, central=0, scale=1.0):
     variationSet = []
-    allhists = hists[0:central]+hists[central+1:]
-    for i, hists in enumerate(zip(allhists[::2], allhists[1::2])):
-        new_name= hist_name.replace("pdf_%s" % name, "pdf%i" %i) if name and name in hist_name else \
-            hist_name.replace("pdf", "pdf%i" % i)
+    varhists = hists[0:central]+hists[central+1:]
+    cenhist = hists[central]
+    for j, (uphist, downhist) in enumerate(zip(varhists[::2], varhists[1::2])):
+        new_name = hist_name.replace("pdf_%s" % name, "pdf%i" % (j+1)) if name and name in hist_name else \
+            hist_name.replace("pdf", "pdf%i" % (j+1))
         # Too lazy to track down why this happens
         new_name = new_name.replace("_Up", "Up")
-        hists[0].SetName(new_name)
-        hists[1].SetName(new_name.replace("Up", "Down"))
+        uphist.SetName(new_name)
+        downhist.SetName(new_name.replace("Up", "Down"))
         if scale != 1.0:
-            for i in range(hists[0].GetNbinsX()+1):
-                cen = hists[central].GetBinContent(i)
-                up = cen + scale*(hists[0].GetBinContent(i) - cen)
-                down = cen - scale*(cen - hists[1].GetBinContent(i))
-                hists[0].SetBinContent(i, up)
-                hists[1].SetBinContent(i, down)
-        variationSet.extend(hists)
+            for i in range(1, cenhist.GetNbinsX()+1):
+                cen = cenhist.GetBinContent(i)
+                varup = uphist.GetBinContent(i) 
+                vardown = downhist.GetBinContent(i) 
+                # Eq. 3 in https://arxiv.org/pdf/hep-ph/0605240.pdf, still not sure it's right...
+                up = cen + scale*max(varup - cen, vardown - cen, 0)
+                down = cen - scale*max(cen - varup, cen - vardown, 0)
+                uphist.SetBinContent(i, up)
+                downhist.SetBinContent(i, down)
+        variationSet.extend((uphist,downhist))
     return variationSet
 
 def getAllSymHessianHists(init2D_hist, entries, name, rebin=None, central=0, scale=1.0):
@@ -245,11 +249,11 @@ def getTransformed3DHessianPDFVarHists(hist3D, transformation, transform_args, e
     hist_name = hist3D.GetName().replace("2D_lheWeights", "_".join(["unrolled", "pdf%sHesUp" % pdfName]))
     return makeAsymHessianPDFVarHists(hists, hist_name, name, central, scale)
 
-def getAsymHessianShift(vals, varType, scale=1.0):
-    pairs = zip(vals[1::2], vals[2::2])
-    central = vals[0]
-    diffs = [max(0, central - x[0], central - x[1])*scale for x in pairs] if varType == "down" else \
-            [max(0, x[0] - central, x[1] - central)*scale for x in pairs] 
+def getAsymHessianShift(vals, varType, central):
+    central = vals.pop(central)
+    pairs = zip(vals[::2], vals[1::2])
+    diffs = [max(0, central - x[0], central - x[1]) for x in pairs] if varType == "down" else \
+            [max(0, x[0] - central, x[1] - central) for x in pairs] 
     return math.sqrt(sum([x**2 for x in diffs]))
 
 # Scale = 1/1.645 for 90% --> 68%
@@ -258,8 +262,8 @@ def makeAsymHessianPDFVarHists(hists, hist_name, name, central=0, scale=1.0):
     # From Eq. 3 https://arxiv.org/pdf/1101.0536.pdf
     #sumsqup = lambda x: math.sqrt(sum([max(0, i - x[central], j - x[central])**2 for i,j in zip(x[1::2], x[2::2])]))
     #sumsqdown = lambda x: math.sqrt(sum([max(0, x[central] - i, x[central] - j)**2 for i,j in zip(x[1::2], x[2::2])]))
-    upaction = lambda x: x[central] + scale*getAsymHessianShift(x, "up", scale) 
-    downaction = lambda x: x[central] - scale*getAsymHessianShift(x, "down", scale) 
+    upaction = lambda x: x[central] + scale*getAsymHessianShift(x, "up", central) 
+    downaction = lambda x: x[central] - scale*getAsymHessianShift(x, "down", central) 
     return getVariationHists(hists, name, hist_name, 
             upaction, downaction, central
     )
@@ -288,19 +292,19 @@ def getScaleHists(scale_hist2D, name, rebin=None, entries=[i for i in range(1,10
     return getVariationHists(hists, name, hist_name, lambda x: x[-1], lambda x: x[1], central)
 
 # Pairs should correspond to muR, muF in (0.5, 2) ordered muR, muF, muR+muF
-def makeExpandedScaleHists(hists, hist_name, name, pairs):
+def makeExpandedScaleHists(hists, hist_name, name, pairs, label="QCDscale"):
     variationSet = []
-    for label, indices in zip(["muR", "muF", "muRmuF"], pairs):
+    for var, indices in zip(["muR", "muF", "muRmuF"], pairs):
         varhists = getVariationHists([hists[i] for i in indices], name,
-            hist_name.replace("QCDscale","QCDscale_"+label), lambda x: x[-1], lambda x: x[1], -1)
+            hist_name.replace(label,f"{label}_{var}"), lambda x: x[-1], lambda x: x[1], -1)
         variationSet.extend(varhists)
     return variationSet
 
 # nano ordering is [0] is mur=0.5 muf=0.5 ; [1] is mur=0.5 muf=1 ; [2] is mur=0.5 muf=2 ; [3] is mur=1 muf=0.5 ; 
 # [4] is mur=1 muf=1 ; [5] is mur=1 muf=2 ; [6] is mur=2 muf=0.5 ; [7] is mur=2 muf=1 ; [8] is mur=2 muf=2 *
 # pairs expects muRmuF simultaneous, muR, and muF variation up/down indices
-def getExpandedScaleHists(scale_hist2D, name, rebin=None, entries=range(1,10), pairs=[(1,7), (3,5), (0,8)]):
-    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, "QCDscale", rebin)
+def getExpandedScaleHists(scale_hist2D, name, label="QCDscale", rebin=None, entries=range(1,10), pairs=[(1,7), (3,5), (0,8)]):
+    hists, hist_name = getLHEWeightHists(scale_hist2D, entries, name, label, rebin)
     return makeExpandedScaleHists(hists, hist_name, name, pairs)
 
 def getVariationHists(hists, process_name, histUp_name, up_action, down_action, central=0):
@@ -368,17 +372,18 @@ def getTransformed3DLHEHists(hist3D, transformation, transform_args, entries, na
     hist_name = hist_name.replace("lheWeights", varName+("_" if name != "" else "")+name+"Up")
     return hists, hist_name
 
-def getTransformed3DScaleHists(scale_hist3D, transformation, transform_args, name, label, entries=range(1,10), exclude=[7,9]):
+def getTransformed3DScaleHists(scale_hist3D, transformation, transform_args, name, label="QCDscale", entries=range(1,10), exclude=[7,9]):
     scale_hists = getAllTransformed3DHists(scale_hist3D, transformation, transform_args, name, entries, exclude)
     hist_name = scale_hist3D.GetName().replace("2D", "unrolled")
     var = (label+"_"+name) if name != "" else label 
     hist_name = hist_name.replace("lheWeights", var+"Up")
     return getVariationHists(scale_hists, name, hist_name, lambda x: x[-1], lambda x: x[1])
 
-def getTransformed3DExpandedScaleHists(scale_hist3D, transformation, transform_args, name, entries, pairs=[(1,7), (3,5), (0,8)]):
+def getTransformed3DExpandedScaleHists(scale_hist3D, transformation, transform_args, name, label, entries, pairs=[(1,7), (3,5), (0,8)]):
     hists = getAllTransformed3DHists(scale_hist3D, transformation, transform_args, name, entries, exclude=[])
     hist_name = scale_hist3D.GetName().replace("2D", "unrolled")
-    hist_name = hist_name.replace("lheWeights", "QCDscale"+("_" if name != "" else "")+name+"Up")
+    var = (label+"_"+name) if name != "" else label 
+    hist_name = hist_name.replace("lheWeights", var+"Up")
     return makeExpandedScaleHists(hists, hist_name, name, pairs)
 
 def getTransformed3DSymMCPDFVarHists(hist3D, transformation, transform_args, entries, name):

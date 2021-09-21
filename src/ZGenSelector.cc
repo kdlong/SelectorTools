@@ -7,7 +7,6 @@
 
 void ZGenSelector::Init(TTree *tree)
 {
-    isZ_ = true;
     // Don't waste memory on empty e hists
     TParameter<bool>* muOnlyParam = (TParameter<bool>*) GetInputList()->FindObject("muOnly");
     bool muOnly = muOnlyParam != nullptr && muOnlyParam->GetVal();
@@ -60,11 +59,11 @@ void ZGenSelector::Init(TTree *tree)
     }
 
     NanoGenSelectorBase::Init(tree);
-    if (name_.find("N3LLCorr") != std::string::npos) {
+    if (name_.find("Corr") != std::string::npos) {
         n3llcorr_ = true;
         SetScaleFactors();
-        if (scetlibCorrs_.at(0) == nullptr)
-            throw std::invalid_argument("Must pass a scalefactor for N3LLCorr file!");
+        if (scetlibCorrs_[0] == nullptr)
+            throw std::invalid_argument("Must pass a scalefactor for sample with corrections!");
     }
 }
 
@@ -129,7 +128,7 @@ void ZGenSelector::LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std
         channelName_ = "Unknown";
     }
     if (n3llcorr_) {
-        weight *= scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
+        weight *= scetlibCorrs_[0]->Evaluate3D(mVcorr, yVcorr, ptVcorr);
     }
 }
 

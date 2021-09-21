@@ -98,6 +98,6 @@ pdf97       shape   1
 pdf98       shape   1                
 pdf99       shape   1                
 pdf100      shape   1                
-${pdfName}_alphas shape   1  
+${pdfName}_alphas shape   0.75
 
 pdf group = pdf1 pdf2 pdf3 pdf4 pdf5 pdf6 pdf7 pdf8 pdf9 pdf10 pdf11 pdf12 pdf13 pdf14 pdf15 pdf16 pdf17 pdf18 pdf19 pdf20 pdf21 pdf22 pdf23 pdf24 pdf25 pdf26 pdf27 pdf28 pdf29 pdf30 pdf31 pdf32 pdf33 pdf34 pdf35 pdf36 pdf37 pdf38 pdf39 pdf40 pdf41 pdf42 pdf43 pdf44 pdf45 pdf46 pdf47 pdf48 pdf49 pdf50 pdf51 pdf52 pdf53 pdf54 pdf55 pdf56 pdf57 pdf58 pdf59 pdf60 pdf61 pdf62 pdf63 pdf64 pdf65 pdf66 pdf67 pdf68 pdf69 pdf70 pdf71 pdf72 pdf73 pdf74 pdf75 pdf76 pdf77 pdf78 pdf79 pdf80 pdf81 pdf82 pdf83 pdf84 pdf85 pdf86 pdf87 pdf88 pdf89 pdf90 pdf91 pdf92 pdf93 pdf94 pdf95 pdf96 pdf97 pdf98 pdf99 pdf100 ${pdfName}_alphas

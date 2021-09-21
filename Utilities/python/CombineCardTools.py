@@ -174,7 +174,7 @@ class CombineCardTools(object):
         return varHists
 
     def addTheoryVar(self, processName, varName, entries, central=0, exclude=[], specName=""):
-        validVars = ["scale", "resumscale", "pdf_hessian", "pdf_mc", "pdf_assymhessian", "other"]
+        validVars = ["scale", "resumscale", "pdf_hessian", "pdf_mc", "pdf_asymhessian", "other"]
         if not any([x in varName.lower() for x in validVars]):
             raise ValueError("Invalid theory uncertainty %s. Must be type %s" % (varName, " ".join(validVars)))
         name = varName if "scale" in varName.lower() else ("pdf"+specName if "pdf" in varName.lower() else specName)
@@ -188,7 +188,7 @@ class CombineCardTools(object):
                 "entries" : entries,
                 "central" : central,
                 "exclude" : exclude,
-                "groups" : [(3,6), (1,2), (4,8)],
+                "groups" : [(1,7), (3,5), (0,8)],
                 "combine" : "envelope" if "pdf" not in varName.lower() else varName.replace("pdf_", ""),
             }
         })
@@ -276,7 +276,7 @@ class CombineCardTools(object):
             theoryVars = self.theoryVariations[processName]
             if 'scale' in theoryVars and 'theoryBasedVars' in theoryVars['scale']:
                 thVars = theoryVars['scale']['theoryBasedVars']
-                plots += [self.weightHistName(c, processName, a) for c in self.channels for a in thVars]
+                plots += [self.weightHistName(c, processName, a.replace("QCDscale_", "")) for c in self.channels for a in thVars]
         return plots
 
     # processName needs to match a PlotGroup 
@@ -344,10 +344,13 @@ class CombineCardTools(object):
                     pdfVar = theoryVars[var]
                     pdfType = "MC"
                     if "hessian" in pdfVar['combine']:
-                        pdfType = "Hessian" if "assym" not in pdfVar['combine'] else "AsymHessian"
+                        pdfType = "Hessian" if "asym" not in pdfVar['combine'] else "AsymHessian"
 
                     pdfFunction = "get%sPDFVarHists" % pdfType 
-                    pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
+                    logging.debug("pdf function is %s" % pdfFunction)
+                    # It's easier to do just do this in the combine cards
+                    #pdfUncScale = (1.0/1.645) if "CT18" in pdfVar['name'] else 1.0
+                    pdfUncScale = 1.0
                     # Don't bother appending process name to PDF (e.g., correlate, doesn't really matter
                     # if we use the hessian sets anyway
                     args = dict(entries=pdfVar['entries'], name="", rebin=self.rebin, 
@@ -363,11 +366,11 @@ class CombineCardTools(object):
                     if expandedTheory and pdfVar['name']:
                         args.pop("pdfName")
                         pdfFunctionName = "getAllSymHessianHists" if pdfType == "Hessian" else "getAllAsymHessianHists"
+                        logging.debug("pdf function for all variations is %s" % pdfFunction)
                         if self.isUnrolledFit:
                             pdfFunctionName = pdfFunctionName.replace("get", "getTransformed3D")
                         pdfFunction = getattr(HistTools, pdfFunctionName)
                         allPdfHists = pdfFunction(weightHist, **args)
-                        print("Number of pdf hists is", len(allPdfHists))
                         pdfHists.extend(allPdfHists)
 
                         if not self.isUnrolledFit:
@@ -434,50 +437,35 @@ class CombineCardTools(object):
         return hists
 
     def scaleHistsForProcess(self, group, processName, chan, expandedTheory, append=""):
-        weighthist_name = self.weightHistName(chan, processName)
+        weighthist_name = self.weightHistName(chan, processName, append)
         weightHist = group.FindObject(weighthist_name)
         if not weightHist:
             raise ValueError("Failed to find %s. Skipping" % weighthist_name)
 
         scaleHists = []
-        for name in self.theoryVariations[processName]:
-            if "scale" not in name.lower():
-                continue
-            scaleVars = self.theoryVariations[processName][name]
-            label = "" if self.correlateScaleUnc else processName
-            
-            hists = HistTools.getScaleHists(weightHist, 
-                    label, 
-                    self.rebin, 
-                    entries=scaleVars['entries'], 
-                    exclude=scaleVars['exclude'], 
-                    central=scaleVars['central'],
-                    label="QCDscale" if name == "scale" else name) \
-            if not self.isUnrolledFit else \
-                HistTools.getTransformed3DScaleHists(weightHist, HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], 
-                    label, 
-                    label="QCDscale" if name == "scale" else name,
-                    entries=scaleVars['entries'], 
-                    exclude=scaleVars['exclude'])
+        for varType in filter(lambda x: "scale" in x, self.theoryVariations[processName]):
+            scaleVars = self.theoryVariations[processName][varType]
+            procName = "" if self.correlateScaleUnc else processName
 
+            args = dict(name=procName,
+                    rebin=self.rebin, entries=scaleVars['entries'],
+                    exclude=scaleVars['exclude'],
+                    label="QCDscale")
+            if self.isUnrolledFit:
+                args["transformation"] = HistTools.makeUnrolledHist
+                args["transform_args"] = [self.unrolledBinsX, self.unrolledBinsY]
+                args.pop("rebin")
+            
+            scaleFunc = HistTools.getScaleHists if not self.isUnrolledFit else HistTools.getTransformed3DScaleHists
+            hists = scaleFunc(weightHist, **args)
             scaleHists.extend(hists)
 
-            if expandedTheory and name == "scale":
-                expandedScaleHists = HistTools.getExpandedScaleHists(weightHist, 
-                        label, 
-                        self.rebin, 
-                        entries=scaleVars['entries'], 
-                        pairs=scaleVars['groups'], 
-                    ) if not self.isUnrolledFit else \
-                    HistTools.getTransformed3DExpandedScaleHists(weightHist, 
-                            HistTools.makeUnrolledHist,
-                        [self.unrolledBinsX, self.unrolledBinsY], 
-                        label,
-                        entries=scaleVars['entries'], 
-                        pairs=scaleVars['groups'], 
-                    )
-                
+            if expandedTheory and "scale" in varType:
+                scaleFunc = HistTools.getExpandedScaleHists if not self.isUnrolledFit \
+                        else HistTools.getTransformed3DExpandedScaleHists
+                args.pop("exclude")
+                args["pairs"] = scaleVars['groups']
+                expandedScaleHists = scaleFunc(weightHist, **args)
                 scaleHists.extend(expandedScaleHists)
         return scaleHists
 
