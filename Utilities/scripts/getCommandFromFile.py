@@ -11,11 +11,11 @@ args = parser.parse_args()
 rtfile = ROOT.TFile(args.input_file)
 metaInfo = rtfile.Get("MetaInfo")
 if not metaInfo:
-    print "ERROR! Can't find metaInfo in file"
+    print("ERROR! Can't find metaInfo in file")
     exit(1)
-print metaInfo.Get("command").GetTitle()
+print(metaInfo.Get("command").GetTitle())
 
 if args.githash:
-    print metaInfo.Get("githash").GetTitle()
+    print(metaInfo.Get("githash").GetTitle())
 if args.gitdiff:
-    print metaInfo.Get("gitdiff").GetTitle()
+    print(metaInfo.Get("gitdiff").GetTitle())

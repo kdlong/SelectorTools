@@ -188,7 +188,7 @@ class CombineCardTools(object):
                 "entries" : entries,
                 "central" : central,
                 "exclude" : exclude,
-                "groups" : [(3,6), (1,2), (4,8)],
+                "groups" : [(1,7), (3,5), (0,8)],
                 "combine" : "envelope" if "pdf" not in varName.lower() else varName.replace("pdf_", ""),
             }
         })
@@ -443,8 +443,8 @@ class CombineCardTools(object):
             raise ValueError("Failed to find %s. Skipping" % weighthist_name)
 
         scaleHists = []
-        for varTye in filter(lambda x: "scale" in x, self.theoryVariations[processName]):
-            scaleVars = self.theoryVariations[processName][varTye]
+        for varType in filter(lambda x: "scale" in x, self.theoryVariations[processName]):
+            scaleVars = self.theoryVariations[processName][varType]
             procName = "" if self.correlateScaleUnc else processName
 
             args = dict(name=procName,
@@ -460,11 +460,10 @@ class CombineCardTools(object):
             hists = scaleFunc(weightHist, **args)
             scaleHists.extend(hists)
 
-            if expandedTheory and "scale" in varTye:
+            if expandedTheory and "scale" in varType:
                 scaleFunc = HistTools.getExpandedScaleHists if not self.isUnrolledFit \
                         else HistTools.getTransformed3DExpandedScaleHists
                 args.pop("exclude")
-                args.pop("label")
                 args["pairs"] = scaleVars['groups']
                 expandedScaleHists = scaleFunc(weightHist, **args)
                 scaleHists.extend(expandedScaleHists)
