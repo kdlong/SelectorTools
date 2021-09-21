@@ -260,30 +260,31 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
     if (variation.first == Central)
         mcWeights_->Fill(weight/std::abs(refWeight));
 
+    bool ptVOutsideRange = (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
+                ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
+                ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
+                ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
+                ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
+                ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
+                ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
+                ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
+                ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
+                ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. ));
+    bool isPtVvar = (variation.first == ptV0to3 || variation.first == ptV0to3_lhe ||
+                variation.first == ptV3to5 || variation.first == ptV3to5_lhe ||
+                variation.first == ptV5to7 || variation.first == ptV5to7_lhe ||
+                variation.first == ptV7to9 || variation.first == ptV7to9_lhe ||
+                variation.first == ptV9to12 || variation.first == ptV9to12_lhe ||
+                variation.first == ptV12to15 || variation.first == ptV12to15_lhe ||
+                variation.first == ptV15to20 || variation.first == ptV15to20_lhe ||
+                variation.first == ptV20to27 || variation.first == ptV20to27_lhe ||
+                variation.first == ptV27to40 || variation.first == ptV27to40_lhe ||
+                variation.first == ptV40toInf || variation.first == ptV40toInf_lhe);
+
+
     if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
         //size_t nScaleWeights = nLHEScaleWeight+nLHEScaleWeightAltSet1;
         // Turn this off for now
-        bool ptVOutsideRange = (((variation.first == ptV0to3 || variation.first == ptV0to3_lhe) && ptVcorr > 3.) ||
-                    ((variation.first == ptV3to5 || variation.first == ptV3to5_lhe) && (ptVcorr < 3. || ptVcorr > 5.))  ||
-                    ((variation.first == ptV5to7 || variation.first == ptV5to7_lhe) && (ptVcorr < 5. || ptVcorr > 7.)) ||
-                    ((variation.first == ptV7to9 || variation.first == ptV7to9_lhe) && (ptVcorr < 7. || ptVcorr > 9.)) ||
-                    ((variation.first == ptV9to12 || variation.first == ptV9to12_lhe) && (ptVcorr < 9. || ptVcorr > 12.)) ||
-                    ((variation.first == ptV12to15 || variation.first == ptV12to15_lhe) && (ptVcorr < 12. || ptVcorr > 15.)) ||
-                    ((variation.first == ptV15to20 || variation.first == ptV15to20_lhe) && (ptVcorr < 15. || ptVcorr > 20.)) ||
-                    ((variation.first == ptV20to27 || variation.first == ptV20to27_lhe) && (ptVcorr < 20. || ptVcorr > 27.)) ||
-                    ((variation.first == ptV27to40 || variation.first == ptV27to40_lhe) && (ptVcorr < 27. || ptVcorr > 40.)) ||
-                    ((variation.first == ptV40toInf || variation.first == ptV40toInf_lhe) && ptVcorr < 40. ));
-        bool isPtVvar = (variation.first == ptV0to3 || variation.first == ptV0to3_lhe ||
-                    variation.first == ptV3to5 || variation.first == ptV3to5_lhe ||
-                    variation.first == ptV5to7 || variation.first == ptV5to7_lhe ||
-                    variation.first == ptV7to9 || variation.first == ptV7to9_lhe ||
-                    variation.first == ptV9to12 || variation.first == ptV9to12_lhe ||
-                    variation.first == ptV12to15 || variation.first == ptV12to15_lhe ||
-                    variation.first == ptV15to20 || variation.first == ptV15to20_lhe ||
-                    variation.first == ptV20to27 || variation.first == ptV20to27_lhe ||
-                    variation.first == ptV27to40 || variation.first == ptV27to40_lhe ||
-                    variation.first == ptV40toInf || variation.first == ptV40toInf_lhe);
-
         size_t nScaleWeights = nLHEScaleWeight;
         // Would like to work in the SCETlib weights for ptV vars
         size_t minimalWeights = isPtVvar ? nScaleWeights : nScaleWeights+nMEParamWeight;

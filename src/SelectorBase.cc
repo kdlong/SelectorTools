@@ -387,22 +387,35 @@ void SelectorBase::InitializeHistogramFromConfig(std::string name, ChannelPair c
                     histData.at(0).c_str(), nbins, xmin, xmax, nbinsy, ymin, ymax);
             }
         }
+        bool isPtVvar = (variation.first == ptV0to3 || variation.first == ptV0to3_lhe ||
+                variation.first == ptV3to5 || variation.first == ptV3to5_lhe ||
+                variation.first == ptV5to7 || variation.first == ptV5to7_lhe ||
+                variation.first == ptV7to9 || variation.first == ptV7to9_lhe ||
+                variation.first == ptV9to12 || variation.first == ptV9to12_lhe ||
+                variation.first == ptV12to15 || variation.first == ptV12to15_lhe ||
+                variation.first == ptV15to20 || variation.first == ptV15to20_lhe ||
+                variation.first == ptV20to27 || variation.first == ptV20to27_lhe ||
+                variation.first == ptV27to40 || variation.first == ptV27to40_lhe ||
+                variation.first == ptV40toInf || variation.first == ptV40toInf_lhe);
 
         if (std::find(theoryVarSysts_.begin(), theoryVarSysts_.end(), variation.first) != theoryVarSysts_.end()) {
+            // Should change this to support SCETlib weights at some point
+            int nWeights = isPtVvar ? 10 : nTheoryWeights_;
+
             size_t pos = variation.first == Central ? name.size() : (name.size() + variation.second.size()+1);
             std::string weighthistName = histName.insert(pos, "_lheWeights");
             if (is1D && std::find(weighthists1D_.begin(), weighthists1D_.end(), name) != weighthists1D_.end()) {
                 weighthistMap1D_[histlabel] = {};
                 AddObject<TH2D>(weighthistMap1D_[histlabel], 
                     weighthistName.c_str(), histData[0].c_str(),
-                    nbins, xmin, xmax, nTheoryWeights_, 0, nTheoryWeights_);
+                    nbins, xmin, xmax, nWeights, 0, nWeights);
             }
             // 3D weight hists must be subset of 2D hists!
             else if (std::find(weighthists2D_.begin(), weighthists2D_.end(), name) != weighthists2D_.end()) {
                 weighthistMap2D_[histlabel] = {};
                 AddObject<TH3D>(weighthistMap2D_[histlabel], 
                     weighthistName.c_str(), histData[0].c_str(),
-                    nbins, xmin, xmax, nbinsy, ymin, ymax, nTheoryWeights_, 0, nTheoryWeights_);
+                    nbins, xmin, xmax, nbinsy, ymin, ymax, nWeights, 0, nWeights);
 
             }
         }
