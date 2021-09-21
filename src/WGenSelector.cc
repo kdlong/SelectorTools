@@ -281,7 +281,7 @@ void WGenSelector::FillHistogramsByName(Long64_t entry, std::string& toAppend, S
             else if (i < nScaleWeights+pdfMaxStore_) {
                 while (!pdfWeights_.at(pdfIdx))
                     pdfIdx++;
-                std::cout << "Storing weight " << i << " from Set number " << pdfIdx << std::endl;
+                //std::cout << "Storing weight " << i << " from Set number " << pdfIdx << std::endl;
                 thweight = LHEPdfWeights[pdfIdx][i-pdfOffset];
                 if (i == pdfOffset+nLHEPdfWeights.at(pdfIdx)-1) {
                     pdfOffset += nLHEPdfWeights.at(pdfIdx++);

@@ -26,3 +26,5 @@ pdf25       shape   1
 pdf26       shape   1                
 pdf27       shape   1                
 pdf28       shape   1                
+
+pdf group = pdf1 pdf2 pdf3 pdf4 pdf5 pdf6 pdf7 pdf8 pdf9 pdf10 pdf11 pdf12 pdf13 pdf14 pdf15 pdf16 pdf17 pdf18 pdf19 pdf20 pdf21 pdf22 pdf23 pdf24 pdf25 pdf26 pdf27 pdf28 
