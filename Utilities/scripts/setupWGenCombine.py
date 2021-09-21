@@ -35,7 +35,7 @@ parser.add_argument("-l", "--lumi", type=float,
     default=35.9*0.7, help="lumi")
 parser.add_argument("--pdf", type=str, default="nnpdf31", help="PDF to store",
     choices=["nnpdf31", "nnpdf30", "nnpdf31cmsw1", "nnpdf31cmsw2", "nnpdf31cmsw3", "nnpdf31cmsw4", "ct18", "ct18z", "mmht", "all"])
-parser.add_argument("-o", "--outFolder", type=str, default="/data/shared/{user}",
+parser.add_argument("-o", "--outFolder", type=str, default="/data/shared/{user}/CombineStudies/WGen",
     help="Output folder")
 parser.add_argument("-s", "--subFolder", type=str, default="",
     help="Output subfolder")
@@ -108,7 +108,7 @@ if args.subFolder:
     folder_name = "/".join([args.subFolder, folder_name])
 
 basefolder = args.outFolder.format(user=os.getlogin())
-cardtool.setOutputFolder(basefolder+"/CombineStudies/WGen/%s" % folder_name)
+cardtool.setOutputFolder("/".join([basefolder, folder_name]))
 
 cardtool.setLumi(args.lumi)
 cardtool.setInputFile(args.input_file)
@@ -191,9 +191,9 @@ for process in plot_groups:
         cardtool.setVariations(variations+["QCDscale_"+process])
     #Turn this back on when the theory uncertainties are added
     if "minnlo" in process:
-        cardtool.addTheoryVar(process, 'scale', range(1, 10) , exclude=[2, 6], central=4)
+        # It's confusing, but entries and range are 1-indexed and central is zero-indexed...
+        cardtool.addTheoryVar(process, 'scale', range(1, 10), exclude=[3, 7], central=4)
         # If using the "central" nano
-        #cardtool.addTheoryVar(process, 'scale', range(1,19)[::2], exclude=[2, 6], central=4)
         cardtool.setScaleVarGroups(process, [(1,7), (3,5), (0,8)])
         # NNPDF3.0 scale unc
         # cardtool.addTheoryVar(process, 'scale', range(10, 19), exclude=[6, 8], central=0, specName="NNPDF30")
@@ -293,3 +293,4 @@ for i, chan in enumerate(args.channels):
             "data_fit_variable" : args.dataHist if args.dataHist else args.fitvar,
         }
     )
+cardtool.writeMetaInfo()
