@@ -1,7 +1,7 @@
 [Setup]
 user = tyjyang
 analysis = WZ
-dataset_manager_path = /data/home/%(user)s/dev/wmass/pdf-uncertainties
+dataset_manager_path = /afs/cern.ch/user/t/%(user)s/dev/wmass/pdf-uncertainties
 combine_path = %(dataset_manager_path)s/CMSSW_10_6_20/src/HiggsAnalysis/CombinedLimit
 output_path = %(dataset_manager_path)s/outputs
 fakeRate_output = %(output_path)s/FakesRates
