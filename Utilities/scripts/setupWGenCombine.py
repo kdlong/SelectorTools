@@ -115,7 +115,7 @@ cardtool.setInputFile(args.input_file)
 cardtool.setOutputFile("WGenCombineInput.root")
 if "mp" in args.channels and "mn" in args.channels:
     cardtool.setCombineChannels({"m" : ["mp", "mn"]})
-    args.channels = args.channels+["m"]
+#    args.channels = args.channels+["m"]
 cardtool.setRemoveZeros(False)
 cardtool.setAddOverflow(False)
 
