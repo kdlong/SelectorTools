@@ -115,7 +115,7 @@ void NanoGenSelectorBase::Init(TTree *tree)
     else if (isMinnlo_ && pdfSet_ != "all") {
         if (pdfSet_ == "ct18")
             // Don't store CT18Z central value, or central value for your own set
-            pdfMaxStore_ = 61+storeCenPdfs_*minnloPdfMap.size()-2;
+            pdfMaxStore_ = 61+storeCenPdfs_*cenPdfOffset_;
         else if (pdfSet_ == "ct18z")
             pdfCenWeight_ = 61;
     }
@@ -245,6 +245,10 @@ void NanoGenSelectorBase::LoadBranchesNanoAOD(Long64_t entry, SystPair variation
                 nLHEPdfWeights[i] = 1;
             else
                 b.SetSpecificEntry(entry, "n"+name);
+            // A Hack for the fact that CT18 and CT18Z go in the same set
+            if (nLHEPdfWeights[i] == 122 && pdfCenWeight_ == 0) {
+                nLHEPdfWeights[i] = 61;
+            }
         }
     }
     if (unknownWeights_) {

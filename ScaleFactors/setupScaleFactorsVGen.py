@@ -92,15 +92,20 @@ histnum, binsn = getHists(numfile, args.numerator, args.hist_names[0].split("+")
 histdenom, binsd = getHists(denomfile, args.denominator, args.hist_names[1].split("+"), xsecs[args.denominator])
 
 if len(histnum.shape) == len(histdenom.shape):
-    corr = histnum/histdenom
+    corr = np.divide(histnum, histdenom, out=np.ones_like(histnum), where=histdenom != 0)
 elif len(histnum.shape) == 4 and len(histdenom.shape) == 3:
-    corr = histnum/histdenom[np.newaxis,:,:,:]
+    rdenom = histdenom[np.newaxis,:,:,:]
+    corr = np.divide(histnum, rdenom, out=np.ones_like(histnum), where=rdenom != 0)
 
 logging.debug("HistNum is %s" % histnum)
 logging.debug("HistDenom is %s" % histdenom)
 
 if args.smooth:
     corr = sfhelpers.smoothingWeights(histnum, histdenom, binsn, *args.smooth)
+    # Add a syst axis to the bins if it's not there
+    if len(histnum.shape) == 3 and len(corr.shape) == 4:
+        temp = [np.array([0., 1.]), binsn[0], binsn[1], binsn[2]]
+        binsn = np.asarray(temp, dtype='object')
 
 if args.npOut:
     labels = {args.name : corr,
@@ -111,7 +116,7 @@ if args.npOut:
             }
     np.savez(args.npOut, **labels)
 
-for var in range(histnum.shape[0]):
+for var in range(corr.shape[0]):
     varname = args.name+"_var%i" % var
 
     hist = OutputTools.numpy3DHistToRoot(varname, binsd, corr[var,:,:,:])

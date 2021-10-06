@@ -130,60 +130,70 @@ pdfIdxMap = {
             "unc" : "pdf_hessian",
             "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 0,
         },
         "nnpdf31cmsw1" : {
             "name" : "NNPDF31CMSW1",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+1*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 1,
         },
         "nnpdf31cmsw2" : {
             "name" : "NNPDF31CMSW2",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+2*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 2,
         },
         "nnpdf31cmsw3" : {
             "name" : "NNPDF31CMSW3",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+3*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 3,
         },
         "nnpdf31cmsw4" : {
             "name" : "NNPDF31CMSW4",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+4*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 4,
         },
         "nnpdf30" : {
             "name" : "NNPDF30",
             "unc" : "pdf_hessian",
-            "cenidx" : firstPdfIdx+5*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "nsets" : 103,
+            "order" : 5,
         },
         "ct18" : {
             "name" : "CT18",
-            "cenidx" : firstPdfIdx+6*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "unc" : "pdf_asymhessian",
             "nsets" : 61,
+            "order" : 6,
         },
         "ct18z" : {
             "name" : "CT18Z",
-            "cenidx" : firstPdfIdx+6*args.storePdfCenValues+61,
+            "cenidx" : firstPdfIdx+61,
             "unc" : "pdf_asymhessian",
             "nsets" : 61,
+            "order" : 7,
         },
         "mmht" : {
             "name" : "MMHT",
-            "cenidx" : firstPdfIdx+7*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "unc" : "pdf_asymhessian",
             "nsets" : 51+3,
+            "order" : 8,
         },
         "hera" : {
             "name" : "HERA",
-            "cenidx" : firstPdfIdx+8*args.storePdfCenValues,
+            "cenidx" : firstPdfIdx,
             "unc" : "pdf_asymhessian",
             "nsets" : 51,
+            "order" : 9,
         },
 }
 for process in plot_groups:
@@ -206,9 +216,8 @@ for process in plot_groups:
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
         if args.storePdfCenValues:
             for label, pdfInfo in pdfIdxMap.items():
-                index = pdfInfo["cenidx"]
-                if index > pdfIdxMap[args.pdf]["cenidx"]:
-                    index += pdfIdxMap[args.pdf]["nsets"]
+                index = firstPdfIdx+pdfIdxMap[args.pdf]["nsets"]
+                index += pdfInfo["order"] if pdfInfo["order"] < pdfIdxMap[args.pdf]["order"] else pdfInfo["order"]-1
                 cardtool.addTheoryVar(process, 'other', [index], central=0, specName=pdfInfo["name"]+"Cen")
 
         cenMassIdx = 9+11

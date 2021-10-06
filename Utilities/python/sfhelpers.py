@@ -56,7 +56,9 @@ def smoothingWeights(histlow: np.array, histhigh: np.array,
     midval = binsl[axislow][mid]
     print(low, high, mid, midval)
     corr = 0.5*(1-special.erf(k*(binsl[axislow][:-1]-midval)))
-    weights = (corr*histlow + (1-corr)*histhigh[np.newaxis,:,:,:])/histhigh[np.newaxis,:,:,:]
+    rnum = corr*histlow + (1-corr)*histhigh[np.newaxis,:,:,:]
+    rdenom = histhigh[np.newaxis,:,:,:]
+    weights = np.divide(rnum, rdenom, out=np.ones_like(rnum), where=rdenom != 0)
 	# Not sure what's going on in the last bin now
     #weights[:,:,-1] = 1.
     return weights

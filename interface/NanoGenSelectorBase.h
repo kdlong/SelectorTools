@@ -45,6 +45,8 @@ public :
         {"mmht", {19, 20}},
         {"hera", {23,24,25,26,28,29,30}},
     };
+    // Don't consider CT18Z or the central set
+    size_t cenPdfOffset_ = minnloPdfMap.size()-2;
     int nScetlibWeights_ = 45;
     PDFWeightsHelper pdfweightshelper_;
     // Derived values
