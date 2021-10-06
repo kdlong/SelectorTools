@@ -41,7 +41,6 @@ public :
 protected:
     virtual void SetComposite() override;
     virtual void FillHistograms(Long64_t entry, std::pair<Systematic, std::string> variation) override;
-    void FillHistogramsByName(Long64_t entry, std::string& toAppend, std::pair<Systematic, std::string> variation);
     void LoadBranchesNanoAOD(Long64_t entry, std::pair<Systematic, std::string> variation) override;
 };
 

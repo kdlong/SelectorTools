@@ -195,6 +195,9 @@ def makeAllAsymHessianHists(hists, hist_name, name, central=0, scale=1.0):
     variationSet = []
     varhists = hists[0:central]+hists[central+1:]
     cenhist = hists[central]
+    #mid = int(len(varhists)/2)
+    #for j, (uphist, downhist) in enumerate(zip(varhists[:mid], reversed(varhists[mid:]))):
+    #for j, (uphist, downhist) in enumerate(zip(varhists[:mid], varhists[mid:])):
     for j, (uphist, downhist) in enumerate(zip(varhists[::2], varhists[1::2])):
         new_name = hist_name.replace("pdf_%s" % name, "pdf%i" % (j+1)) if name and name in hist_name else \
             hist_name.replace("pdf", "pdf%i" % (j+1))

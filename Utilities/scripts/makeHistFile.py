@@ -61,10 +61,13 @@ def getComLineArgs():
     return vars(parser.parse_args())
 
 def buildInputs(inputArgs, datasets=[]):
-    if datasets and not any(["wSignOnly" in x or "wSuppress" in x for x in inputArgs]) \
+    if datasets and (not inputArgs or not any(["wSignOnly" in x or "wSuppress" in x for x in inputArgs])) \
             and all(["minnlo" in x for x in datasets]):
         logging.warning("Setting wSignOnly=1 for MiNNLO sample to avoid large weights")
-        inputArgs.append("wSignOnly=1")
+        if inputArgs:
+            inputArgs.append("wSignOnly=1")
+        else: 
+            inputArgs = ["wSignOnly=1"]
     if not inputArgs:
         return []
     divided = [x.split("=") for x in inputArgs]
