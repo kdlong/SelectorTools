@@ -179,21 +179,21 @@ pdfIdxMap = {
             "cenidx" : firstPdfIdx+61,
             "unc" : "pdf_asymhessian",
             "nsets" : 61,
-            "order" : 7,
+            "order" : 99, # Central value isn't stored
         },
         "mmht" : {
             "name" : "MMHT",
             "cenidx" : firstPdfIdx,
             "unc" : "pdf_asymhessian",
             "nsets" : 51+3,
-            "order" : 8,
+            "order" : 7,
         },
         "hera" : {
             "name" : "HERA",
             "cenidx" : firstPdfIdx,
             "unc" : "pdf_asymhessian",
             "nsets" : 51,
-            "order" : 9,
+            "order" : 8,
         },
 }
 for process in plot_groups:
@@ -216,8 +216,12 @@ for process in plot_groups:
             cardtool.addTheoryVar(process, 'other', alphaIndices, central=0, specName=info["name"]+"_alphas")
         if args.storePdfCenValues:
             for label, pdfInfo in pdfIdxMap.items():
+                # The central value of the main set isn't stored again, neither is CT18Z
+                if label == args.pdf or label == "ct18z":
+                    continue
                 index = firstPdfIdx+pdfIdxMap[args.pdf]["nsets"]
                 index += pdfInfo["order"] if pdfInfo["order"] < pdfIdxMap[args.pdf]["order"] else pdfInfo["order"]-1
+                logging.debug("Index for set %s is %s" % (label, index))
                 cardtool.addTheoryVar(process, 'other', [index], central=0, specName=pdfInfo["name"]+"Cen")
 
         cenMassIdx = 9+11
