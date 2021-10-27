@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--nHessians", type=int, required=True)
 parser.add_argument("-p", "--pdf", type=str, required=False)
 parser.add_argument("-v", "--variable", type=str, required=False)
+parser.add_argument("--profile", action='store_true')
 args = parser.parse_args()
 
 def runVar(idx, var, shift):
@@ -17,14 +18,17 @@ def runVar(idx, var, shift):
         text = card.readlines()
         for line in text:
             if "kmax" in line:
-                new_text.append("kmax 2\n")
+                new_text.append("kmax *\n")
             elif "shapes" in line:
                 if "data_obs" in line:
                     new_text += line
                 else:
                     temp =  line.replace(f"{var}_mp", f"{var}_{label}_mp")
                     new_text += temp.replace(f"{var}_mn", f"{var}_{label}_mn")
-            elif "group" in line or ("shape" in line and not any([x in line for x in ("massShift100MeV", "lumi2016_13TeV")])):
+            elif "group" in line or ("shape" in line and "pdf" in line):
+                continue
+            elif not args.profile and "shape" in line and not any([x in line for x in ("massShift100MeV", "lumi2016_13TeV")]):
+                print("SKIP!", line)
                 continue
             else:
                 new_text += line
@@ -32,7 +36,7 @@ def runVar(idx, var, shift):
     outfile = f"fitresults_{label}.root"
     with open(cardname, "w") as newcard:
         newcard.write("".join(new_text))
-    subprocess.call(["text2hdf5.py", "--X-allow-no-signal", cardname])
+    subprocess.call(["text2hdf5.py", "--X-allow-no-signal", "--X-allow-no-background", cardname])
     subprocess.call(["combinetf.py", cardname.replace("txt", "hdf5"), f"-o {outfile}"])
     return outfile
 

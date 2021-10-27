@@ -332,7 +332,7 @@ void WGenSelector::FillHistograms(Long64_t entry, SystPair variation) {
                 thweight /= rescaleWeight_;
             }
             else {
-                int slIdx = i-minimalWeights-pdfMaxStore_*isPtVvar;
+                int slIdx = i-minimalWeights-pdfMaxStore_;
                 auto* sf = scetlibCorrs_.at(slIdx);
                 float refW = scetlibCorrs_.at(0)->Evaluate3D(mVcorr, yVcorr, ptVcorr);
                 thweight = sf->Evaluate3D(mVcorr, yVcorr, ptVcorr)/refW;
