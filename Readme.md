@@ -186,7 +186,9 @@ See the following section for a detailed example of how to setup and run the fit
 	
 ### Produce a historgram file running locally
 		
-```./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 massVar=1 muonVar=1 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection```
+`
+./Utilities/scripts/makeHistFile.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 massVar=1 muonVar=1 pdfSet=nnpdf31 --maxFiles 24 -j 24 --maxEntries 250000 -s Wselection -o wmmunu-nnpdf31.root
+`
 	
 Explanation of arguments:
 	
@@ -209,6 +211,10 @@ Explanation of arguments:
 * **-o** Wmunu.root: Output file name
 	
 ### Produce a histogram file by submitting to condor
+`
+./Utilities/scripts/submitMakeHistFileToCondor.py -a WGen -f wmmunu_minnlo --selectorArgs muOnly=1 theoryUnc=1 prefsr=1 bare=1 theoryPrefsr=1 wSignOnly=1 thwSuppress=10 muonVar=1 massVar=1 pdfSet=nnpdf31 -d /home/kdlong/Submit_Wp_Fiducial --input_tier NanoAOD --force --local -s Wselection --numFiles 1000 -n 20
+`
+* add `--submit` for automatic submission to condor
 
 ### Produce combine cards
 	
@@ -218,7 +224,7 @@ Explanation of arguments:
 * **-c** wmmunu_minnlo: This sample will be written as the central MC prediction in the cards
 * **--files** wmmunu_minnlo: A comma-separated list of the data sets you want to process. These are specified in PlotGroups/WGen.py of AnalysisDatasetManager. They main contain multiple samples (e.g., combining histograms of multiple folders in the file)
 * **-d** wmmunu_minnlo: This sample is treated as "data" in the fit. When it is the same as -c, the fit will always be an expected Asimov fit
-* **-f** test.root: output file name
+* **-f** test.root: input file name
 * **--pdfs** nnpdf31: List of PDF set names, separated by commas, to include in fit
 * **--addEff**: Add dummy efficiency uncertainties (per-bin stat unc)
 * **--allHessianVars**: Write PDF uncertainties as one nuisance per hessian variation set

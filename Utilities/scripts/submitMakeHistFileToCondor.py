@@ -238,7 +238,7 @@ def submitDASFilesToCondor(filenames, submit_dir, analysis, selection, input_tie
     else:
         extraSubmit = '+JobFlavour = "%s"' % queue
         iscmg = "kelong" in os.getlogin()
-        extraSubmit += '\n+AccountingGroup = "group_u_CMST3.all"'
+        if iscmg: extraSubmit += '\n+AccountingGroup = "group_u_CMST3.all"'
 
     writeSubmitFile(submit_dir, analysis, selection, input_tier, extraSubmit, memory, filelist_name, numfiles, numCores, numPerJob, selArgs)
     if merge:

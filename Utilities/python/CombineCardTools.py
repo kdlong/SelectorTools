@@ -488,6 +488,7 @@ class CombineCardTools(object):
 
     def writeCards(self, chan, nuisances, label="", outlabel="", extraArgs={}):
         chan_dict = self.yields[chan].copy()
+        print('chan in combine file is', chan)
         chan_dict.update(extraArgs)
         for key, value in extraArgs.items():
             if "yield:" in value:
